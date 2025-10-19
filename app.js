@@ -16,9 +16,9 @@ class RSVPReader {
         // Settings with defaults
         this.settings = {
             wpm: 300,
-            commaPause: 1.5,
-            periodPause: 2.5,
-            semicolonPause: 2,
+            commaPause: 1.05,
+            periodPause: 1.75,
+            semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 60
         };
@@ -351,14 +351,14 @@ class RSVPReader {
     startRSVPWithCooldown() {
         if (this.doubleTapCooldown) return;
         this.doubleTapCooldown = true;
-        setTimeout(() => { this.doubleTapCooldown = false; }, 500);
+        setTimeout(() => { this.doubleTapCooldown = false; }, 200);
         this.startRSVP();
     }
     
     stopRSVPWithCooldown() {
         if (this.doubleTapCooldown) return;
         this.doubleTapCooldown = true;
-        setTimeout(() => { this.doubleTapCooldown = false; }, 500);
+        setTimeout(() => { this.doubleTapCooldown = false; }, 200);
         this.stopRSVP();
     }
     
@@ -656,9 +656,9 @@ class RSVPReader {
     resetSettings() {
         this.settings = {
             wpm: 300,
-            commaPause: 1.5,
-            periodPause: 2.5,
-            semicolonPause: 2,
+            commaPause: 1.05,
+            periodPause: 1.75,
+            semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 60
         };
