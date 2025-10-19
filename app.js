@@ -84,9 +84,13 @@ class RSVPReader {
         this.nextWordBtn.addEventListener('click', () => this.nextWord());
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
         
-        // Double click to start/stop RSVP
+        // Double click/tap to start/stop RSVP
         this.normalTextDisplay.addEventListener('dblclick', () => this.startRSVP());
         this.rsvpWordDisplay.addEventListener('dblclick', () => this.stopRSVP());
+        
+        // Mobile double-tap support
+        this.setupDoubleTap(this.normalTextDisplay, () => this.startRSVP());
+        this.setupDoubleTap(this.rsvpWordDisplay, () => this.stopRSVP());
         
         // Keyboard controls
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
@@ -108,6 +112,28 @@ class RSVPReader {
         
         // Auto-save text on input
         this.textInput.addEventListener('input', () => this.saveText());
+    }
+    
+    setupDoubleTap(element, callback) {
+        let lastTap = 0;
+        let tapTimeout = null;
+        
+        element.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            
+            clearTimeout(tapTimeout);
+            
+            if (tapLength < 300 && tapLength > 0) {
+                // Double tap detected
+                e.preventDefault();
+                callback();
+                lastTap = 0;
+            } else {
+                // Single tap - wait to see if another tap comes
+                lastTap = currentTime;
+            }
+        });
     }
     
     async handleFileUpload(event) {
