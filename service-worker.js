@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rsvp-reader-v6';
+const CACHE_NAME = 'rsvp-reader-v7';
 const urlsToCache = [
   '/',
   '/index.html',

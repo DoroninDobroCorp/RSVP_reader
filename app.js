@@ -7,6 +7,7 @@ class RSVPReader {
         this.isPlaying = false;
         this.timer = null;
         this.mode = 'input'; // 'input', 'normal', 'rsvp'
+        this.doubleTapCooldown = false; // Prevent double-tap from firing twice
         
         // Settings with defaults
         this.settings = {
@@ -86,16 +87,16 @@ class RSVPReader {
         
         // Double click/tap to start/stop RSVP - works ANYWHERE on screen
         // Add to both section (for empty space) and display (for text)
-        this.normalReadingSection.addEventListener('dblclick', () => this.startRSVP());
-        this.normalTextDisplay.addEventListener('dblclick', () => this.startRSVP());
-        this.rsvpReadingSection.addEventListener('dblclick', () => this.stopRSVP());
-        this.rsvpWordDisplay.addEventListener('dblclick', () => this.stopRSVP());
+        this.normalReadingSection.addEventListener('dblclick', () => this.startRSVPWithCooldown());
+        this.normalTextDisplay.addEventListener('dblclick', () => this.startRSVPWithCooldown());
+        this.rsvpReadingSection.addEventListener('dblclick', () => this.stopRSVPWithCooldown());
+        this.rsvpWordDisplay.addEventListener('dblclick', () => this.stopRSVPWithCooldown());
         
         // Mobile double-tap support - works ANYWHERE on screen
-        this.setupDoubleTap(this.normalReadingSection, () => this.startRSVP());
-        this.setupDoubleTap(this.normalTextDisplay, () => this.startRSVP());
-        this.setupDoubleTap(this.rsvpReadingSection, () => this.stopRSVP());
-        this.setupDoubleTap(this.rsvpWordDisplay, () => this.stopRSVP());
+        this.setupDoubleTap(this.normalReadingSection, () => this.startRSVPWithCooldown());
+        this.setupDoubleTap(this.normalTextDisplay, () => this.startRSVPWithCooldown());
+        this.setupDoubleTap(this.rsvpReadingSection, () => this.stopRSVPWithCooldown());
+        this.setupDoubleTap(this.rsvpWordDisplay, () => this.stopRSVPWithCooldown());
         
         // Prevent control buttons from triggering section handlers
         const controlButtons = [this.playPauseBtn, this.prevWordBtn, this.nextWordBtn, this.stopRSVPBtn];
@@ -240,6 +241,20 @@ class RSVPReader {
         });
         
         this.updateProgress();
+    }
+    
+    startRSVPWithCooldown() {
+        if (this.doubleTapCooldown) return;
+        this.doubleTapCooldown = true;
+        setTimeout(() => { this.doubleTapCooldown = false; }, 500);
+        this.startRSVP();
+    }
+    
+    stopRSVPWithCooldown() {
+        if (this.doubleTapCooldown) return;
+        this.doubleTapCooldown = true;
+        setTimeout(() => { this.doubleTapCooldown = false; }, 500);
+        this.stopRSVP();
     }
     
     startRSVP() {
