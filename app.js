@@ -84,13 +84,25 @@ class RSVPReader {
         this.nextWordBtn.addEventListener('click', () => this.nextWord());
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
         
-        // Double click/tap to start/stop RSVP
+        // Double click/tap to start/stop RSVP - works ANYWHERE on screen
+        // Add to both section (for empty space) and display (for text)
+        this.normalReadingSection.addEventListener('dblclick', () => this.startRSVP());
         this.normalTextDisplay.addEventListener('dblclick', () => this.startRSVP());
+        this.rsvpReadingSection.addEventListener('dblclick', () => this.stopRSVP());
         this.rsvpWordDisplay.addEventListener('dblclick', () => this.stopRSVP());
         
-        // Mobile double-tap support
+        // Mobile double-tap support - works ANYWHERE on screen
+        this.setupDoubleTap(this.normalReadingSection, () => this.startRSVP());
         this.setupDoubleTap(this.normalTextDisplay, () => this.startRSVP());
+        this.setupDoubleTap(this.rsvpReadingSection, () => this.stopRSVP());
         this.setupDoubleTap(this.rsvpWordDisplay, () => this.stopRSVP());
+        
+        // Prevent control buttons from triggering section handlers
+        const controlButtons = [this.playPauseBtn, this.prevWordBtn, this.nextWordBtn, this.stopRSVPBtn];
+        controlButtons.forEach(btn => {
+            btn.addEventListener('dblclick', (e) => e.stopPropagation());
+            btn.addEventListener('touchend', (e) => e.stopPropagation());
+        });
         
         // Keyboard controls
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
