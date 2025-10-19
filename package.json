@@ -1,0 +1,17 @@
+{
+  "name": "rsvp_reader",
+  "version": "1.0.0",
+  "description": "Быстрая читалка по методу RSVP (Rapid Serial Visual Presentation) с поддержкой оффлайн-режима и мобильных устройств.",
+  "main": "app.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

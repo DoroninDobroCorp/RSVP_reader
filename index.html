@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="RSVP Speed Reader - быстрое чтение по одному слову">
+    <title>RSVP Reader</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAISSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>📖 RSVP Reader</h1>
+        <button id="settingsBtn" class="icon-btn" title="Настройки">⚙️</button>
+    </header>
+
+    <!-- Main Container -->
+    <main id="mainContainer">
+        <!-- Text Input Section -->
+        <section id="textInputSection">
+            <h2>Загрузите текст для чтения</h2>
+            <textarea id="textInput" placeholder="Вставьте текст сюда или загрузите файл..."></textarea>
+            <div class="button-group">
+                <button id="loadFileBtn" class="primary-btn">📁 Загрузить TXT/EPUB</button>
+                <button id="startReadingBtn" class="primary-btn">▶️ Начать чтение</button>
+            </div>
+            <input type="file" id="fileInput" accept=".txt,.epub" style="display: none;">
+        </section>
+
+        <!-- Normal Reading Mode -->
+        <section id="normalReadingSection" style="display: none;">
+            <div class="reading-header">
+                <button id="backToInputBtn" class="icon-btn">◀️ Назад</button>
+                <div class="progress-info">
+                    <span id="progressText">0%</span>
+                    <span id="wordCount">0 / 0</span>
+                </div>
+                <button id="startRSVPBtn" class="icon-btn" title="Двойной клик для запуска RSVP">▶️</button>
+            </div>
+            <div id="normalTextDisplay" class="normal-text"></div>
+        </section>
+
+        <!-- RSVP Reading Mode -->
+        <section id="rsvpReadingSection" style="display: none;">
+            <div class="rsvp-container">
+                <div id="rsvpWordDisplay" class="rsvp-word"></div>
+                <div class="rsvp-controls">
+                    <button id="playPauseBtn" class="control-btn">⏸️</button>
+                    <button id="prevWordBtn" class="control-btn">⏮️</button>
+                    <button id="nextWordBtn" class="control-btn">⏭️</button>
+                    <button id="stopRSVPBtn" class="control-btn">⏹️</button>
+                </div>
+                <div class="rsvp-progress">
+                    <div id="rsvpProgressBar" class="progress-bar">
+                        <div id="rsvpProgressFill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="rsvpProgressText">0%</span>
+                        <span id="rsvpWordCount">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Настройки</h2>
+                <button id="closeSettingsBtn" class="close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="wpmInput">Скорость (слов/мин)</label>
+                    <input type="number" id="wpmInput" min="100" max="1000" step="50" value="300">
+                    <span class="setting-desc">Рекомендуется: 250-400</span>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="focusLetterColor">Цвет фокусной буквы</label>
+                    <input type="color" id="focusLetterColor" value="#ff6b6b">
+                </div>
+
+                <div class="setting-group">
+                    <label for="commaPause">Пауза на запятую (множитель)</label>
+                    <input type="number" id="commaPause" min="1" max="5" step="0.5" value="1.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="periodPause">Пауза на точку (множитель)</label>
+                    <input type="number" id="periodPause" min="1" max="5" step="0.5" value="2.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="semicolonPause">Пауза на ; : ! ? (множитель)</label>
+                    <input type="number" id="semicolonPause" min="1" max="5" step="0.5" value="2">
+                </div>
+
+                <div class="setting-group">
+                    <label for="fontSizeInput">Размер шрифта (px)</label>
+                    <input type="number" id="fontSizeInput" min="30" max="120" step="10" value="60">
+                </div>
+
+                <div class="setting-group">
+                    <button id="resetSettingsBtn" class="secondary-btn">Сбросить настройки</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="epub-parser.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

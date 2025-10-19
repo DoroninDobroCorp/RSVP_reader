@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест EPUB парсера</title>
+</head>
+<body>
+    <h1>Тест парсера EPUB</h1>
+    <input type="file" id="fileInput" accept=".epub">
+    <button onclick="testParse()">Парсить!</button>
+    <hr>
+    <div id="output" style="white-space: pre-wrap; font-family: monospace; max-width: 1000px;"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="epub-parser.js"></script>
+    <script>
+        async function testParse() {
+            const fileInput = document.getElementById('fileInput');
+            const output = document.getElementById('output');
+            
+            if (!fileInput.files[0]) {
+                alert('Выберите EPUB файл!');
+                return;
+            }
+            
+            output.textContent = '⏳ Обработка...';
+            
+            try {
+                const parser = new EPUBParser();
+                const text = await parser.parse(fileInput.files[0]);
+                
+                const words = text.split(/\s+/).length;
+                const preview = text.substring(0, 3000);
+                
+                output.textContent = `✅ Успех!\n\nСлов: ${words}\nСимволов: ${text.length}\n\n=== ПРЕВЬЮ (первые 3000 символов) ===\n\n${preview}\n\n...`;
+                
+                console.log('ПОЛНЫЙ ТЕКСТ:', text);
+            } catch (error) {
+                output.textContent = '❌ Ошибка: ' + error.message;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
