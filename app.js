@@ -9,6 +9,10 @@ class RSVPReader {
         this.mode = 'input'; // 'input', 'normal', 'rsvp'
         this.doubleTapCooldown = false; // Prevent double-tap from firing twice
         
+        // Search state
+        this.searchMatches = [];
+        this.currentMatchIndex = -1;
+        
         // Settings with defaults
         this.settings = {
             wpm: 300,
@@ -45,6 +49,12 @@ class RSVPReader {
         this.startRSVPBtn = document.getElementById('startRSVPBtn');
         this.progressText = document.getElementById('progressText');
         this.wordCount = document.getElementById('wordCount');
+        
+        // Search elements
+        this.searchInput = document.getElementById('searchInput');
+        this.searchPrevBtn = document.getElementById('searchPrevBtn');
+        this.searchNextBtn = document.getElementById('searchNextBtn');
+        this.searchResults = document.getElementById('searchResults');
         
         // RSVP elements
         this.rsvpWordDisplay = document.getElementById('rsvpWordDisplay');
@@ -125,6 +135,16 @@ class RSVPReader {
         
         // Auto-save text on input
         this.textInput.addEventListener('input', () => this.saveText());
+        
+        // Search functionality
+        this.searchInput.addEventListener('input', () => this.handleSearch());
+        this.searchNextBtn.addEventListener('click', () => this.goToNextMatch());
+        this.searchPrevBtn.addEventListener('click', () => this.goToPrevMatch());
+        this.searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.shiftKey ? this.goToPrevMatch() : this.goToNextMatch();
+            }
+        });
     }
     
     setupDoubleTap(element, callback) {
@@ -241,6 +261,91 @@ class RSVPReader {
         });
         
         this.updateProgress();
+    }
+    
+    handleSearch() {
+        const query = this.searchInput.value.trim().toLowerCase();
+        
+        // Clear previous matches
+        this.searchMatches = [];
+        this.currentMatchIndex = -1;
+        
+        // Remove all search highlights
+        document.querySelectorAll('.search-match, .search-current').forEach(el => {
+            el.classList.remove('search-match', 'search-current');
+        });
+        
+        if (query.length < 2) {
+            this.searchResults.textContent = '';
+            this.searchPrevBtn.disabled = true;
+            this.searchNextBtn.disabled = true;
+            return;
+        }
+        
+        // Find all matches
+        this.words.forEach((word, index) => {
+            if (word.toLowerCase().includes(query)) {
+                this.searchMatches.push(index);
+            }
+        });
+        
+        // Update UI
+        if (this.searchMatches.length > 0) {
+            this.currentMatchIndex = 0;
+            this.highlightMatches();
+            this.goToMatch(0);
+            this.searchPrevBtn.disabled = false;
+            this.searchNextBtn.disabled = false;
+        } else {
+            this.searchResults.textContent = 'Не найдено';
+            this.searchPrevBtn.disabled = true;
+            this.searchNextBtn.disabled = true;
+        }
+    }
+    
+    highlightMatches() {
+        this.searchMatches.forEach(index => {
+            const span = this.normalTextDisplay.children[index];
+            if (span) {
+                span.classList.add('search-match');
+            }
+        });
+    }
+    
+    goToNextMatch() {
+        if (this.searchMatches.length === 0) return;
+        
+        this.currentMatchIndex = (this.currentMatchIndex + 1) % this.searchMatches.length;
+        this.goToMatch(this.currentMatchIndex);
+    }
+    
+    goToPrevMatch() {
+        if (this.searchMatches.length === 0) return;
+        
+        this.currentMatchIndex = (this.currentMatchIndex - 1 + this.searchMatches.length) % this.searchMatches.length;
+        this.goToMatch(this.currentMatchIndex);
+    }
+    
+    goToMatch(matchIndex) {
+        const wordIndex = this.searchMatches[matchIndex];
+        
+        // Remove previous current highlight
+        document.querySelectorAll('.search-current').forEach(el => {
+            el.classList.remove('search-current');
+        });
+        
+        // Highlight current match
+        const span = this.normalTextDisplay.children[wordIndex];
+        if (span) {
+            span.classList.add('search-current');
+            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Update search results text
+        this.searchResults.textContent = `${matchIndex + 1} / ${this.searchMatches.length}`;
+        
+        // Update current index (so RSVP can start from here)
+        this.currentIndex = wordIndex;
     }
     
     startRSVPWithCooldown() {

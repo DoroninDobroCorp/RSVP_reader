@@ -33,12 +33,18 @@
         <!-- Normal Reading Mode -->
         <section id="normalReadingSection" style="display: none;">
             <div class="reading-header">
-                <button id="backToInputBtn" class="icon-btn">◀️ Назад</button>
-                <div class="progress-info">
-                    <span id="progressText">0%</span>
-                    <span id="wordCount">0 / 0</span>
+                <button id="backToInputBtn" class="secondary-btn">← Назад</button>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="🔍 Поиск по тексту...">
+                    <button id="searchPrevBtn" class="search-nav-btn" title="Предыдущее">↑</button>
+                    <button id="searchNextBtn" class="search-nav-btn" title="Следующее">↓</button>
+                    <span id="searchResults" class="search-results"></span>
                 </div>
-                <button id="startRSVPBtn" class="icon-btn" title="Двойной клик для запуска RSVP">▶️</button>
+                <button id="startRSVPBtn" class="primary-btn">🚀 Быстрое чтение (RSVP)</button>
+            </div>
+            <div class="progress-info">
+                <span id="progressText">0%</span>
+                <span id="wordCount">0 / 0</span>
             </div>
             <div id="normalTextDisplay" class="normal-text"></div>
         </section>
