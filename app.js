@@ -552,13 +552,24 @@ class RSVPReader {
     }
     
     handleKeyboard(event) {
+        // Spacebar: toggle between normal and RSVP modes (like double-tap on mobile)
+        if (event.code === 'Space') {
+            event.preventDefault();
+            
+            if (this.mode === 'normal') {
+                // In normal mode: start RSVP
+                this.startRSVPWithCooldown();
+            } else if (this.mode === 'rsvp') {
+                // In RSVP mode: stop and return to normal
+                this.stopRSVPWithCooldown();
+            }
+            return;
+        }
+        
+        // Other keyboard controls only work in RSVP mode
         if (this.mode !== 'rsvp') return;
         
         switch(event.code) {
-            case 'Space':
-                event.preventDefault();
-                this.togglePlayPause();
-                break;
             case 'ArrowLeft':
                 event.preventDefault();
                 this.previousWord();
@@ -566,6 +577,10 @@ class RSVPReader {
             case 'ArrowRight':
                 event.preventDefault();
                 this.nextWord();
+                break;
+            case 'KeyP': // P for pause/play
+                event.preventDefault();
+                this.togglePlayPause();
                 break;
             case 'Escape':
                 event.preventDefault();
