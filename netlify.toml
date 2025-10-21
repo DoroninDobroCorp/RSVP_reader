@@ -1,9 +1,10 @@
 [build]
   publish = "."
+  command = "echo 'Build complete'"
 
-# Domain configuration for read.ibet.team
+# GitHub интеграция
 [context.production]
-  command = "echo 'Production deployment'"
+  command = "echo 'Production build'"
 
 [[redirects]]
   from = "/*"
