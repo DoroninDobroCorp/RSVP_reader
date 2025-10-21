@@ -23,11 +23,25 @@
         <section id="textInputSection">
             <h2>Загрузите текст для чтения</h2>
             <textarea id="textInput" placeholder="Вставьте текст сюда или загрузите файл..."></textarea>
+            <div class="input-group">
+                <input type="text" id="bookNameInput" placeholder="Название для библиотеки (опционально)">
+            </div>
             <div class="button-group">
                 <button id="loadFileBtn" class="primary-btn">📁 Загрузить TXT/EPUB</button>
                 <button id="startReadingBtn" class="primary-btn">▶️ Начать чтение</button>
+                <button id="addToLibraryBtn" class="primary-btn">💾 Добавить в библиотеку</button>
+                <button id="libraryBtn" class="secondary-btn">📚 Моя библиотека</button>
             </div>
             <input type="file" id="fileInput" accept=".txt,.epub" style="display: none;">
+        </section>
+
+        <!-- Library Section -->
+        <section id="librarySection" style="display: none;">
+            <div class="library-header">
+                <h2>📚 Моя библиотека</h2>
+                <button id="backFromLibraryBtn" class="secondary-btn">← Назад</button>
+            </div>
+            <ul id="booksList" class="books-list"></ul>
         </section>
 
         <!-- Normal Reading Mode -->
@@ -45,6 +59,7 @@
             <div class="progress-info">
                 <span id="progressText">0%</span>
                 <span id="wordCount">0 / 0</span>
+                <span id="currentBookInfo"></span>
             </div>
             <div id="normalTextDisplay" class="normal-text"></div>
         </section>

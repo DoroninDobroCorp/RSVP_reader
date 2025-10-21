@@ -1,4 +1,4 @@
-// RSVP Reader Application
+// RSVP Reader Application with Multi-Book Support
 class RSVPReader {
     constructor() {
         // State
@@ -7,11 +7,15 @@ class RSVPReader {
         this.isPlaying = false;
         this.timer = null;
         this.mode = 'input'; // 'input', 'normal', 'rsvp'
-        this.doubleTapCooldown = false; // Prevent double-tap from firing twice
+        this.doubleTapCooldown = false;
         
         // Search state
         this.searchMatches = [];
         this.currentMatchIndex = -1;
+        
+        // Library state
+        this.library = [];
+        this.currentBookId = null;
         
         // Settings with defaults
         this.settings = {
@@ -26,7 +30,7 @@ class RSVPReader {
         // Initialize
         this.initElements();
         this.loadSettings();
-        this.loadText();
+        this.loadLibrary();
         this.attachEventListeners();
         this.registerServiceWorker();
     }
@@ -36,12 +40,20 @@ class RSVPReader {
         this.textInputSection = document.getElementById('textInputSection');
         this.normalReadingSection = document.getElementById('normalReadingSection');
         this.rsvpReadingSection = document.getElementById('rsvpReadingSection');
+        this.librarySection = document.getElementById('librarySection');
         
         // Input elements
         this.textInput = document.getElementById('textInput');
         this.fileInput = document.getElementById('fileInput');
         this.loadFileBtn = document.getElementById('loadFileBtn');
         this.startReadingBtn = document.getElementById('startReadingBtn');
+        this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
+        this.libraryBtn = document.getElementById('libraryBtn');
+        this.bookNameInput = document.getElementById('bookNameInput');
+        
+        // Library elements
+        this.booksList = document.getElementById('booksList');
+        this.backFromLibraryBtn = document.getElementById('backFromLibraryBtn');
         
         // Normal reading elements
         this.normalTextDisplay = document.getElementById('normalTextDisplay');
@@ -49,6 +61,7 @@ class RSVPReader {
         this.startRSVPBtn = document.getElementById('startRSVPBtn');
         this.progressText = document.getElementById('progressText');
         this.wordCount = document.getElementById('wordCount');
+        this.currentBookInfo = document.getElementById('currentBookInfo');
         
         // Search elements
         this.searchInput = document.getElementById('searchInput');
@@ -83,6 +96,11 @@ class RSVPReader {
         // File loading
         this.loadFileBtn.addEventListener('click', () => this.fileInput.click());
         this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+        
+        // Library management
+        this.addToLibraryBtn.addEventListener('click', () => this.addBookToLibrary());
+        this.libraryBtn.addEventListener('click', () => this.showLibrary());
+        this.backFromLibraryBtn.addEventListener('click', () => this.backToInput());
         
         // Navigation
         this.startReadingBtn.addEventListener('click', () => this.startNormalReading());
@@ -593,6 +611,7 @@ class RSVPReader {
         this.textInputSection.style.display = 'none';
         this.normalReadingSection.style.display = 'none';
         this.rsvpReadingSection.style.display = 'none';
+        this.librarySection.style.display = 'none';
         
         switch(section) {
             case 'input':
@@ -603,6 +622,9 @@ class RSVPReader {
                 break;
             case 'rsvp':
                 this.rsvpReadingSection.style.display = 'block';
+                break;
+            case 'library':
+                this.librarySection.style.display = 'block';
                 break;
         }
     }
@@ -675,6 +697,139 @@ class RSVPReader {
         }
     }
     
+    // Library Management
+    loadLibrary() {
+        const saved = localStorage.getItem('rsvp_library');
+        if (saved) {
+            try {
+                this.library = JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to load library:', e);
+                this.library = [];
+            }
+        }
+    }
+    
+    saveLibrary() {
+        localStorage.setItem('rsvp_library', JSON.stringify(this.library));
+    }
+    
+    addBookToLibrary() {
+        const text = this.textInput.value.trim();
+        if (!text) {
+            alert('Пожалуйста, загрузите текст перед добавлением в библиотеку');
+            return;
+        }
+        
+        let bookName = this.bookNameInput.value.trim();
+        if (!bookName) {
+            const defaultName = `Книга ${this.library.length + 1}`;
+            bookName = prompt('Введите название книги:', defaultName) || defaultName;
+        }
+        
+        const bookId = Date.now();
+        const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+        
+        const book = {
+            id: bookId,
+            name: bookName,
+            text: text,
+            wordCount: wordCount,
+            currentIndex: 0,
+            dateAdded: new Date().toLocaleString('ru-RU'),
+            lastRead: new Date().toLocaleString('ru-RU')
+        };
+        
+        this.library.push(book);
+        this.saveLibrary();
+        
+        this.bookNameInput.value = '';
+        alert(`✅ "${bookName}" добавлена в библиотеку`);
+    }
+    
+    showLibrary() {
+        this.renderLibrary();
+        this.showSection('library');
+    }
+    
+    renderLibrary() {
+        this.booksList.innerHTML = '';
+        
+        if (this.library.length === 0) {
+            this.booksList.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">Библиотека пуста. Добавьте книгу!</p>';
+            return;
+        }
+        
+        this.library.forEach((book, index) => {
+            const li = document.createElement('li');
+            li.className = 'library-item';
+            
+            const progress = Math.round((book.currentIndex / Math.max(book.wordCount, 1)) * 100);
+            
+            li.innerHTML = `
+                <div class="book-info">
+                    <div class="book-title">${book.name}</div>
+                    <div class="book-meta">
+                        <span>${book.wordCount} слов</span>
+                        <span>•</span>
+                        <span>Прогресс: ${progress}%</span>
+                    </div>
+                    <div class="book-progress-bar">
+                        <div class="book-progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="book-date">Последний раз: ${book.lastRead}</div>
+                </div>
+                <div class="book-actions">
+                    <button class="book-btn" title="Читать">📖</button>
+                    <button class="book-btn" title="Переименовать">✏️</button>
+                    <button class="book-btn" title="Удалить">🗑️</button>
+                </div>
+            `;
+            
+            const [readBtn, renameBtn, deleteBtn] = li.querySelectorAll('.book-btn');
+            readBtn.addEventListener('click', () => this.loadBook(book.id));
+            renameBtn.addEventListener('click', () => this.renameBook(book.id));
+            deleteBtn.addEventListener('click', () => this.deleteBook(book.id));
+            
+            this.booksList.appendChild(li);
+        });
+    }
+    
+    loadBook(bookId) {
+        const book = this.library.find(b => b.id === bookId);
+        if (!book) return;
+        
+        this.currentBookId = bookId;
+        this.textInput.value = book.text;
+        book.lastRead = new Date().toLocaleString('ru-RU');
+        this.saveLibrary();
+        
+        this.showSection('input');
+    }
+    
+    deleteBook(bookId) {
+        const book = this.library.find(b => b.id === bookId);
+        if (!book) return;
+        
+        if (confirm(`Удалить "${book.name}" из библиотеки?`)) {
+            this.library = this.library.filter(b => b.id !== bookId);
+            this.saveLibrary();
+            this.renderLibrary();
+        }
+    }
+    
+    renameBook(bookId) {
+        const book = this.library.find(b => b.id === bookId);
+        if (!book) return;
+        
+        const newName = prompt('Новое название:', book.name);
+        if (newName && newName.trim()) {
+            book.name = newName.trim();
+            this.saveLibrary();
+            this.renderLibrary();
+        }
+    }
+    
     // Local Storage Management
     saveSettings() {
         localStorage.setItem('rsvp_settings', JSON.stringify(this.settings));
@@ -703,6 +858,11 @@ class RSVPReader {
     }
     
     saveBookmark() {
+        const book = this.library.find(b => b.id === this.currentBookId);
+        if (book) {
+            book.currentIndex = this.currentIndex;
+            this.saveLibrary();
+        }
         localStorage.setItem('rsvp_bookmark', this.currentIndex.toString());
     }
     
