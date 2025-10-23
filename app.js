@@ -8,6 +8,7 @@ class RSVPReader {
         this.timer = null;
         this.mode = 'input'; // 'input', 'normal', 'rsvp'
         this.doubleTapCooldown = false;
+        this.cooldownTimer = null;
         
         // Search state
         this.searchMatches = [];
@@ -114,11 +115,27 @@ class RSVPReader {
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
         
         // Double click/tap to start/stop RSVP - works ANYWHERE on screen
-        // Add to both section (for empty space) and display (for text)
-        this.normalReadingSection.addEventListener('dblclick', () => this.startRSVPWithCooldown());
-        this.normalTextDisplay.addEventListener('dblclick', () => this.startRSVPWithCooldown());
-        this.rsvpReadingSection.addEventListener('dblclick', () => this.stopRSVPWithCooldown());
-        this.rsvpWordDisplay.addEventListener('dblclick', () => this.stopRSVPWithCooldown());
+        // Use event delegation to reduce number of listeners
+        this.normalReadingSection.addEventListener('dblclick', (e) => {
+            if (!this.isButtonOrControl(e.target)) {
+                this.startRSVPWithCooldown();
+            }
+        });
+        this.normalTextDisplay.addEventListener('dblclick', (e) => {
+            if (!this.isButtonOrControl(e.target)) {
+                this.startRSVPWithCooldown();
+            }
+        });
+        this.rsvpReadingSection.addEventListener('dblclick', (e) => {
+            if (!this.isButtonOrControl(e.target)) {
+                this.stopRSVPWithCooldown();
+            }
+        });
+        this.rsvpWordDisplay.addEventListener('dblclick', (e) => {
+            if (!this.isButtonOrControl(e.target)) {
+                this.stopRSVPWithCooldown();
+            }
+        });
         
         // Mobile double-tap support - works ANYWHERE on screen
         this.setupDoubleTap(this.normalReadingSection, () => this.startRSVPWithCooldown());
@@ -129,8 +146,24 @@ class RSVPReader {
         // Prevent control buttons from triggering section handlers
         const controlButtons = [this.playPauseBtn, this.prevWordBtn, this.nextWordBtn, this.stopRSVPBtn];
         controlButtons.forEach(btn => {
-            btn.addEventListener('dblclick', (e) => e.stopPropagation());
-            btn.addEventListener('touchend', (e) => e.stopPropagation());
+            // Prevent double-click on buttons
+            btn.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            });
+            // Prevent double-tap on buttons  
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            });
+            // Also prevent touchstart to be comprehensive
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            });
         });
         
         // Keyboard controls
@@ -165,12 +198,28 @@ class RSVPReader {
         });
     }
     
+    isButtonOrControl(element) {
+        // Check if element is a button or inside a button/control
+        const tagName = element.tagName.toLowerCase();
+        if (tagName === 'button') return true;
+        if (element.closest('button')) return true;
+        if (element.classList && element.classList.contains('book-btn')) return true;
+        return false;
+    }
+    
     setupDoubleTap(element, callback) {
         let lastTap = 0;
         let tapTimeout = null;
+        let tapCount = 0;
         
-        element.addEventListener('touchend', (e) => {
-            const currentTime = new Date().getTime();
+        const handleTouchEnd = (e) => {
+            // Don't trigger double-tap on buttons or their children
+            if (this.isButtonOrControl(e.target)) {
+                e.stopPropagation(); // Ensure we block propagation
+                return;
+            }
+            
+            const currentTime = Date.now();
             const tapLength = currentTime - lastTap;
             
             clearTimeout(tapTimeout);
@@ -178,13 +227,25 @@ class RSVPReader {
             if (tapLength < 300 && tapLength > 0) {
                 // Double tap detected
                 e.preventDefault();
-                callback();
+                e.stopPropagation(); // Prevent event bubbling
+                tapCount = 0;
                 lastTap = 0;
+                callback();
             } else {
                 // Single tap - wait to see if another tap comes
+                tapCount++;
                 lastTap = currentTime;
+                
+                // Reset tap count if no second tap within 300ms
+                tapTimeout = setTimeout(() => {
+                    tapCount = 0;
+                    lastTap = 0;
+                }, 300);
             }
-        });
+        };
+        
+        // Use capture phase to intercept events before they reach buttons
+        element.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
     }
     
     async handleFileUpload(event) {
@@ -368,16 +429,42 @@ class RSVPReader {
     
     startRSVPWithCooldown() {
         if (this.doubleTapCooldown) return;
+        
+        // Clear any existing cooldown
+        if (this.cooldownTimer) {
+            clearTimeout(this.cooldownTimer);
+        }
+        
         this.doubleTapCooldown = true;
-        setTimeout(() => { this.doubleTapCooldown = false; }, 200);
+        
+        // Start RSVP immediately, then set cooldown
         this.startRSVP();
+        
+        // Reduced cooldown time for better responsiveness
+        this.cooldownTimer = setTimeout(() => { 
+            this.doubleTapCooldown = false;
+            this.cooldownTimer = null;
+        }, 50);
     }
     
     stopRSVPWithCooldown() {
         if (this.doubleTapCooldown) return;
+        
+        // Clear any existing cooldown
+        if (this.cooldownTimer) {
+            clearTimeout(this.cooldownTimer);
+        }
+        
         this.doubleTapCooldown = true;
-        setTimeout(() => { this.doubleTapCooldown = false; }, 200);
+        
+        // Stop RSVP immediately, then set cooldown
         this.stopRSVP();
+        
+        // Reduced cooldown time for better responsiveness
+        this.cooldownTimer = setTimeout(() => { 
+            this.doubleTapCooldown = false;
+            this.cooldownTimer = null;
+        }, 50);
     }
     
     startRSVP() {
@@ -482,21 +569,41 @@ class RSVPReader {
             delay *= this.settings.semicolonPause;
         }
         
-        this.timer = setTimeout(() => {
+        // Use requestAnimationFrame for smoother performance when possible
+        const nextWord = () => {
+            // Check if this is the LAST word we're currently displaying
+            if (this.currentIndex >= this.words.length - 1) {
+                // This is the last word - pause after displaying it
+                this.timer = setTimeout(() => {
+                    this.pause();
+                    this.updateProgress();
+                    this.saveBookmark();
+                }, delay);
+                return;
+            }
+            
+            // Move to next word
             this.currentIndex++;
             
+            // Check if we've gone past the end
             if (this.currentIndex >= this.words.length) {
-                // Reached end
+                // Reached end - pause immediately
                 this.pause();
-                this.currentIndex = this.words.length - 1;
+                this.currentIndex = this.words.length - 1; // Stay on last word
+                this.displayCurrentWord(); // Show last word again
                 this.updateProgress();
                 this.saveBookmark();
                 return;
             }
             
             this.displayCurrentWord();
+            
+            // Schedule next word
             this.scheduleNextWord();
-        }, delay);
+        };
+        
+        // Only use setTimeout for actual delays, not immediate execution
+        this.timer = setTimeout(nextWord, Math.max(0, delay));
     }
     
     previousWord() {
