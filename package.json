@@ -8,9 +8,13 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["rsvp", "speed-reading", "epub", "pwa", "offline", "reader"],
+  "author": "Vovka (DoroninDobroCorp)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DoroninDobroCorp/RSVP_reader.git"
+  },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "netlify-cli": "^23.9.2"
