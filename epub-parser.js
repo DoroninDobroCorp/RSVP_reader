@@ -6,18 +6,23 @@ class EPUBParser {
         this.JSZip = null;
     }
 
-    // Load JSZip library dynamically
+    // Load local JSZip library. The app shell caches this file for offline EPUB parsing.
     async loadJSZip() {
         if (this.JSZip) return;
+        if (window.JSZip) {
+            this.JSZip = window.JSZip;
+            return;
+        }
         
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            script.src = new URL('vendor/jszip.min.js', document.baseURI).href;
+            script.async = true;
             script.onload = () => {
                 this.JSZip = window.JSZip;
                 resolve();
             };
-            script.onerror = reject;
+            script.onerror = () => reject(new Error('Не удалось загрузить локальный JSZip'));
             document.head.appendChild(script);
         });
     }

@@ -28,8 +28,9 @@
 | 🔍 | **Text Search** | Quickly jump to the passage you need |
 | ⏸ | **Smart Pauses** | Configurable pauses on commas, periods, and other punctuation |
 | 📱 | **PWA** | Installable on your phone just like a native app |
-| 🔌 | **Offline** | Works without internet after the first launch |
-| 💾 | **Privacy** | All data is stored **exclusively** in the browser locally |
+| 🔌 | **Offline-first** | Works without internet after the first launch |
+| 🔄 | **Single-user Sync** | Books, bookmarks, reading position, draft, and preferences sync to your server when online |
+| 💾 | **Local-first Storage** | Reading data is stored in the browser first, then synced opportunistically |
 
 ---
 
@@ -62,13 +63,13 @@
 git clone https://github.com/DoroninDobroCorp/RSVP_reader.git
 cd RSVP_reader
 
-# Any HTTP server will do:
-python3 -m http.server 8080
-# or
-npx http-server -p 8080
+npm install
+npm start
 ```
 
-Open `http://localhost:8080`
+Open `http://localhost:8081`.
+
+`npm start` runs `server.js`, which serves the PWA and exposes `POST /api/sync` for single-user sync.
 
 ---
 
@@ -94,8 +95,9 @@ Open `http://localhost:8080`
 - **Vanilla JavaScript** — no frameworks, ~40 KB
 - **Service Worker** — caching and offline support
 - **Web App Manifest** — PWA capabilities
-- **localStorage** — local data storage
-- **JSZip** (CDN) — EPUB extraction
+- **IndexedDB / localStorage** — local-first library, bookmarks, draft, and settings
+- **Node.js sync server** — single-user server merge endpoint
+- **JSZip** — local EPUB/DOCX extraction
 
 ---
 
@@ -107,6 +109,7 @@ RSVP_reader/
 ├── app.js                  # Application logic
 ├── style.css               # Styles (dark theme, responsive)
 ├── epub-parser.js          # EPUB file parser
+├── server.js               # Static server + single-user sync API
 ├── service-worker.js       # Service Worker
 ├── manifest.json           # PWA manifest
 ├── sample_text.txt         # Sample text
@@ -178,8 +181,9 @@ Pull requests are welcome! Open an [Issue](https://github.com/DoroninDobroCorp/R
 | 🔍 | **Поиск по тексту** | Быстрый переход к нужному фрагменту |
 | ⏸ | **Умные паузы** | Настраиваемые паузы на запятых, точках и других знаках |
 | 📱 | **PWA** | Устанавливается на телефон как нативное приложение |
-| 🔌 | **Офлайн** | Работает без интернета после первого запуска |
-| 💾 | **Приватность** | Все данные хранятся **только** локально в браузере |
+| 🔌 | **Offline-first** | Работает без интернета после первого запуска |
+| 🔄 | **Single-user sync** | Книги, закладки, позиция чтения, черновик и настройки синхронизируются с сервером при появлении сети |
+| 💾 | **Local-first хранение** | Данные сначала сохраняются в браузере, потом синхронизируются фоном |
 
 ---
 
@@ -212,13 +216,13 @@ Pull requests are welcome! Open an [Issue](https://github.com/DoroninDobroCorp/R
 git clone https://github.com/DoroninDobroCorp/RSVP_reader.git
 cd RSVP_reader
 
-# Любой HTTP-сервер:
-python3 -m http.server 8080
-# или
-npx http-server -p 8080
+npm install
+npm start
 ```
 
-Откройте `http://localhost:8080`
+Откройте `http://localhost:8081`.
+
+`npm start` запускает `server.js`: он отдает PWA и endpoint `POST /api/sync` для single-user синхронизации.
 
 ---
 

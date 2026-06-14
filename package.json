@@ -4,7 +4,9 @@
   "description": "Быстрая читалка по методу RSVP (Rapid Serial Visual Presentation) с поддержкой оффлайн-режима и мобильных устройств.",
   "main": "app.js",
   "scripts": {
+    "start": "node server.js",
     "test": "playwright test",
+    "test:local": "playwright test test-comprehensive-functionality.spec.js test-bottom-tap-zone.spec.js test-epub.spec.js test-format-imports.spec.js test-library-bookmarks.spec.js test-mobile-doubletap.spec.js test-last-word-stopping.spec.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug"
   },
@@ -18,5 +20,8 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "netlify-cli": "^23.9.2"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
   }
 }

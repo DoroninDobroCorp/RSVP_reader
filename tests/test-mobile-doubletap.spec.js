@@ -161,8 +161,6 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
         for (const button of controlButtons) {
             console.log(`   Testing double-tap on ${button.name} button`);
             
-            const wordBefore = await page.locator('#rsvpWordDisplay').textContent();
-            
             // Double-tap on button
             await page.locator(button.selector).dispatchEvent('touchend');
             await page.waitForTimeout(200);
@@ -170,10 +168,9 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
             await page.waitForTimeout(500);
             
             const rsvpStillVisible = await page.locator('#rsvpReadingSection').isVisible();
-            const wordAfter = await page.locator('#rsvpWordDisplay').textContent();
             
-            const preserved = rsvpStillVisible && wordBefore === wordAfter;
-            console.log(`   ${button.name}: ${preserved ? '✅ PROTECTED (no double-tap)' : '❌ BUG (double-tap triggered)'}`);
+            console.log(`   ${button.name}: ${rsvpStillVisible ? '✅ PROTECTED (RSVP stayed open)' : '❌ BUG (double-tap triggered)'}`);
+            expect(rsvpStillVisible).toBe(true);
         }
         
         // Test that section still works for stopping

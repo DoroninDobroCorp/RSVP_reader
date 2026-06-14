@@ -1,74 +1,113 @@
-const CACHE_NAME = 'rsvp-reader-v10';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/app.js',
-  '/epub-parser.js',
-  '/manifest.json'
+const CACHE_NAME = 'rsvp-reader-v20';
+const ASSET_VERSION = 'v=20';
+const APP_SHELL = [
+  './',
+  './index.html',
+  `./style.css?${ASSET_VERSION}`,
+  `./app.js?${ASSET_VERSION}`,
+  `./epub-parser.js?${ASSET_VERSION}`,
+  `./vendor/jszip.min.js?${ASSET_VERSION}`,
+  `./manifest.json?${ASSET_VERSION}`,
+  './sample_text.txt'
 ];
 
-// Install event - cache resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys()
+      .then((cacheNames) => Promise.all(
+        cacheNames
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
+  if (event.request.method !== 'GET') return;
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
 
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+  if (requestUrl.pathname.endsWith('/api/sync')) return;
 
-          // Clone the response
-          const responseToCache = response.clone();
+  if (event.request.mode === 'navigate') {
+    event.respondWith(handleNavigation(event.request));
+    return;
+  }
 
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+  if (isVersionedAppAsset(requestUrl)) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
 
-          return response;
-        }).catch(() => {
-          // Network failed, return offline page or cached version
-          return caches.match('/index.html');
-        });
-      })
-  );
+  event.respondWith(staleWhileRevalidate(event.request));
 });
+
+function isVersionedAppAsset(requestUrl) {
+  if (requestUrl.searchParams.has('v')) return true;
+
+  return [
+    '/app.js',
+    '/style.css',
+    '/epub-parser.js',
+    '/vendor/jszip.min.js',
+    '/manifest.json'
+  ].some((path) => requestUrl.pathname.endsWith(path));
+}
+
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    const cache = await caches.open(CACHE_NAME);
+    cache.put('./index.html', response.clone());
+    return response;
+  } catch (error) {
+    return caches.match(request)
+      .then((cached) => cached || caches.match('./index.html'));
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkFetch = fetch(request)
+    .then((response) => {
+      if (response && response.status === 200 && response.type === 'basic') {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || networkFetch;
+}
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200 && response.type === 'basic') {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return cache.match(request);
+  }
+}

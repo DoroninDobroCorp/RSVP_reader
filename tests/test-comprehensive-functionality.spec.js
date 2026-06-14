@@ -162,8 +162,6 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
         await page.click('#startRSVPBtn');
         await page.waitForTimeout(500);
         
-        const wordBefore = await page.locator('#rsvpWordDisplay').textContent();
-        
         // Double-click on control buttons - should NOT stop RSVP
         const buttons = ['#playPauseBtn', '#prevWordBtn', '#nextWordBtn'];
         
@@ -172,10 +170,9 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
             await page.waitForTimeout(300);
             
             const rsvpStillVisible = await page.locator('#rsvpReadingSection').isVisible();
-            const wordAfter = await page.locator('#rsvpWordDisplay').textContent();
             
-            const preserved = rsvpStillVisible && wordBefore === wordAfter;
-            console.log(`   ${buttonSelector}: ${preserved ? '✅ PROTECTED' : '❌ BUG'}`);
+            console.log(`   ${buttonSelector}: ${rsvpStillVisible ? '✅ PROTECTED' : '❌ BUG'}`);
+            expect(rsvpStillVisible).toBe(true);
         }
         
         // Double-tap on control buttons - should NOT stop RSVP
@@ -188,14 +185,15 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
             const rsvpStillVisible = await page.locator('#rsvpReadingSection').isVisible();
             const preserved = rsvpStillVisible;
             console.log(`   ${buttonSelector} touch: ${preserved ? '✅ PROTECTED' : '❌ BUG'}`);
+            expect(rsvpStillVisible).toBe(true);
         }
         
-        // Test that section still works for stopping
-        await page.dblclick('#rsvpReadingSection');
+        // Test that non-control RSVP content still works for stopping
+        await page.dblclick('#rsvpWordDisplay');
         await page.waitForTimeout(500);
         
         const normalVisible = await page.locator('#normalReadingSection').isVisible();
-        console.log(`   Section stop still works: ${normalVisible ? '✅' : '❌'}`);
+        console.log(`   Word-area stop still works: ${normalVisible ? '✅' : '❌'}`);
         
         expect(normalVisible).toBe(true);
     });
@@ -223,7 +221,7 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
         console.log(`   Play/pause button: ${playPauseBtn}`);
         console.log(`   Progress: ${progress}`);
         
-        expect(playPauseBtn).toContain('⏸️'); // Should show pause icon (meaning it's paused)
+        expect(playPauseBtn).toContain('▶️'); // Paused state shows the play icon
         expect(progress).toContain('100%'); // Should be at 100%
     });
 
@@ -286,17 +284,57 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
         
         expect(rsvpVisible).toBe(true);
         
-        // Spacebar to stop RSVP
+        // Spacebar pauses RSVP
         await page.keyboard.press('Space');
         await page.waitForTimeout(500);
         
-        const normalVisible = await page.locator('#normalReadingSection').isVisible();
+        let normalVisible = await page.locator('#normalReadingSection').isVisible();
         rsvpVisible = await page.locator('#rsvpReadingSection').isVisible();
+        let playPauseText = await page.locator('#playPauseBtn').textContent();
         
-        console.log(`   Spacebar stop: ${normalVisible && !rsvpVisible ? '✅' : '❌'}`);
+        console.log(`   Spacebar pause: ${rsvpVisible && playPauseText.includes('▶️') ? '✅' : '❌'}`);
         
+        expect(normalVisible).toBe(false);
+        expect(rsvpVisible).toBe(true);
+        expect(playPauseText).toContain('▶️');
+
+        // Spacebar resumes RSVP
+        await page.keyboard.press('Space');
+        await page.waitForTimeout(300);
+        playPauseText = await page.locator('#playPauseBtn').textContent();
+        expect(playPauseText).toContain('⏸️');
+
+        // Escape returns to normal mode
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(300);
+        normalVisible = await page.locator('#normalReadingSection').isVisible();
+        rsvpVisible = await page.locator('#rsvpReadingSection').isVisible();
         expect(normalVisible).toBe(true);
         expect(rsvpVisible).toBe(false);
+    });
+
+    test('Bottom tap zone pauses and resumes RSVP', async ({ page }) => {
+        console.log('\n👇 Testing bottom tap zone...');
+
+        const testText = 'Bottom zone test. Pause and resume from a stable lower area.';
+        await page.locator('#textInput').fill(testText);
+        await page.click('#startReadingBtn');
+        await page.waitForTimeout(500);
+        await page.click('#startRSVPBtn');
+        await page.waitForSelector('#rsvpReadingSection', { state: 'visible' });
+
+        await expect(page.locator('#rsvpBottomTapZone')).toBeVisible();
+        await expect(page.locator('#playPauseBtn')).toContainText('⏸️');
+
+        await page.click('#rsvpBottomTapZone');
+        await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+        await expect(page.locator('#playPauseBtn')).toContainText('▶️');
+        await expect(page.locator('#rsvpBottomTapLabel')).toContainText('Продолжить');
+
+        await page.click('#rsvpBottomTapZone');
+        await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+        await expect(page.locator('#playPauseBtn')).toContainText('⏸️');
+        await expect(page.locator('#rsvpBottomTapLabel')).toContainText('Пауза');
     });
 
     test('Settings modal and configuration', async ({ page }) => {

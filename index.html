@@ -6,55 +6,73 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="description" content="RSVP Speed Reader - быстрое чтение по одному слову">
     <title>RSVP Reader</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json?v=20">
+    <link rel="stylesheet" href="style.css?v=20">
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAISSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <h1>📖 RSVP Reader</h1>
-        <button id="settingsBtn" class="icon-btn" title="Настройки">⚙️</button>
+        <div class="header-actions">
+            <span id="offlineBadge" class="status-pill">Проверка кеша...</span>
+            <button id="settingsBtn" class="icon-btn" title="Настройки">⚙️</button>
+        </div>
     </header>
 
-    <!-- Main Container -->
     <main id="mainContainer">
-        <!-- Text Input Section -->
+        <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
         <section id="textInputSection">
-            <h2>Загрузите текст для чтения</h2>
+            <div class="section-heading">
+                <div>
+                    <h2>Текст или книга</h2>
+                    <p id="storageStatus">Данные хранятся локально в браузере.</p>
+                </div>
+            </div>
             <textarea id="textInput" placeholder="Вставьте текст сюда или загрузите файл..."></textarea>
             <div class="input-group">
                 <input type="text" id="bookNameInput" placeholder="Название для библиотеки (опционально)">
             </div>
             <div class="button-group">
-                <button id="loadFileBtn" class="primary-btn">📁 Загрузить TXT/EPUB</button>
+                <button id="loadFileBtn" class="primary-btn">📁 Загрузить книгу/текст</button>
                 <button id="startReadingBtn" class="primary-btn">▶️ Начать чтение</button>
-                <button id="addToLibraryBtn" class="primary-btn">💾 Добавить в библиотеку</button>
+                <button id="addToLibraryBtn" class="secondary-btn">💾 Сохранить книгу</button>
                 <button id="libraryBtn" class="secondary-btn">📚 Моя библиотека</button>
             </div>
-            <input type="file" id="fileInput" accept=".txt,.epub" style="display: none;">
+            <input type="file" id="fileInput" accept=".txt,.epub,.fb2,.xml,.docx,.html,.htm,.md,.markdown,.rtf,text/plain,text/html,application/epub+zip,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/rtf" style="display: none;">
         </section>
 
-        <!-- Library Section -->
         <section id="librarySection" style="display: none;">
             <div class="library-header">
-                <h2>📚 Моя библиотека</h2>
-                <button id="backFromLibraryBtn" class="secondary-btn">← Назад</button>
+                <div>
+                    <h2>📚 Моя библиотека</h2>
+                    <p id="librarySummary">0 книг</p>
+                </div>
+                <div class="library-tools">
+                    <input type="search" id="librarySearchInput" placeholder="Поиск по библиотеке">
+                    <button id="exportLibraryBtn" class="secondary-btn compact-btn">Экспорт</button>
+                    <button id="importLibraryBtn" class="secondary-btn compact-btn">Импорт</button>
+                    <button id="backFromLibraryBtn" class="secondary-btn compact-btn">← Назад</button>
+                </div>
             </div>
-            <ul id="booksList" class="books-list"></ul>
+            <ul id="booksList" class="books-list" aria-live="polite"></ul>
+            <input type="file" id="libraryImportInput" accept=".json,application/json" style="display: none;">
         </section>
 
-        <!-- Normal Reading Mode -->
         <section id="normalReadingSection" style="display: none;">
             <div class="reading-header">
-                <button id="backToInputBtn" class="secondary-btn">← Назад</button>
+                <button id="backToInputBtn" class="secondary-btn compact-btn">← Назад</button>
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="🔍 Поиск по тексту...">
+                    <input type="text" id="searchInput" placeholder="Поиск по тексту">
                     <button id="searchPrevBtn" class="search-nav-btn" title="Предыдущее">↑</button>
                     <button id="searchNextBtn" class="search-nav-btn" title="Следующее">↓</button>
                     <span id="searchResults" class="search-results"></span>
                 </div>
-                <button id="startRSVPBtn" class="primary-btn">🚀 Быстрое чтение (RSVP)</button>
+                <div class="reading-actions">
+                    <button id="addBookmarkBtn" class="secondary-btn compact-btn">☆ Закладка</button>
+                    <button id="bookmarksBtn" class="secondary-btn compact-btn">★ Список</button>
+                    <button id="startRSVPBtn" class="primary-btn compact-btn">▶ RSVP</button>
+                </div>
             </div>
             <div class="progress-info">
                 <span id="progressText">0%</span>
@@ -64,7 +82,6 @@
             <div id="normalTextDisplay" class="normal-text"></div>
         </section>
 
-        <!-- RSVP Reading Mode -->
         <section id="rsvpReadingSection" style="display: none;">
             <div class="rsvp-container">
                 <div id="rsvpWordDisplay" class="rsvp-word"></div>
@@ -72,6 +89,7 @@
                     <button id="playPauseBtn" class="control-btn">⏸️</button>
                     <button id="prevWordBtn" class="control-btn">⏮️</button>
                     <button id="nextWordBtn" class="control-btn">⏭️</button>
+                    <button id="rsvpBookmarkBtn" class="control-btn" title="Добавить закладку">☆</button>
                     <button id="stopRSVPBtn" class="control-btn">⏹️</button>
                 </div>
                 <div class="rsvp-progress">
@@ -83,11 +101,14 @@
                         <span id="rsvpWordCount">0 / 0</span>
                     </div>
                 </div>
+                <button id="rsvpBottomTapZone" class="rsvp-bottom-tap" type="button" aria-label="Пауза">
+                    <span id="rsvpBottomTapIcon">⏸️</span>
+                    <span id="rsvpBottomTapLabel">Пауза</span>
+                </button>
             </div>
         </section>
     </main>
 
-    <!-- Settings Modal -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -133,7 +154,23 @@
         </div>
     </div>
 
-    <script src="epub-parser.js"></script>
-    <script src="app.js"></script>
+    <div id="bookmarksModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>★ Закладки</h2>
+                <button id="closeBookmarksBtn" class="close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="bookmark-toolbar">
+                    <button id="saveBookmarkBtn" class="primary-btn">☆ Добавить текущую</button>
+                </div>
+                <ul id="bookmarksList" class="bookmark-list" aria-live="polite"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jszip.min.js?v=20"></script>
+    <script src="epub-parser.js?v=20"></script>
+    <script src="app.js?v=20"></script>
 </body>
 </html>

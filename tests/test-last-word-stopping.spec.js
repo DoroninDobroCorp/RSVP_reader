@@ -35,11 +35,12 @@ test.describe('Last Word Stopping Tests', () => {
                 
                 console.log(`   At last word - Status: ${stillPlaying} | "${finalWord}"`);
                 
-                if (stillPlaying === '⏸️' || stillPlaying.includes('⏸')) {
+                if (stillPlaying === '▶️' || stillPlaying.includes('▶')) {
                     console.log('✅ CORRECT: Paused at last word');
-                } else if (stillPlaying === '▶️') {
+                } else if (stillPlaying === '⏸️') {
                     console.log('❌ BUG: Still playing at/after last word');
                 }
+                expect(stillPlaying).toContain('▶️');
                 break;
             }
         }
@@ -78,11 +79,12 @@ test.describe('Last Word Stopping Tests', () => {
                 const stillPlaying = await page.locator('#playPauseBtn').textContent();
                 const finalProgress = await page.locator('#rsvpProgressText').textContent();
                 
-                if (stillPlaying === '⏸️' || stillPlaying.includes('⏸')) {
+                if (stillPlaying === '▶️' || stillPlaying.includes('▶')) {
                     console.log('✅ CORRECT: Paused at last word');
-                } else if (stillPlaying === '▶️') {
+                } else if (stillPlaying === '⏸️') {
                     console.log('❌ BUG: Still playing at last word');
                 }
+                expect(stillPlaying).toContain('▶️');
                 
                 console.log(`   Final status: ${stillPlaying} | ${finalProgress}`);
                 break;
@@ -117,11 +119,12 @@ test.describe('Last Word Stopping Tests', () => {
         
         console.log(`   Single word result: "${currentWord}" | ${isPlaying} | ${progress}`);
         
-        if (isPlaying === '⏸️' || isPlaying.includes('⏸')) {
+        if (isPlaying === '▶️' || isPlaying.includes('▶')) {
             console.log('✅ CORRECT: Single word paused correctly');
         } else {
             console.log('❌ BUG: Single word handling issue');
         }
+        expect(isPlaying).toContain('▶️');
     });
     
     test('Should preserve progress after pausing at end', async ({ page }) => {
@@ -157,10 +160,12 @@ test.describe('Last Word Stopping Tests', () => {
         
         console.log(`   Restart state: ${restartProgress} | "${restartWord}"`);
         
-        if (finalWord === restartWord && finalProgress === restartProgress) {
+        if (finalWord === restartWord && finalWordCount === restartProgress) {
             console.log('✅ CORRECT: Progress preserved after end');
         } else {
             console.log('❌ BUG: Progress not preserved correctly');
         }
+        expect(restartWord).toBe(finalWord);
+        expect(restartProgress).toBe(finalWordCount);
     });
 });

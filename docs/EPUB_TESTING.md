@@ -44,7 +44,7 @@
 - [ ] Отображение индикатора загрузки
 - [ ] Извлечение текста из EPUB
 - [ ] Подсчёт количества слов
-- [ ] Сохранение текста в localStorage
+- [ ] Сохранение текста локально (IndexedDB для книг, localStorage для совместимого черновика)
 - [ ] Начало чтения извлечённого текста
 
 ### ✅ RSVP с EPUB текстом:
@@ -79,8 +79,8 @@
 **Решение:** Можно вручную отредактировать текст после загрузки
 
 ### Проблема: JSZip не загружается
-**Причина:** Нет интернета при первой загрузке EPUB
-**Решение:** JSZip загружается с CDN при первом использовании EPUB, нужен интернет
+**Причина:** Не отдался локальный файл `vendor/jszip.min.js` или он не попал в кеш service worker
+**Решение:** Проверьте, что файл существует, доступен по HTTP и указан в `service-worker.js`
 
 ---
 
@@ -148,8 +148,11 @@
 // Проверить, что EPUBParser доступен
 console.log(window.EPUBParser);
 
-// Проверить localStorage
+// Проверить совместимый черновик в localStorage
 console.log(localStorage.getItem('rsvp_text'));
+
+// Проверить книги в IndexedDB через приложение
+window.rsvpReader.getAllBooks().then(console.log);
 
 // Проверить Service Worker
 navigator.serviceWorker.getRegistrations().then(console.log);
