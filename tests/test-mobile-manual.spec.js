@@ -375,12 +375,12 @@ test.describe('Manual Mobile Device Testing', () => {
         let rsvpVisible = await page.locator('#rsvpReadingSection').isVisible();
         console.log(`   ✅ RSVP started: ${rsvpVisible}`);
         
-        console.log('\nStep 4: Test navigation buttons');
+        console.log('\nStep 4: Test speed buttons');
         await page.click('#nextWordBtn');
         await page.waitForTimeout(200);
         await page.click('#prevWordBtn');
         await page.waitForTimeout(200);
-        console.log('   ✅ Navigation buttons work');
+        console.log('   ✅ Speed buttons work');
         
         console.log('\nStep 5: Pause and resume');
         await page.click('#playPauseBtn');

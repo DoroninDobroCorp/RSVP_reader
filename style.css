@@ -371,6 +371,46 @@ header h1 {
     text-rendering: geometricPrecision;
 }
 
+.rsvp-pause-context {
+    width: min(860px, calc(100% - 16px));
+    min-height: 92px;
+    margin: -6px auto 0;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0 0.42em;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: clamp(1.02rem, 2.15vw, 1.18rem);
+    line-height: 1.6;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+}
+
+.rsvp-pause-context.is-visible {
+    opacity: 1;
+    visibility: visible;
+    background: #151c24;
+    border-color: var(--border);
+}
+
+.pause-context-current {
+    color: var(--text);
+    background: rgba(47, 128, 237, 0.28);
+    border-radius: 4px;
+    padding: 0 0.22em;
+    font-weight: 800;
+}
+
+.pause-context-edge {
+    color: var(--border-strong);
+}
+
 .rsvp-letter {
     display: inline-block;
     flex: 0 0 auto;
@@ -400,10 +440,26 @@ header h1 {
     font-size: 1.35rem;
 }
 
+.control-btn.speed-btn {
+    font-size: 1rem;
+    letter-spacing: 0;
+}
+
 .control-btn:hover {
     background: var(--primary);
     border-color: var(--primary);
     transform: translateY(-1px);
+}
+
+.control-btn:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.control-btn:disabled:hover {
+    background: #202832;
+    border-color: var(--border);
 }
 
 .rsvp-progress {
@@ -438,6 +494,11 @@ header h1 {
     gap: 12px;
     color: var(--muted);
     font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.progress-stats span {
+    min-width: 0;
 }
 
 .rsvp-bottom-tap {
@@ -763,6 +824,12 @@ header h1 {
     .rsvp-word {
         min-height: 120px;
         letter-spacing: 0.02em;
+    }
+
+    .rsvp-pause-context {
+        min-height: 86px;
+        width: calc(100% - 12px);
+        font-size: 0.98rem;
     }
 
     .rsvp-container {

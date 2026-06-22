@@ -122,17 +122,18 @@ test.describe('EPUB Parser Tests', () => {
     await page.waitForTimeout(300);
     console.log('✅ Пауза работает');
     
-    // След/пред слово
+    // Кнопки скорости
+    const initialSpeed = await page.locator('#rsvpSpeedText').textContent();
+    const initialWpm = parseInt(initialSpeed, 10);
     await page.click('#nextWordBtn');
     await page.waitForTimeout(300);
-    const nextWord = await page.locator('#rsvpWordDisplay').textContent();
-    expect(nextWord).not.toBe(rsvpWord);
-    console.log(`✅ Следующее слово: "${nextWord}"`);
+    await expect(page.locator('#rsvpSpeedText')).toContainText(`${initialWpm + 20} слов/мин`);
+    console.log(`✅ Скорость увеличилась: ${initialSpeed} → ${initialWpm + 20} слов/мин`);
     
     await page.click('#prevWordBtn');
     await page.waitForTimeout(300);
-    const prevWord = await page.locator('#rsvpWordDisplay').textContent();
-    console.log(`✅ Предыдущее слово: "${prevWord}"`);
+    await expect(page.locator('#rsvpSpeedText')).toContainText(`${initialWpm} слов/мин`);
+    console.log(`✅ Скорость уменьшилась до ${initialWpm} слов/мин`);
     
     // Проверяем прогресс
     const rsvpProgress = await page.locator('#rsvpProgressText').textContent();

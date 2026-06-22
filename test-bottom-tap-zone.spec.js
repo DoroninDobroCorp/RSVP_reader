@@ -25,10 +25,13 @@ test.describe('Bottom tap zone', () => {
     await page.touchscreen.tap(x, y);
     await expect(page.locator('#playPauseBtn')).toContainText('▶️');
     await expect(page.locator('#rsvpBottomTapLabel')).toContainText('Продолжить');
+    await expect(page.locator('#rsvpPauseContext')).toBeVisible();
+    await expect(page.locator('#rsvpPauseContext .pause-context-current')).toBeVisible();
 
     await page.waitForTimeout(350);
     await page.touchscreen.tap(x, y);
     await expect(page.locator('#playPauseBtn')).toContainText('⏸️');
     await expect(page.locator('#rsvpBottomTapLabel')).toContainText('Пауза');
+    await expect(page.locator('#rsvpPauseContext')).toBeHidden();
   });
 });

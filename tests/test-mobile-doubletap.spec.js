@@ -154,8 +154,8 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
         
         const controlButtons = [
             { selector: '#playPauseBtn', name: 'play/pause' },
-            { selector: '#prevWordBtn', name: 'previous' },
-            { selector: '#nextWordBtn', name: 'next' }
+            { selector: '#prevWordBtn', name: 'speed down' },
+            { selector: '#nextWordBtn', name: 'speed up' }
         ];
         
         for (const button of controlButtons) {

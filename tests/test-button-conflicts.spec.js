@@ -14,8 +14,8 @@ test('Test control buttons dont conflict with double-click', async ({ page }) =>
   await page.waitForTimeout(500);
   console.log('✅ RSVP запущен');
   
-  // Тест 1: Двойной клик на Next не должен останавливать RSVP
-  console.log('\n🖱️ Двойной клик на кнопке Next...');
+  // Тест 1: Двойной клик на +20 не должен останавливать RSVP
+  console.log('\n🖱️ Двойной клик на кнопке +20...');
   const wordBefore = await page.locator('#rsvpWordDisplay').textContent();
   await page.dblclick('#nextWordBtn');
   await page.waitForTimeout(300);

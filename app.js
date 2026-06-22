@@ -46,16 +46,18 @@ class RSVPReader {
         this.libraryFilter = '';
 
         this.settings = {
-            wpm: 300,
+            settingsVersion: 2,
+            wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
-            fontSize: 60
+            fontSize: 35
         };
 
         this.initElements();
         this.loadSettings();
+        this.updateSpeedControls();
         this.attachEventListeners();
         this.updateOnlineStatus();
         this.registerServiceWorker();
@@ -102,6 +104,7 @@ class RSVPReader {
         this.searchResults = document.getElementById('searchResults');
 
         this.rsvpWordDisplay = document.getElementById('rsvpWordDisplay');
+        this.rsvpPauseContext = document.getElementById('rsvpPauseContext');
         this.playPauseBtn = document.getElementById('playPauseBtn');
         this.prevWordBtn = document.getElementById('prevWordBtn');
         this.nextWordBtn = document.getElementById('nextWordBtn');
@@ -110,6 +113,7 @@ class RSVPReader {
         this.rsvpProgressBar = document.getElementById('rsvpProgressFill');
         this.rsvpProgressText = document.getElementById('rsvpProgressText');
         this.rsvpWordCount = document.getElementById('rsvpWordCount');
+        this.rsvpSpeedText = document.getElementById('rsvpSpeedText');
         this.rsvpBottomTapZone = document.getElementById('rsvpBottomTapZone');
         this.rsvpBottomTapIcon = document.getElementById('rsvpBottomTapIcon');
         this.rsvpBottomTapLabel = document.getElementById('rsvpBottomTapLabel');
@@ -165,8 +169,8 @@ class RSVPReader {
         } else {
             this.rsvpBottomTapZone.addEventListener('touchend', (event) => this.handleBottomTap(event), { passive: false });
         }
-        this.prevWordBtn.addEventListener('click', () => this.previousWord());
-        this.nextWordBtn.addEventListener('click', () => this.nextWord());
+        this.prevWordBtn.addEventListener('click', () => this.adjustSpeed(-20));
+        this.nextWordBtn.addEventListener('click', () => this.adjustSpeed(20));
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
 
         this.normalReadingSection.addEventListener('dblclick', (event) => {
@@ -1138,13 +1142,12 @@ class RSVPReader {
             this.currentIndex = this.clampIndex(this.currentIndex, this.words.length);
         }
 
-        this.mode = 'rsvp';
-        this.showSection('rsvp');
-        this.isPlaying = true;
-        this.updatePlaybackControls();
-        this.requestWakeLock();
+        this.mode = "rsvp";
+        this.showSection("rsvp");
+        this.isPlaying = false;
         this.displayCurrentWord();
-        this.scheduleNextWord();
+        this.updatePlaybackControls();
+        this.schedulePositionSave();
     }
 
     stopRSVP() {
@@ -1192,7 +1195,6 @@ class RSVPReader {
 
     pause() {
         this.isPlaying = false;
-        this.updatePlaybackControls();
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;
@@ -1204,6 +1206,8 @@ class RSVPReader {
         if (this.mode === 'rsvp' && this.words.length > 0 && !this.rsvpWordDisplay.firstChild) {
             this.displayCurrentWord();
         }
+        this.updatePlaybackControls();
+        this.runAsync(() => this.persistReadingPosition());
         this.releaseWakeLock();
     }
 
@@ -1218,6 +1222,91 @@ class RSVPReader {
             this.rsvpBottomTapIcon.textContent = icon;
             this.rsvpBottomTapLabel.textContent = label;
             this.rsvpBottomTapZone.classList.toggle('paused', !this.isPlaying);
+        }
+
+        this.updatePauseContext();
+        this.updateSpeedControls();
+    }
+
+    updatePauseContext() {
+        if (!this.rsvpPauseContext) return;
+
+        const shouldShow = this.mode === 'rsvp' && !this.isPlaying && this.words.length > 0;
+        this.rsvpPauseContext.classList.toggle('is-visible', shouldShow);
+        this.rsvpPauseContext.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+        this.rsvpPauseContext.replaceChildren();
+
+        if (!shouldShow) return;
+
+        const wordsBefore = 18;
+        const wordsAfter = 8;
+        const start = Math.max(0, this.currentIndex - wordsBefore);
+        const end = Math.min(this.words.length, this.currentIndex + wordsAfter + 1);
+
+        if (start > 0) {
+            this.rsvpPauseContext.appendChild(this.createPauseContextToken('...', 'pause-context-edge'));
+        }
+
+        for (let index = start; index < end; index++) {
+            const className = index === this.currentIndex ? 'pause-context-current' : '';
+            this.rsvpPauseContext.appendChild(this.createPauseContextToken(this.words[index], className));
+        }
+
+        if (end < this.words.length) {
+            this.rsvpPauseContext.appendChild(this.createPauseContextToken('...', 'pause-context-edge'));
+        }
+
+        this.rsvpPauseContext.setAttribute('aria-label', this.words.slice(start, end).join(' '));
+    }
+
+    createPauseContextToken(text, className = '') {
+        const token = document.createElement('span');
+        token.textContent = text;
+        if (className) token.className = className;
+        return token;
+    }
+
+    adjustSpeed(delta) {
+        const nextWpm = this.numberInRange(this.settings.wpm + delta, 100, 1000, 250);
+        if (nextWpm === this.settings.wpm) {
+            this.updateSpeedControls();
+            return;
+        }
+
+        this.settings.wpm = nextWpm;
+        if (this.wpmInput) {
+            this.wpmInput.value = this.settings.wpm;
+        }
+
+        this.saveSettings();
+        this.updateSpeedControls();
+
+        if (this.mode === 'rsvp') {
+            if (!this.rsvpWordDisplay.firstChild) {
+                this.displayCurrentWord();
+            }
+            if (this.isPlaying) this.scheduleNextWord();
+            this.updateProgress();
+        } else if (this.mode === 'normal') {
+            this.updateProgress();
+        }
+    }
+
+    updateSpeedControls() {
+        const wpmText = `${Math.round(this.settings.wpm)} слов/мин`;
+
+        if (this.rsvpSpeedText) {
+            this.rsvpSpeedText.textContent = wpmText;
+        }
+
+        if (this.prevWordBtn) {
+            this.prevWordBtn.disabled = this.settings.wpm <= 100;
+            this.prevWordBtn.title = `Уменьшить скорость на 20 (${wpmText})`;
+        }
+
+        if (this.nextWordBtn) {
+            this.nextWordBtn.disabled = this.settings.wpm >= 1000;
+            this.nextWordBtn.title = `Увеличить скорость на 20 (${wpmText})`;
         }
     }
 
@@ -1247,6 +1336,7 @@ class RSVPReader {
         this.rsvpWordDisplay.style.fontSize = `${this.settings.fontSize}px`;
         this.rsvpWordDisplay.classList.remove('is-clearing');
         this.rsvpWordDisplay.replaceChildren(wordFrame);
+        this.updatePauseContext();
         this.updateProgress();
     }
 
@@ -1415,11 +1505,11 @@ class RSVPReader {
         switch (event.code) {
             case 'ArrowLeft':
                 event.preventDefault();
-                this.previousWord();
+                this.adjustSpeed(-20);
                 break;
             case 'ArrowRight':
                 event.preventDefault();
-                this.nextWord();
+                this.adjustSpeed(20);
                 break;
             case 'KeyP':
                 event.preventDefault();
@@ -1473,14 +1563,15 @@ class RSVPReader {
     }
 
     updateSettings() {
-        this.settings.wpm = this.numberInRange(this.wpmInput.value, 100, 1000, 300);
+        this.settings.wpm = this.numberInRange(this.wpmInput.value, 100, 1000, 250);
         this.settings.commaPause = this.numberInRange(this.commaPauseInput.value, 1, 5, 1.05);
         this.settings.periodPause = this.numberInRange(this.periodPauseInput.value, 1, 5, 1.75);
         this.settings.semicolonPause = this.numberInRange(this.semicolonPauseInput.value, 1, 5, 1.4);
         this.settings.focusLetterColor = this.focusLetterColorInput.value;
-        this.settings.fontSize = this.numberInRange(this.fontSizeInput.value, 30, 120, 60);
+        this.settings.fontSize = this.numberInRange(this.fontSizeInput.value, 30, 120, 35);
 
         this.saveSettings();
+        this.updateSpeedControls();
 
         if (this.mode === 'rsvp') {
             this.displayCurrentWord();
@@ -1493,15 +1584,17 @@ class RSVPReader {
 
     resetSettings() {
         this.settings = {
-            wpm: 300,
+            settingsVersion: 2,
+            wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
-            fontSize: 60
+            fontSize: 35
         };
         this.loadSettingsToForm();
         this.saveSettings();
+        this.updateSpeedControls();
 
         if (this.mode === 'rsvp') {
             this.displayCurrentWord();
@@ -1538,7 +1631,15 @@ class RSVPReader {
         const saved = localStorage.getItem('rsvp_settings');
         if (saved) {
             try {
-                this.settings = { ...this.settings, ...JSON.parse(saved) };
+                const parsed = JSON.parse(saved);
+                const migrated = this.migrateSettingsDefaults(parsed);
+                this.settings = { ...this.settings, ...migrated.settings };
+                if (migrated.changed) {
+                    this.settingsUpdatedAt = new Date().toISOString();
+                    localStorage.setItem('rsvp_settings', JSON.stringify(this.settings));
+                    localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
+                    localStorage.setItem('rsvp_sync_pending', '1');
+                }
             } catch (error) {
                 console.error('Failed to load settings:', error);
             }
@@ -1548,6 +1649,26 @@ class RSVPReader {
         if (savedUpdatedAt) {
             this.settingsUpdatedAt = savedUpdatedAt;
         }
+    }
+
+    migrateSettingsDefaults(settings) {
+        const migrated = { ...(settings || {}) };
+        let changed = false;
+
+        if (migrated.settingsVersion !== 2) {
+            if (migrated.wpm === undefined || migrated.wpm === 300) {
+                migrated.wpm = 250;
+                changed = true;
+            }
+            if (migrated.fontSize === undefined || migrated.fontSize === 60) {
+                migrated.fontSize = 35;
+                changed = true;
+            }
+            migrated.settingsVersion = 2;
+            changed = true;
+        }
+
+        return { settings: migrated, changed };
     }
 
     markSyncPending() {
@@ -1960,6 +2081,7 @@ class RSVPReader {
 
     async persistReadingPosition() {
         localStorage.setItem('rsvp_bookmark', String(this.currentIndex));
+        const now = new Date().toISOString();
 
         if (this.currentBookId) {
             const book = await this.getBook(this.currentBookId);
@@ -1967,7 +2089,8 @@ class RSVPReader {
                 const updated = {
                     ...book,
                     currentIndex: this.clampIndex(this.currentIndex, book.wordCount),
-                    lastRead: new Date().toISOString()
+                    lastRead: now,
+                    updatedAt: now
                 };
                 await this.putBook(updated);
                 this.updateBookInMemory(updated);
@@ -2299,7 +2422,7 @@ class RSVPReader {
                 if (refreshing) return;
                 refreshing = true;
 
-                const reloadKey = 'rsvp-reader-reloaded-v20';
+                const reloadKey = 'rsvp-reader-reloaded-v24';
                 if (!sessionStorage.getItem(reloadKey)) {
                     sessionStorage.setItem(reloadKey, '1');
                     window.location.reload();
@@ -2349,9 +2472,12 @@ async function resetRuntimeCacheIfRequested() {
         }
 
         sessionStorage.removeItem('rsvp-reader-reloaded-v20');
+        sessionStorage.removeItem('rsvp-reader-reloaded-v21');
+        sessionStorage.removeItem('rsvp-reader-reloaded-v23');
+        sessionStorage.removeItem('rsvp-reader-reloaded-v24');
     } finally {
         url.searchParams.delete('reset-cache');
-        url.searchParams.set('v', '20');
+        url.searchParams.set('v', '22');
         window.location.replace(url.toString());
     }
 
