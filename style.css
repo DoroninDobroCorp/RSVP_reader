@@ -276,6 +276,8 @@ header h1 {
 }
 
 .normal-text {
+    width: min(800px, 100%);
+    margin: 0 auto;
     min-height: 360px;
     max-height: 70vh;
     padding: 18px;
@@ -287,6 +289,15 @@ header h1 {
     line-height: 1.9;
     font-size: 1.08rem;
     user-select: none;
+}
+
+.normal-text p.paragraph {
+    margin: 0 0 1.2em 0;
+    text-align: left;
+}
+
+.normal-text p.paragraph:last-child {
+    margin-bottom: 0;
 }
 
 .normal-text span {

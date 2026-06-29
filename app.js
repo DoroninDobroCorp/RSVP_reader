@@ -7,6 +7,7 @@ class RSVPReader {
         this.storageMode = 'indexeddb';
 
         this.words = [];
+        this.wordSpans = [];
         this.currentIndex = 0;
         this.isPlaying = false;
         this.timer = null;
@@ -997,23 +998,43 @@ class RSVPReader {
         this.searchResults.textContent = '';
         this.searchPrevBtn.disabled = true;
         this.searchNextBtn.disabled = true;
+        this.wordSpans = [];
 
         const fragment = document.createDocumentFragment();
-        this.words.forEach((word, index) => {
-            const span = document.createElement('span');
-            span.textContent = `${word} `;
-            span.dataset.index = index;
+        const paragraphs = this.textInput.value.split(/\n\s*\n/);
+        let wordIndex = 0;
 
-            if (index === this.currentIndex) {
-                span.classList.add('current-word');
-                this.lastHighlightedIndex = index;
-            }
+        paragraphs.forEach((pText) => {
+            const trimmedP = pText.trim();
+            if (!trimmedP) return;
 
-            span.addEventListener('click', () => {
-                this.setCurrentWordIndex(index);
+            const pWords = trimmedP.split(/\s+/).filter((w) => w.length > 0);
+            if (pWords.length === 0) return;
+
+            const pElement = document.createElement('p');
+            pElement.className = 'paragraph';
+
+            pWords.forEach((word) => {
+                const span = document.createElement('span');
+                span.textContent = `${word} `;
+                span.dataset.index = wordIndex;
+
+                if (wordIndex === this.currentIndex) {
+                    span.classList.add('current-word');
+                    this.lastHighlightedIndex = wordIndex;
+                }
+
+                const idx = wordIndex;
+                span.addEventListener('click', () => {
+                    this.setCurrentWordIndex(idx);
+                });
+
+                pElement.appendChild(span);
+                this.wordSpans.push(span);
+                wordIndex++;
             });
 
-            fragment.appendChild(span);
+            fragment.appendChild(pElement);
         });
 
         this.normalTextDisplay.appendChild(fragment);
@@ -1064,7 +1085,7 @@ class RSVPReader {
 
     highlightMatches() {
         this.searchMatches.forEach((index) => {
-            const span = this.normalTextDisplay.children[index];
+            const span = this.wordSpans[index];
             if (span) {
                 span.classList.add('search-match');
             }
@@ -1090,7 +1111,7 @@ class RSVPReader {
             element.classList.remove('search-current');
         });
 
-        const span = this.normalTextDisplay.children[wordIndex];
+        const span = this.wordSpans[wordIndex];
         if (span) {
             span.classList.add('search-current');
             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1115,17 +1136,17 @@ class RSVPReader {
 
     updateCurrentWordHighlight() {
         if (this.lastHighlightedIndex !== null) {
-            const previous = this.normalTextDisplay.children[this.lastHighlightedIndex];
+            const previous = this.wordSpans[this.lastHighlightedIndex];
             if (previous) previous.classList.remove('current-word');
         }
 
-        const current = this.normalTextDisplay.children[this.currentIndex];
+        const current = this.wordSpans[this.currentIndex];
         if (current) current.classList.add('current-word');
         this.lastHighlightedIndex = this.currentIndex;
     }
 
     scrollCurrentWordIntoView(smooth = true) {
-        const current = this.normalTextDisplay.children[this.currentIndex];
+        const current = this.wordSpans[this.currentIndex];
         if (current) {
             current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });
         }

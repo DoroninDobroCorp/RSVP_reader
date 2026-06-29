@@ -1,5 +1,5 @@
-const CACHE_NAME = 'rsvp-reader-v24';
-const ASSET_VERSION = 'v=24';
+const CACHE_NAME = 'rsvp-reader-v25';
+const ASSET_VERSION = 'v=25';
 const APP_SHELL = [
   './',
   './index.html',
@@ -77,14 +77,14 @@ async function handleNavigation(request) {
     cache.put('./index.html', response.clone());
     return response;
   } catch (error) {
-    return caches.match(request)
-      .then((cached) => cached || caches.match('./index.html'));
+    return caches.match(request, { ignoreSearch: true })
+      .then((cached) => cached || caches.match('./index.html', { ignoreSearch: true }));
   }
 }
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreSearch: true });
 
   const networkFetch = fetch(request)
     .then((response) => {
@@ -108,6 +108,6 @@ async function networkFirst(request) {
     }
     return response;
   } catch (error) {
-    return cache.match(request);
+    return cache.match(request, { ignoreSearch: true });
   }
 }
