@@ -640,7 +640,16 @@ class RSVPReader {
     }
 
     parseText(text) {
-        return text.trim().split(/\s+/).filter((word) => word.length > 0);
+        const paragraphs = text.split(/\r?\n\s*\r?\n/).map((p) => p.trim()).filter((p) => p.length > 0);
+        const result = [];
+        paragraphs.forEach((p, idx) => {
+            const words = p.split(/\s+/).filter((w) => w.length > 0);
+            result.push(...words);
+            if (idx < paragraphs.length - 1) {
+                result.push(''); // Empty word for micro-pause at paragraph boundary
+            }
+        });
+        return result;
     }
 
     isButtonOrControl(element) {
@@ -1001,14 +1010,11 @@ class RSVPReader {
         this.wordSpans = [];
 
         const fragment = document.createDocumentFragment();
-        const paragraphs = this.textInput.value.split(/\n\s*\n/);
+        const paragraphs = this.textInput.value.split(/\r?\n\s*\r?\n/).map((p) => p.trim()).filter((p) => p.length > 0);
         let wordIndex = 0;
 
-        paragraphs.forEach((pText) => {
-            const trimmedP = pText.trim();
-            if (!trimmedP) return;
-
-            const pWords = trimmedP.split(/\s+/).filter((w) => w.length > 0);
+        paragraphs.forEach((pWordsText, idx) => {
+            const pWords = pWordsText.split(/\s+/).filter((w) => w.length > 0);
             if (pWords.length === 0) return;
 
             const pElement = document.createElement('p');
@@ -1035,6 +1041,11 @@ class RSVPReader {
             });
 
             fragment.appendChild(pElement);
+
+            if (idx < paragraphs.length - 1) {
+                this.wordSpans.push(null);
+                wordIndex++;
+            }
         });
 
         this.normalTextDisplay.appendChild(fragment);
