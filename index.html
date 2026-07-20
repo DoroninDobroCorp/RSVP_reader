@@ -84,7 +84,11 @@
 
         <section id="rsvpReadingSection" style="display: none;">
             <div class="rsvp-container">
-                <div id="rsvpWordDisplay" class="rsvp-word"></div>
+                <div class="rsvp-word-wrapper">
+                    <div id="orpNotchTop" class="orp-notch top-notch" style="display: none;"></div>
+                    <div id="rsvpWordDisplay" class="rsvp-word"></div>
+                    <div id="orpNotchBottom" class="orp-notch bottom-notch" style="display: none;"></div>
+                </div>
                 <div id="rsvpPauseContext" class="rsvp-pause-context" aria-live="polite" aria-hidden="true"></div>
                 <div class="rsvp-controls">
                     <button id="playPauseBtn" class="control-btn">⏸️</button>
@@ -94,11 +98,16 @@
                     <button id="stopRSVPBtn" class="control-btn">⏹️</button>
                 </div>
                 <div class="rsvp-progress">
-                    <div id="rsvpProgressBar" class="progress-bar">
-                        <div id="rsvpProgressFill" class="progress-fill"></div>
+                    <div class="progress-bars-container">
+                        <div id="rsvpTotalProgressBar" class="progress-bar progress-bar-total" title="Общий прогресс книги">
+                            <div id="rsvpTotalProgressFill" class="progress-fill total-fill"></div>
+                        </div>
+                        <div id="rsvpRunProgressBar" class="progress-bar progress-bar-run" title="Прогресс текущего забега">
+                            <div id="rsvpRunProgressFill" class="progress-fill run-fill"></div>
+                        </div>
                     </div>
                     <div class="progress-stats">
-                        <span id="rsvpProgressText">0%</span>
+                        <span id="rsvpProgressText">Забег 0% • книга 0% • осталось 0 мин</span>
                         <span id="rsvpWordCount">0 / 0</span>
                         <span id="rsvpSpeedText">250 слов/мин</span>
                     </div>
@@ -119,6 +128,14 @@
             </div>
             <div class="modal-body">
                 <div class="setting-group">
+                    <label>Тема оформления</label>
+                    <div class="theme-buttons">
+                        <button type="button" id="themeNightBtn" class="theme-select-btn">🌙 Ночная</button>
+                        <button type="button" id="themeDayBtn" class="theme-select-btn">☀️ Дневная</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
                     <label for="wpmInput">Скорость (слов/мин)</label>
                     <input type="number" id="wpmInput" min="100" max="1000" step="20" value="250">
                     <span class="setting-desc">Рекомендуется: 250-400</span>
@@ -127,6 +144,40 @@
                 <div class="setting-group">
                     <label for="focusLetterColor">Цвет фокусной буквы</label>
                     <input type="color" id="focusLetterColor" value="#ff6b6b">
+                </div>
+
+                <div class="setting-section-title">🚀 Оптимизации скорочтения (Опционально)</div>
+
+                <div class="setting-group checkbox-group">
+                    <label for="orpAlignmentInput" class="checkbox-label">
+                        <input type="checkbox" id="orpAlignmentInput">
+                        <span>Центрирование по точке фокуса (ORP alignment)</span>
+                    </label>
+                    <span class="setting-desc">Фиксирует красную букву строго по центру экрана</span>
+                </div>
+
+                <div class="setting-group checkbox-group">
+                    <label for="lengthScalingInput" class="checkbox-label">
+                        <input type="checkbox" id="lengthScalingInput">
+                        <span>Умная задержка по длине слов</span>
+                    </label>
+                    <span class="setting-desc">Короткие слова быстрее, длинные слова дольше</span>
+                </div>
+
+                <div class="setting-group checkbox-group">
+                    <label for="speedRampUpInput" class="checkbox-label">
+                        <input type="checkbox" id="speedRampUpInput">
+                        <span>Плавный разгон при старте (3 сек)</span>
+                    </label>
+                    <span class="setting-desc">Плавное ускорение от 70% до 100% скорости</span>
+                </div>
+
+                <div class="setting-group checkbox-group">
+                    <label for="chunkingEnabledInput" class="checkbox-label">
+                        <input type="checkbox" id="chunkingEnabledInput">
+                        <span>Чанкинг по 2 слова на высоких скоростях (>=400 WPM)</span>
+                    </label>
+                    <span class="setting-desc">Показывает словосочетания по 2 слова</span>
                 </div>
 
                 <div class="setting-group">

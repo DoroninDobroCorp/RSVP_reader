@@ -47,13 +47,17 @@ class RSVPReader {
         this.libraryFilter = '';
 
         this.settings = {
-            settingsVersion: 2,
+            settingsVersion: 3,
             wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
-            fontSize: 35
+            fontSize: 35,
+            orpAlignment: false,
+            lengthScaling: false,
+            speedRampUp: false,
+            chunkingEnabled: false
         };
 
         this.initElements();
@@ -111,10 +115,21 @@ class RSVPReader {
         this.nextWordBtn = document.getElementById('nextWordBtn');
         this.rsvpBookmarkBtn = document.getElementById('rsvpBookmarkBtn');
         this.stopRSVPBtn = document.getElementById('stopRSVPBtn');
+        this.themeToggleBtn = document.getElementById('themeToggleBtn');
+        this.themeNightBtn = document.getElementById('themeNightBtn');
+        this.themeDayBtn = document.getElementById('themeDayBtn');
+        this.rsvpTotalProgressFill = document.getElementById('rsvpTotalProgressFill');
+        this.rsvpRunProgressFill = document.getElementById('rsvpRunProgressFill');
         this.rsvpProgressBar = document.getElementById('rsvpProgressFill');
         this.rsvpProgressText = document.getElementById('rsvpProgressText');
         this.rsvpWordCount = document.getElementById('rsvpWordCount');
         this.rsvpSpeedText = document.getElementById('rsvpSpeedText');
+        this.orpAlignmentInput = document.getElementById('orpAlignmentInput');
+        this.lengthScalingInput = document.getElementById('lengthScalingInput');
+        this.speedRampUpInput = document.getElementById('speedRampUpInput');
+        this.chunkingEnabledInput = document.getElementById('chunkingEnabledInput');
+        this.orpNotchTop = document.getElementById('orpNotchTop');
+        this.orpNotchBottom = document.getElementById('orpNotchBottom');
         this.rsvpBottomTapZone = document.getElementById('rsvpBottomTapZone');
         this.rsvpBottomTapIcon = document.getElementById('rsvpBottomTapIcon');
         this.rsvpBottomTapLabel = document.getElementById('rsvpBottomTapLabel');
@@ -157,6 +172,17 @@ class RSVPReader {
 
         this.startReadingBtn.addEventListener('click', () => this.runAsync(() => this.startNormalReading()));
         this.backToInputBtn.addEventListener('click', () => this.backToInput());
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        }
+        if (this.themeNightBtn) {
+            this.themeNightBtn.addEventListener('click', () => this.setTheme('night'));
+        }
+        if (this.themeDayBtn) {
+            this.themeDayBtn.addEventListener('click', () => this.setTheme('day'));
+        }
+        this.currentTheme = localStorage.getItem('rsvp_theme') || 'night';
+        this.applyTheme(this.currentTheme);
         this.startRSVPBtn.addEventListener('click', () => this.startRSVP());
 
         this.addBookmarkBtn.addEventListener('click', () => this.runAsync(() => this.addBookmarkAtCurrentPosition()));
@@ -1164,6 +1190,10 @@ class RSVPReader {
     }
 
     startRSVP() {
+        this.rsvpRunStartIndex = this.currentIndex;
+        this.rampUpStartTime = Date.now();
+        this.runStartTime = Date.now();
+        this.runWordsCount = 0;
         if (this.words.length === 0) {
             const text = this.textInput.value.trim();
             if (!text) {
@@ -1325,7 +1355,17 @@ class RSVPReader {
     }
 
     updateSpeedControls() {
-        const wpmText = `${Math.round(this.settings.wpm)} слов/мин`;
+        let wpmText = `${Math.round(this.settings.wpm)} слов/мин`;
+        if (this.isPlaying && this.runStartTime && (this.currentIndex - (this.rsvpRunStartIndex || 0)) > 3) {
+            const elapsedMin = (Date.now() - this.runStartTime) / 60000;
+            if (elapsedMin > 0.02) {
+                const currentRunWords = Math.max(0, this.currentIndex - (this.rsvpRunStartIndex || 0));
+                const realWpm = Math.round(currentRunWords / elapsedMin);
+                if (Math.abs(realWpm - this.settings.wpm) >= 5) {
+                    wpmText = `Цель: ${Math.round(this.settings.wpm)} • Факт: ${realWpm} WPM`;
+                }
+            }
+        }
 
         if (this.rsvpSpeedText) {
             this.rsvpSpeedText.textContent = wpmText;
@@ -1368,6 +1408,28 @@ class RSVPReader {
         this.rsvpWordDisplay.style.fontSize = `${this.settings.fontSize}px`;
         this.rsvpWordDisplay.classList.remove('is-clearing');
         this.rsvpWordDisplay.replaceChildren(wordFrame);
+
+        if (this.settings.orpAlignment) {
+            if (this.orpNotchTop) this.orpNotchTop.style.display = 'block';
+            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'block';
+
+            requestAnimationFrame(() => {
+                const focusLetter = wordFrame.querySelector('.focus-letter');
+                if (focusLetter) {
+                    const wordRect = wordFrame.getBoundingClientRect();
+                    const letterRect = focusLetter.getBoundingClientRect();
+                    const letterCenter = (letterRect.left + letterRect.right) / 2 - wordRect.left;
+                    const wordCenter = wordRect.width / 2;
+                    const offset = wordCenter - letterCenter;
+                    wordFrame.style.transform = `translateX(${offset}px)`;
+                }
+            });
+        } else {
+            if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
+            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
+            wordFrame.style.transform = 'none';
+        }
+
         this.updatePauseContext();
         this.updateProgress();
     }
@@ -1415,9 +1477,38 @@ class RSVPReader {
             this.clearTimer = null;
         }
 
-        const word = this.words[this.currentIndex] || '';
+        let word = this.words[this.currentIndex] || '';
+        let wordCountInFrame = 1;
+
+        if (this.settings.chunkingEnabled && this.settings.wpm >= 400 && this.currentIndex < this.words.length - 1) {
+            const nextW = this.words[this.currentIndex + 1] || '';
+            const lastC = word[word.length - 1];
+            if (word.length > 0 && nextW.length > 0 && !['.', '!', '?', ';'].includes(lastC)) {
+                word = `${word} ${nextW}`;
+                wordCountInFrame = 2;
+            }
+        }
+
         const baseDelay = 60000 / this.settings.wpm;
-        let delay = baseDelay;
+        let delay = baseDelay * wordCountInFrame;
+
+        if (this.settings.lengthScaling && word.length > 0) {
+            const len = word.length;
+            let scale = 1.0;
+            if (len <= 3) scale = 0.75;
+            else if (len >= 8 && len <= 10) scale = 1.25;
+            else if (len >= 11) scale = 1.45;
+            delay *= scale;
+        }
+
+        if (this.settings.speedRampUp && this.rampUpStartTime) {
+            const elapsed = Date.now() - this.rampUpStartTime;
+            if (elapsed < 3000) {
+                const progress = elapsed / 3000;
+                const ramp = 0.7 + 0.3 * progress;
+                delay /= ramp;
+            }
+        }
 
         const lastChar = word[word.length - 1];
         if (lastChar === ',') {
@@ -1496,11 +1587,22 @@ class RSVPReader {
             this.wordCount.textContent = `${wordCountText} • всего ~${totalTime}`;
         }
 
+        const runStart = Math.min(this.rsvpRunStartIndex || 0, Math.max(this.words.length - 1, 0));
+        const runTotalWords = Math.max(this.words.length - runStart, 1);
+        const runCurrentWords = Math.max(this.currentIndex - runStart + 1, 0);
+        const rsvpRunPercentage = this.words.length > 0 ? Math.min(100, Math.max(0, Math.round((runCurrentWords / runTotalWords) * 100))) : 0;
+
+        if (this.rsvpTotalProgressFill) {
+            this.rsvpTotalProgressFill.style.width = `${percentage}%`;
+        }
+        if (this.rsvpRunProgressFill) {
+            this.rsvpRunProgressFill.style.width = `${rsvpRunPercentage}%`;
+        }
         if (this.rsvpProgressBar) {
             this.rsvpProgressBar.style.width = `${percentage}%`;
         }
         if (this.rsvpProgressText) {
-            this.rsvpProgressText.textContent = `${percentageText} • осталось ${timeRemaining}`;
+            this.rsvpProgressText.textContent = `Забег ${rsvpRunPercentage}% • книга ${percentage}% • осталось ${timeRemaining}`;
         }
         if (this.rsvpWordCount) {
             this.rsvpWordCount.textContent = `${wordCountText} • всего ~${totalTime}`;
@@ -1616,13 +1718,17 @@ class RSVPReader {
 
     resetSettings() {
         this.settings = {
-            settingsVersion: 2,
+            settingsVersion: 3,
             wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
-            fontSize: 35
+            fontSize: 35,
+            orpAlignment: false,
+            lengthScaling: false,
+            speedRampUp: false,
+            chunkingEnabled: false
         };
         this.loadSettingsToForm();
         this.saveSettings();
@@ -2484,6 +2590,30 @@ class RSVPReader {
             console.log('Service Worker registered');
         } catch (error) {
             console.error('Service Worker registration failed:', error);
+        }
+    }
+
+    toggleTheme() {
+        const nextTheme = this.currentTheme === 'day' ? 'night' : 'day';
+        this.setTheme(nextTheme);
+    }
+
+    setTheme(theme) {
+        this.currentTheme = theme;
+        localStorage.setItem('rsvp_theme', theme);
+        this.applyTheme(theme);
+    }
+
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.textContent = theme === 'day' ? '☀️ День' : '🌙 Ночь';
+        }
+        if (this.themeNightBtn) {
+            this.themeNightBtn.classList.toggle('active', theme === 'night');
+        }
+        if (this.themeDayBtn) {
+            this.themeDayBtn.classList.toggle('active', theme === 'day');
         }
     }
 }

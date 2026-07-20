@@ -1,20 +1,45 @@
-:root {
-    --bg: #111418;
-    --surface: #1b2027;
-    --surface-2: #222a33;
+:root, [data-theme="night"] {
+    --bg: #12161f;
+    --bg-gradient: linear-gradient(180deg, #12161f 0%, #1a202c 100%);
+    --surface: #1c222e;
+    --surface-2: #242c3b;
     --surface-3: #15251f;
-    --border: #35404c;
-    --border-strong: #4a5867;
-    --text: #f7f8fa;
-    --muted: #aeb8c4;
-    --primary: #2f80ed;
-    --primary-hover: #1f6fd4;
+    --border: #2e3848;
+    --border-strong: #414f66;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
     --secondary: #2fbf71;
     --accent: #ff6b6b;
     --warning: #f2c94c;
     --danger: #eb5757;
     --shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
     --rsvp-bottom-zone-height: clamp(132px, 18vh, 180px);
+    --run-fill: #3b82f6;
+    --total-fill: #64748b;
+}
+
+[data-theme="day"] {
+    --bg: #f7f4ec;
+    --bg-gradient: linear-gradient(180deg, #f7f4ec 0%, #ede7da 100%);
+    --surface: #eae4d5;
+    --surface-2: #dfd8c7;
+    --surface-3: #d3ebd8;
+    --border: #d3caba;
+    --border-strong: #b8ac97;
+    --text: #2d333b;
+    --muted: #6e7681;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary: #16a34a;
+    --accent: #d9534f;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    --rsvp-bottom-zone-height: clamp(132px, 18vh, 180px);
+    --run-fill: #2563eb;
+    --total-fill: #94a3b8;
 }
 
 * {
@@ -29,12 +54,11 @@ html {
 
 body {
     min-height: 100vh;
-    background:
-        linear-gradient(135deg, rgba(47, 128, 237, 0.10), transparent 32%),
-        linear-gradient(180deg, #111418 0%, #171b20 100%);
+    background: var(--bg-gradient);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 button,
@@ -878,4 +902,126 @@ header h1 {
     .status-pill {
         display: none;
     }
+}
+
+
+/* Dual Progress Bars & Theme Buttons */
+.progress-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.progress-bar-total {
+    height: 4px;
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-run {
+    height: 4px;
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill.total-fill {
+    background: var(--total-fill);
+    height: 100%;
+    transition: width 0.15s ease;
+}
+
+.progress-fill.run-fill {
+    background: var(--run-fill);
+    height: 100%;
+    transition: width 0.15s ease;
+}
+
+.theme-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.theme-select-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-select-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #ffffff;
+}
+
+
+/* ORP Alignment & Optimization Settings Styles */
+.rsvp-word-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.orp-notch {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 1px;
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.orp-notch.top-notch {
+    top: -18px;
+}
+
+.orp-notch.bottom-notch {
+    bottom: -18px;
+}
+
+.setting-section-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 20px 0 10px;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
 }
