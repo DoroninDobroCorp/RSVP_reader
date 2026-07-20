@@ -47,7 +47,7 @@ class RSVPReader {
         this.libraryFilter = '';
 
         this.settings = {
-            settingsVersion: 3,
+            settingsVersion: 4,
             wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
@@ -56,8 +56,9 @@ class RSVPReader {
             fontSize: 35,
             orpAlignment: false,
             lengthScaling: false,
+            chunkingEnabled: false,
             speedRampUp: false,
-            chunkingEnabled: false
+            orpNotches: false
         };
 
         this.initElements();
@@ -130,6 +131,7 @@ class RSVPReader {
         this.chunkingEnabledInput = document.getElementById('chunkingEnabledInput');
         this.orpNotchTop = document.getElementById('orpNotchTop');
         this.orpNotchBottom = document.getElementById('orpNotchBottom');
+        this.orpNotchesInput = document.getElementById('orpNotchesInput');
         this.rsvpBottomTapZone = document.getElementById('rsvpBottomTapZone');
         this.rsvpBottomTapIcon = document.getElementById('rsvpBottomTapIcon');
         this.rsvpBottomTapLabel = document.getElementById('rsvpBottomTapLabel');
@@ -1409,10 +1411,15 @@ class RSVPReader {
         this.rsvpWordDisplay.classList.remove('is-clearing');
         this.rsvpWordDisplay.replaceChildren(wordFrame);
 
-        if (this.settings.orpAlignment) {
+        if (this.settings.orpNotches) {
             if (this.orpNotchTop) this.orpNotchTop.style.display = 'block';
             if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'block';
+        } else {
+            if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
+            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
+        }
 
+        if (this.settings.orpAlignment) {
             requestAnimationFrame(() => {
                 const focusLetter = wordFrame.querySelector('.focus-letter');
                 if (focusLetter) {
@@ -1425,8 +1432,6 @@ class RSVPReader {
                 }
             });
         } else {
-            if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
-            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
             wordFrame.style.transform = 'none';
         }
 
@@ -1718,7 +1723,7 @@ class RSVPReader {
 
     resetSettings() {
         this.settings = {
-            settingsVersion: 3,
+            settingsVersion: 4,
             wpm: 250,
             commaPause: 1.05,
             periodPause: 1.75,
@@ -1727,8 +1732,9 @@ class RSVPReader {
             fontSize: 35,
             orpAlignment: false,
             lengthScaling: false,
+            chunkingEnabled: false,
             speedRampUp: false,
-            chunkingEnabled: false
+            orpNotches: false
         };
         this.loadSettingsToForm();
         this.saveSettings();

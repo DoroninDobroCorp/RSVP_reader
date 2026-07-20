@@ -146,12 +146,12 @@
                     <input type="color" id="focusLetterColor" value="#ff6b6b">
                 </div>
 
-                <div class="setting-section-title">🚀 Оптимизации скорочтения (Опционально)</div>
+                <div class="setting-section-title">🚀 Оптимизации скорочтения (Все 5 опций отключаемы)</div>
 
                 <div class="setting-group checkbox-group">
                     <label for="orpAlignmentInput" class="checkbox-label">
                         <input type="checkbox" id="orpAlignmentInput">
-                        <span>Центрирование по точке фокуса (ORP alignment)</span>
+                        <span>1. Центрирование по точке фокуса (ORP Alignment)</span>
                     </label>
                     <span class="setting-desc">Фиксирует красную букву строго по центру экрана</span>
                 </div>
@@ -159,25 +159,33 @@
                 <div class="setting-group checkbox-group">
                     <label for="lengthScalingInput" class="checkbox-label">
                         <input type="checkbox" id="lengthScalingInput">
-                        <span>Умная задержка по длине слов</span>
+                        <span>2. Умная задержка по длине слов (Length-Based Scaling)</span>
                     </label>
                     <span class="setting-desc">Короткие слова быстрее, длинные слова дольше</span>
                 </div>
 
                 <div class="setting-group checkbox-group">
+                    <label for="chunkingEnabledInput" class="checkbox-label">
+                        <input type="checkbox" id="chunkingEnabledInput">
+                        <span>3. Мульти-словесный режим / Чанкинг (2 слова при WPM >= 400)</span>
+                    </label>
+                    <span class="setting-desc">Показывает словосочетания по 2 слова</span>
+                </div>
+
+                <div class="setting-group checkbox-group">
                     <label for="speedRampUpInput" class="checkbox-label">
                         <input type="checkbox" id="speedRampUpInput">
-                        <span>Плавный разгон при старте (3 сек)</span>
+                        <span>4. Плавный разгон при старте (Speed Ramp-Up, 3 сек)</span>
                     </label>
                     <span class="setting-desc">Плавное ускорение от 70% до 100% скорости</span>
                 </div>
 
                 <div class="setting-group checkbox-group">
-                    <label for="chunkingEnabledInput" class="checkbox-label">
-                        <input type="checkbox" id="chunkingEnabledInput">
-                        <span>Чанкинг по 2 слова на высоких скоростях (>=400 WPM)</span>
+                    <label for="orpNotchesInput" class="checkbox-label">
+                        <input type="checkbox" id="orpNotchesInput">
+                        <span>5. Визуальные прицельные засечки (ORP Visual Markers)</span>
                     </label>
-                    <span class="setting-desc">Показывает словосочетания по 2 слова</span>
+                    <span class="setting-desc">Вертикальные риски-засечки сверху и снизу над точкой фокуса</span>
                 </div>
 
                 <div class="setting-group">
