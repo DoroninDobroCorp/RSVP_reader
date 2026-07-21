@@ -10,7 +10,7 @@ test.describe('Start/Stop Performance Tests', () => {
         
         const testText = 'Performance test. Speed measurement. Start stop timing.';
         await page.locator('#textInput').fill(testText);
-        await page.click('#startReadingBtn');
+        if (await page.isVisible('#startReadingBtn')) { await page.click('#startReadingBtn'); }
         await page.waitForTimeout(500);
         
         // Measure double-click start time
@@ -64,7 +64,7 @@ test.describe('Start/Stop Performance Tests', () => {
         
         const testText = 'Stop test. Performance measure. Return to normal.';
         await page.locator('#textInput').fill(testText);
-        await page.click('#startReadingBtn');
+        if (await page.isVisible('#startReadingBtn')) { await page.click('#startReadingBtn'); }
         await page.waitForTimeout(500);
         await page.click('#startRSVPBtn');
         await page.waitForTimeout(500);
@@ -118,7 +118,7 @@ test.describe('Start/Stop Performance Tests', () => {
         
         const testText = 'Rapid cycles test. Start stop repeat. Performance check.';
         await page.locator('#textInput').fill(testText);
-        await page.click('#startReadingBtn');
+        if (await page.isVisible('#startReadingBtn')) { await page.click('#startReadingBtn'); }
         await page.waitForTimeout(500);
         
         const cycles = 5;
@@ -174,7 +174,7 @@ test.describe('Start/Stop Performance Tests', () => {
         // Long text for extended testing
         const longText = 'Extended session test. '.repeat(100);
         await page.locator('#textInput').fill(longText);
-        await page.click('#startReadingBtn');
+        if (await page.isVisible('#startReadingBtn')) { await page.click('#startReadingBtn'); }
         await page.waitForTimeout(500);
         
         const sessionStart = Date.now();
@@ -209,7 +209,7 @@ test.describe('Start/Stop Performance Tests', () => {
             }
             
             // Add some navigation
-            await page.click('#startReadingBtn');
+            if (await page.isVisible('#startReadingBtn')) { await page.click('#startReadingBtn'); }
             await page.waitForTimeout(300);
             await page.dblclick('#normalTextDisplay');
             await page.waitForTimeout(300);

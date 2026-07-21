@@ -982,26 +982,11 @@ header h1 {
     width: 100%;
 }
 
-.orp-notch {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 14px;
-    background: var(--accent);
-    border-radius: 1px;
-    opacity: 0.9;
-    pointer-events: none;
-    z-index: 5;
-}
 
-.orp-notch.top-notch {
-    top: -18px;
-}
 
-.orp-notch.bottom-notch {
-    bottom: -18px;
-}
+
+
+
 
 .setting-section-title {
     font-weight: 600;
@@ -1036,107 +1021,39 @@ header h1 {
 }
 
 
-/* CSS Grid ORP Alignment & Visible Notches */
-.rsvp-word-wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 140px;
-    box-sizing: border-box;
+/* Disabled Button Styling */
+button:disabled,
+.control-btn:disabled,
+.action-btn:disabled,
+.secondary-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--surface-3);
+    color: var(--muted);
 }
 
-.orp-notch {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 18px;
-    background: var(--accent);
-    border-radius: 2px;
-    opacity: 0.95;
-    pointer-events: none;
-    z-index: 10;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
 
-.orp-notch.top-notch {
-    top: -6px;
-}
 
-.orp-notch.bottom-notch {
-    bottom: -6px;
-}
 
-.rsvp-word {
-    width: 100%;
-    box-sizing: border-box;
-}
 
-.rsvp-word-frame {
-    width: 100%;
-    box-sizing: border-box;
-}
 
-.rsvp-word-frame.orp-grid-mode {
-    display: grid !important;
-    grid-template-columns: 1fr min-content 1fr !important;
-    align-items: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
 
-.rsvp-word-frame.orp-grid-mode .orp-left {
-    justify-self: end;
-    text-align: right;
-    white-space: pre;
-    overflow: hidden;
-    color: var(--text);
-}
 
-.rsvp-word-frame.orp-grid-mode .orp-center {
-    justify-self: center;
-    text-align: center;
-    padding: 0 1px;
-    white-space: pre;
-}
 
-.rsvp-word-frame.orp-grid-mode .orp-right {
-    justify-self: start;
-    text-align: left;
-    white-space: pre;
-    overflow: hidden;
-    color: var(--text);
-}
-/* Theme Polish & ORP Alignment */
-#textInputSection,
-#normalReadingSection,
-#librarySection {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-}
 
-.action-btn,
-.secondary-btn,
-.book-btn,
-.bookmark-btn,
-.control-btn {
-    background: var(--btn-bg);
-    color: var(--btn-text);
-    border: 1px solid var(--border);
 
-    transition: all 0.2s ease;
-}
+/* ==========================================================================
+   ORP Alignment, Axis Notches, Theme Variables & Disabled Button Rules
+   ========================================================================== */
 
-.action-btn:hover,
-.secondary-btn:hover,
-.book-btn:hover,
-.bookmark-btn:hover,
-.control-btn:hover {
-    background: var(--btn-hover);
+button:disabled,
+.control-btn:disabled,
+.action-btn:disabled,
+.secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--surface-3) !important;
+    color: var(--muted) !important;
 }
 
 .normal-text {
@@ -1151,6 +1068,11 @@ header h1 {
 
 .normal-text span:hover {
     background: var(--surface-3);
+}
+
+.normal-text span.current-word {
+    color: #ffffff;
+    background: var(--primary);
 }
 
 .rsvp-word-wrapper {
@@ -1179,6 +1101,19 @@ header h1 {
     box-sizing: border-box;
 }
 
+.orp-axis-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    background: var(--accent);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 5;
+}
+
 .orp-notch {
     position: absolute;
     left: 50%;
@@ -1201,41 +1136,9 @@ header h1 {
     bottom: 6px;
 }
 
-.rsvp-pause-context {
-    background: var(--surface-2);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.modal-content {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-
-/* Disabled Button Styling */
-button:disabled,
-.control-btn:disabled,
-.action-btn:disabled,
-.secondary-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    background: var(--surface-3);
-    color: var(--muted);
-}
-
-.orp-axis-line {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 1px;
-    background: var(--accent);
-    opacity: 0.18;
-    pointer-events: none;
-    z-index: 5;
+.rsvp-word-frame {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .rsvp-word-frame.orp-grid-mode {
@@ -1270,4 +1173,12 @@ button:disabled,
     white-space: pre !important;
     overflow: visible !important;
     color: var(--text) !important;
+}
+
+.rsvp-pause-context.is-visible {
+    opacity: 1;
+    visibility: visible;
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border);
 }

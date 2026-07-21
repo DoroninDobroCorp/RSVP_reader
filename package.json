@@ -8,9 +8,17 @@
     "test": "playwright test",
     "test:local": "playwright test test-comprehensive-functionality.spec.js test-bottom-tap-zone.spec.js test-epub.spec.js test-format-imports.spec.js test-library-bookmarks.spec.js test-mobile-doubletap.spec.js test-last-word-stopping.spec.js",
     "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug"
+    "test:debug": "playwright test --debug",
+    "test:prod": "playwright test --config=playwright.prod.config.js"
   },
-  "keywords": ["rsvp", "speed-reading", "epub", "pwa", "offline", "reader"],
+  "keywords": [
+    "rsvp",
+    "speed-reading",
+    "epub",
+    "pwa",
+    "offline",
+    "reader"
+  ],
   "author": "Vovka (DoroninDobroCorp)",
   "license": "MIT",
   "repository": {

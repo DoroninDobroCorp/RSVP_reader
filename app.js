@@ -90,6 +90,14 @@ class RSVPReader {
         this.booksList = document.getElementById('booksList');
         this.librarySummary = document.getElementById('librarySummary');
         this.librarySearchInput = document.getElementById('librarySearchInput');
+        this.orpAlignmentInput = document.getElementById('orpAlignmentInput');
+        this.lengthScalingInput = document.getElementById('lengthScalingInput');
+        this.chunkingEnabledInput = document.getElementById('chunkingEnabledInput');
+        this.speedRampUpInput = document.getElementById('speedRampUpInput');
+        this.orpNotchesInput = document.getElementById('orpNotchesInput');
+        this.orpAxisLine = document.getElementById('orpAxisLine');
+        this.orpNotchTop = document.getElementById('orpNotchTop');
+        this.orpNotchBottom = document.getElementById('orpNotchBottom');
         this.exportLibraryBtn = document.getElementById('exportLibraryBtn');
         this.importLibraryBtn = document.getElementById('importLibraryBtn');
         this.libraryImportInput = document.getElementById('libraryImportInput');
@@ -241,11 +249,23 @@ class RSVPReader {
             }
         });
 
-        [this.wpmInput, this.commaPauseInput, this.periodPauseInput, this.semicolonPauseInput, this.focusLetterColorInput, this.fontSizeInput]
-            .forEach((input) => {
-                input.addEventListener('input', () => this.updateSettings());
-                input.addEventListener('change', () => this.updateSettings());
-            });
+        [
+            this.wpmInput,
+            this.commaPauseInput,
+            this.periodPauseInput,
+            this.semicolonPauseInput,
+            this.focusLetterColorInput,
+            this.fontSizeInput,
+            this.orpAlignmentInput,
+            this.lengthScalingInput,
+            this.chunkingEnabledInput,
+            this.speedRampUpInput,
+            this.orpNotchesInput
+        ].forEach((input) => {
+            if (!input) return;
+            input.addEventListener('input', () => this.updateSettings());
+            input.addEventListener('change', () => this.updateSettings());
+        });
 
         this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
 
@@ -1411,20 +1431,85 @@ class RSVPReader {
         }
     }
 
+    getFrameAt(index) {
+        index = this.clampIndex(index, this.words.length);
+        if (this.words.length === 0 || index >= this.words.length) {
+            return { text: '', wordCount: 0, focusIndex: 0, sourceWords: [], punctuationMultiplier: 1.0, isPauseToken: true };
+        }
+
+        const firstWord = this.words[index];
+
+        if (firstWord === '') {
+            return { text: '', wordCount: 1, focusIndex: 0, sourceWords: [''], punctuationMultiplier: 1.0, isPauseToken: true };
+        }
+
+        let wordCount = 1;
+        let combinedText = firstWord;
+        const sourceWords = [firstWord];
+
+        const hasPunctuation = (w) => {
+            if (!w) return false;
+            const lastChar = w[w.length - 1];
+            return ['.', '!', '?', ';', ':', '…'].includes(lastChar) || w.endsWith('...');
+        };
+
+        if (this.settings.chunkingEnabled && this.settings.wpm >= 400 && index < this.words.length - 1) {
+            const secondWord = this.words[index + 1];
+            if (!hasPunctuation(firstWord) && secondWord !== '' && !secondWord.startsWith('\n')) {
+                wordCount = 2;
+                combinedText = `${firstWord} ${secondWord}`;
+                sourceWords.push(secondWord);
+            }
+        }
+
+        const focusIndex = this.calculateFocusPoint(combinedText);
+
+        let punctuationMultiplier = 1.0;
+        const lastWord = sourceWords[sourceWords.length - 1];
+        if (lastWord && lastWord.length > 0) {
+            const lastChar = lastWord[lastWord.length - 1];
+            if (lastWord.endsWith('...') || lastWord.endsWith('…')) {
+                punctuationMultiplier = this.settings.periodPause;
+            } else if (['.', '!', '?'].includes(lastChar)) {
+                punctuationMultiplier = this.settings.periodPause;
+            } else if (lastChar === ',') {
+                punctuationMultiplier = this.settings.commaPause;
+            } else if ([';', ':'].includes(lastChar)) {
+                punctuationMultiplier = this.settings.semicolonPause;
+            }
+        }
+
+        return {
+            text: combinedText,
+            wordCount: wordCount,
+            focusIndex: focusIndex,
+            sourceWords: sourceWords,
+            punctuationMultiplier: punctuationMultiplier,
+            isPauseToken: false
+        };
+    }
+
+    getActivePlaybackMinutes() {
+        let totalMs = this.activePlaybackMs || 0;
+        if (this.isPlaying && this.lastPlayTimestamp) {
+            totalMs += (Date.now() - this.lastPlayTimestamp);
+        }
+        return totalMs / 60000;
+    }
+
     displayCurrentWord() {
         this.currentIndex = this.clampIndex(this.currentIndex, this.words.length);
-        const word = this.words[this.currentIndex] || '';
-        const focusIndex = this.calculateFocusPoint(word);
+        const frame = this.getFrameAt(this.currentIndex);
         const wordFrame = document.createElement('span');
-        wordFrame.setAttribute('aria-label', word);
+        wordFrame.setAttribute('aria-label', frame.text);
         wordFrame.dataset.paintToken = String(this.wordPaintToken + 1);
 
-        if (this.settings.orpAlignment) {
+        if (this.settings.orpAlignment && !frame.isPauseToken) {
             wordFrame.className = 'rsvp-word-frame orp-grid-mode';
 
-            const leftText = word.slice(0, focusIndex);
-            const focusText = word[focusIndex] || '';
-            const rightText = word.slice(focusIndex + 1);
+            const leftText = frame.text.slice(0, frame.focusIndex);
+            const focusText = frame.text[frame.focusIndex] || '';
+            const rightText = frame.text.slice(frame.focusIndex + 1);
 
             const leftSpan = document.createElement('span');
             leftSpan.className = 'orp-left';
@@ -1442,12 +1527,12 @@ class RSVPReader {
             wordFrame.append(leftSpan, focusSpan, rightSpan);
         } else {
             wordFrame.className = 'rsvp-word-frame';
-            for (let index = 0; index < word.length; index++) {
+            for (let index = 0; index < frame.text.length; index++) {
                 const letter = document.createElement('span');
                 letter.className = 'rsvp-letter';
-                letter.textContent = word[index];
+                letter.textContent = frame.text[index];
 
-                if (index === focusIndex) {
+                if (index === frame.focusIndex && !frame.isPauseToken) {
                     letter.classList.add('focus-letter');
                     letter.style.color = this.settings.focusLetterColor;
                 }
@@ -1461,15 +1546,10 @@ class RSVPReader {
         this.rsvpWordDisplay.classList.remove('is-clearing');
         this.rsvpWordDisplay.replaceChildren(wordFrame);
 
-        if (this.settings.orpNotches) {
-            if (this.orpNotchTop) this.orpNotchTop.style.display = 'block';
-            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'block';
-            if (this.orpAxisLine) this.orpAxisLine.style.display = 'block';
-        } else {
-            if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
-            if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
-            if (this.orpAxisLine) this.orpAxisLine.style.display = 'none';
-        }
+        const showNotches = Boolean(this.settings.orpNotches);
+        if (this.orpNotchTop) this.orpNotchTop.style.display = showNotches ? 'block' : 'none';
+        if (this.orpNotchBottom) this.orpNotchBottom.style.display = showNotches ? 'block' : 'none';
+        if (this.orpAxisLine) this.orpAxisLine.style.display = showNotches ? 'block' : 'none';
 
         this.updatePauseContext();
         this.updateProgress();
@@ -1510,31 +1590,21 @@ class RSVPReader {
     scheduleNextWord() {
         if (!this.isPlaying || this.words.length === 0) return;
 
-        if (this.timer) {
-            clearTimeout(this.timer);
-        }
-        if (this.clearTimer) {
-            clearTimeout(this.clearTimer);
-            this.clearTimer = null;
+        if (this.timer) clearTimeout(this.timer);
+        if (this.clearTimer) clearTimeout(this.clearTimer);
+
+        if (this.currentIndex >= this.words.length) {
+            this.pause();
+            return;
         }
 
-        let word = this.words[this.currentIndex] || '';
-        let wordCountInFrame = 1;
-
-        if (this.settings.chunkingEnabled && this.settings.wpm >= 400 && this.currentIndex < this.words.length - 1) {
-            const nextW = this.words[this.currentIndex + 1] || '';
-            const lastC = word[word.length - 1];
-            if (word.length > 0 && nextW.length > 0 && !['.', '!', '?', ';'].includes(lastC)) {
-                word = `${word} ${nextW}`;
-                wordCountInFrame = 2;
-            }
-        }
+        const frame = this.getFrameAt(this.currentIndex);
 
         const baseDelay = 60000 / this.settings.wpm;
-        let delay = baseDelay * wordCountInFrame;
+        let delay = baseDelay * frame.wordCount * frame.punctuationMultiplier;
 
-        if (this.settings.lengthScaling && word.length > 0) {
-            const len = word.length;
+        if (this.settings.lengthScaling && frame.text.length > 0 && !frame.isPauseToken) {
+            const len = frame.text.length;
             let scale = 1.0;
             if (len <= 3) scale = 0.75;
             else if (len >= 8 && len <= 10) scale = 1.25;
@@ -1544,31 +1614,12 @@ class RSVPReader {
 
         if (this.settings.speedRampUp && this.rampUpStartTime) {
             const elapsed = Date.now() - this.rampUpStartTime;
-            if (elapsed < 3000) {
-                const progress = elapsed / 3000;
-                const ramp = 0.7 + 0.3 * progress;
-                delay /= ramp;
+            const rampDuration = 3000;
+            if (elapsed < rampDuration) {
+                const rampProgress = Math.min(1.0, elapsed / rampDuration);
+                const speedFactor = 0.7 + 0.3 * rampProgress;
+                delay = delay / speedFactor;
             }
-        }
-
-        const lastChar = word[word.length - 1];
-        if (lastChar === ',') {
-            delay *= this.settings.commaPause;
-        } else if (lastChar === '.' || lastChar === '!') {
-            delay *= this.settings.periodPause;
-        } else if ([';', ':', '?', '…'].includes(lastChar)) {
-            delay *= this.settings.semicolonPause;
-        }
-
-        if (this.currentIndex >= this.words.length - 1) {
-            this.timer = setTimeout(() => {
-                if (!this.isPlaying) return;
-
-                this.pause();
-                this.updateProgress();
-                this.schedulePositionSave();
-            }, delay);
-            return;
         }
 
         const scheduledIndex = this.currentIndex;
@@ -1585,16 +1636,25 @@ class RSVPReader {
             if (!this.isPlaying) return;
             if (this.currentIndex !== scheduledIndex) return;
 
-            this.currentIndex++;
-            this.displayCurrentWord();
-            this.schedulePositionSave();
-            this.scheduleNextWord();
+            const advanceCount = frame.wordCount || 1;
+            this.wordsProcessedInRun = (this.wordsProcessedInRun || 0) + advanceCount;
+            this.currentIndex += advanceCount;
+
+            if (this.currentIndex >= this.words.length) {
+                this.displayCurrentWord();
+                this.pause();
+                this.updateProgress();
+            } else {
+                this.displayCurrentWord();
+                this.scheduleNextWord();
+                this.updateProgress();
+            }
         }, delay);
     }
 
     previousWord() {
         if (this.currentIndex > 0) {
-            this.currentIndex--;
+            this.currentIndex = Math.max(0, this.currentIndex - 1);
             this.displayCurrentWord();
             this.schedulePositionSave();
             if (this.isPlaying) this.scheduleNextWord();
@@ -1602,12 +1662,16 @@ class RSVPReader {
     }
 
     nextWord() {
-        if (this.currentIndex < this.words.length - 1) {
-            this.currentIndex++;
-            this.displayCurrentWord();
-            this.schedulePositionSave();
-            if (this.isPlaying) this.scheduleNextWord();
+        const frame = this.getFrameAt(this.currentIndex);
+        const step = frame.wordCount || 1;
+        if (this.currentIndex + step < this.words.length) {
+            this.currentIndex += step;
+        } else {
+            this.currentIndex = Math.max(0, this.words.length - 1);
         }
+        this.displayCurrentWord();
+        this.schedulePositionSave();
+        if (this.isPlaying) this.scheduleNextWord();
     }
 
     updateProgress() {
@@ -1731,21 +1795,31 @@ class RSVPReader {
     }
 
     loadSettingsToForm() {
-        this.wpmInput.value = this.settings.wpm;
-        this.commaPauseInput.value = this.settings.commaPause;
-        this.periodPauseInput.value = this.settings.periodPause;
-        this.semicolonPauseInput.value = this.settings.semicolonPause;
-        this.focusLetterColorInput.value = this.settings.focusLetterColor;
-        this.fontSizeInput.value = this.settings.fontSize;
+        if (this.wpmInput) this.wpmInput.value = this.settings.wpm;
+        if (this.commaPauseInput) this.commaPauseInput.value = this.settings.commaPause;
+        if (this.periodPauseInput) this.periodPauseInput.value = this.settings.periodPause;
+        if (this.semicolonPauseInput) this.semicolonPauseInput.value = this.settings.semicolonPause;
+        if (this.focusLetterColorInput) this.focusLetterColorInput.value = this.settings.focusLetterColor;
+        if (this.fontSizeInput) this.fontSizeInput.value = this.settings.fontSize;
+        if (this.orpAlignmentInput) this.orpAlignmentInput.checked = Boolean(this.settings.orpAlignment);
+        if (this.lengthScalingInput) this.lengthScalingInput.checked = Boolean(this.settings.lengthScaling);
+        if (this.chunkingEnabledInput) this.chunkingEnabledInput.checked = Boolean(this.settings.chunkingEnabled);
+        if (this.speedRampUpInput) this.speedRampUpInput.checked = Boolean(this.settings.speedRampUp);
+        if (this.orpNotchesInput) this.orpNotchesInput.checked = Boolean(this.settings.orpNotches);
     }
 
     updateSettings() {
-        this.settings.wpm = this.numberInRange(this.wpmInput.value, 100, 1000, 250);
-        this.settings.commaPause = this.numberInRange(this.commaPauseInput.value, 1, 5, 1.05);
-        this.settings.periodPause = this.numberInRange(this.periodPauseInput.value, 1, 5, 1.75);
-        this.settings.semicolonPause = this.numberInRange(this.semicolonPauseInput.value, 1, 5, 1.4);
-        this.settings.focusLetterColor = this.focusLetterColorInput.value;
-        this.settings.fontSize = this.numberInRange(this.fontSizeInput.value, 30, 120, 35);
+        this.settings.wpm = this.numberInRange(this.wpmInput ? this.wpmInput.value : 250, 100, 1000, 250);
+        this.settings.commaPause = this.numberInRange(this.commaPauseInput ? this.commaPauseInput.value : 1.05, 1, 5, 1.05);
+        this.settings.periodPause = this.numberInRange(this.periodPauseInput ? this.periodPauseInput.value : 1.75, 1, 5, 1.75);
+        this.settings.semicolonPause = this.numberInRange(this.semicolonPauseInput ? this.semicolonPauseInput.value : 1.4, 1, 5, 1.4);
+        if (this.focusLetterColorInput) this.settings.focusLetterColor = this.focusLetterColorInput.value;
+        if (this.fontSizeInput) this.settings.fontSize = this.numberInRange(this.fontSizeInput.value, 30, 120, 35);
+        if (this.orpAlignmentInput) this.settings.orpAlignment = this.orpAlignmentInput.checked;
+        if (this.lengthScalingInput) this.settings.lengthScaling = this.lengthScalingInput.checked;
+        if (this.chunkingEnabledInput) this.settings.chunkingEnabled = this.chunkingEnabledInput.checked;
+        if (this.speedRampUpInput) this.settings.speedRampUp = this.speedRampUpInput.checked;
+        if (this.orpNotchesInput) this.settings.orpNotches = this.orpNotchesInput.checked;
 
         this.saveSettings();
         this.updateSpeedControls();
@@ -1831,13 +1905,15 @@ class RSVPReader {
         if (savedUpdatedAt) {
             this.settingsUpdatedAt = savedUpdatedAt;
         }
+
+        this.loadSettingsToForm();
     }
 
     migrateSettingsDefaults(settings) {
         const migrated = { ...(settings || {}) };
         let changed = false;
 
-        if (migrated.settingsVersion !== 2) {
+        if (migrated.settingsVersion !== 4) {
             if (migrated.wpm === undefined || migrated.wpm === 300) {
                 migrated.wpm = 250;
                 changed = true;
@@ -1846,7 +1922,27 @@ class RSVPReader {
                 migrated.fontSize = 35;
                 changed = true;
             }
-            migrated.settingsVersion = 2;
+            if (typeof migrated.orpAlignment !== 'boolean') {
+                migrated.orpAlignment = false;
+                changed = true;
+            }
+            if (typeof migrated.lengthScaling !== 'boolean') {
+                migrated.lengthScaling = false;
+                changed = true;
+            }
+            if (typeof migrated.chunkingEnabled !== 'boolean') {
+                migrated.chunkingEnabled = false;
+                changed = true;
+            }
+            if (typeof migrated.speedRampUp !== 'boolean') {
+                migrated.speedRampUp = false;
+                changed = true;
+            }
+            if (typeof migrated.orpNotches !== 'boolean') {
+                migrated.orpNotches = false;
+                changed = true;
+            }
+            migrated.settingsVersion = 4;
             changed = true;
         }
 
