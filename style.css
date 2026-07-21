@@ -3,10 +3,11 @@
     --bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
     --surface: #1e293b;
     --surface-2: #334155;
-    --surface-3: #15251f;
+    --surface-3: #475569;
     --border: #334155;
     --border-strong: #475569;
-    --text: #e2e8f0;
+    --text: #f8fafc;
+    --text-heading: #ffffff;
     --muted: #94a3b8;
     --primary: #3b82f6;
     --primary-hover: #2563eb;
@@ -18,17 +19,21 @@
     --rsvp-bottom-zone-height: clamp(132px, 18vh, 180px);
     --run-fill: #3b82f6;
     --total-fill: #64748b;
+    --btn-bg: #334155;
+    --btn-text: #f8fafc;
+    --btn-hover: #475569;
 }
 
 [data-theme="day"] {
     --bg: #f5f0e8;
     --bg-gradient: linear-gradient(180deg, #f5f0e8 0%, #eae4d5 100%);
     --surface: #eae4d5;
-    --surface-2: #dfd8c7;
-    --surface-3: #d3ebd8;
+    --surface-2: #fbf9f4;
+    --surface-3: #dfd8c7;
     --border: #d8d0c0;
     --border-strong: #bfb4a0;
     --text: #2d2d2d;
+    --text-heading: #1a1a1a;
     --muted: #6e7681;
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
@@ -40,6 +45,9 @@
     --rsvp-bottom-zone-height: clamp(132px, 18vh, 180px);
     --run-fill: #2563eb;
     --total-fill: #94a3b8;
+    --btn-bg: #dfd8c7;
+    --btn-text: #2d2d2d;
+    --btn-hover: #d3caba;
 }
 
 * {
@@ -123,14 +131,14 @@ header h1 {
 #librarySummary,
 #storageStatus {
     margin-top: 4px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.9rem;
 }
 
 #textInputSection,
 #normalReadingSection,
 #librarySection {
-    background: rgba(27, 32, 39, 0.94);
+    background: var(--surface);
     border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
     border-radius: 8px;
     padding: 18px;
@@ -278,7 +286,7 @@ header h1 {
 
 .search-results {
     min-width: 58px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.86rem;
     white-space: nowrap;
 }
@@ -288,7 +296,7 @@ header h1 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 12px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.9rem;
 }
 
@@ -306,7 +314,7 @@ header h1 {
     max-height: 70vh;
     padding: 18px;
     overflow-y: auto;
-    color: #f0f3f7;
+    color: var(--text);
     background: var(--surface);
     border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
     border-radius: 8px;
@@ -332,7 +340,7 @@ header h1 {
 }
 
 .normal-text span:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(128, 128, 128, 0.15);
 }
 
 .normal-text span.current-word {
@@ -416,7 +424,7 @@ header h1 {
     justify-content: center;
     flex-wrap: wrap;
     gap: 0 0.42em;
-    color: var(--muted);
+    color: var(--text);
     border: 1px solid transparent;
     border-radius: 8px;
     font-size: clamp(1.02rem, 2.15vw, 1.18rem);
@@ -430,7 +438,8 @@ header h1 {
 .rsvp-pause-context.is-visible {
     opacity: 1;
     visibility: visible;
-    background: #151c24;
+    background: var(--surface-2);
+    color: var(--text);
     border-color: var(--border);
 }
 
@@ -469,7 +478,7 @@ header h1 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #202832;
+    background: var(--btn-bg); color: var(--btn-text);
     border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
     border-radius: 50%;
     font-size: 1.35rem;
@@ -493,7 +502,7 @@ header h1 {
 }
 
 .control-btn:disabled:hover {
-    background: #202832;
+    background: var(--btn-bg); color: var(--btn-text);
     border-color: var(--border);
 }
 
@@ -527,7 +536,7 @@ header h1 {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.9rem;
     flex-wrap: wrap;
 }
@@ -628,7 +637,7 @@ header h1 {
 .bookmark-meta,
 .book-date,
 .bookmark-excerpt {
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.86rem;
 }
 
@@ -650,7 +659,7 @@ header h1 {
     width: 42px;
     height: 42px;
     color: var(--text);
-    background: #202832;
+    background: var(--btn-bg); color: var(--btn-text);
     border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
     border-radius: 8px;
     cursor: pointer;
@@ -658,7 +667,7 @@ header h1 {
 }
 
 .empty-state {
-    color: var(--muted);
+    color: var(--text);
     text-align: center;
 }
 
@@ -708,7 +717,7 @@ header h1 {
 }
 
 .close-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(128, 128, 128, 0.15);
 }
 
 .modal-body {
@@ -745,7 +754,7 @@ header h1 {
 .setting-desc {
     display: block;
     margin-top: 5px;
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.84rem;
 }
 
@@ -1035,7 +1044,8 @@ header h1 {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 120px;
+    min-height: 140px;
+    box-sizing: border-box;
 }
 
 .orp-notch {
@@ -1043,45 +1053,174 @@ header h1 {
     left: 50%;
     transform: translateX(-50%);
     width: 4px;
-    height: 16px;
+    height: 18px;
     background: var(--accent);
     border-radius: 2px;
     opacity: 0.95;
     pointer-events: none;
     z-index: 10;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 .orp-notch.top-notch {
-    top: -12px;
+    top: -6px;
 }
 
 .orp-notch.bottom-notch {
-    bottom: -12px;
+    bottom: -6px;
+}
+
+.rsvp-word {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.rsvp-word-frame {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .rsvp-word-frame.orp-grid-mode {
     display: grid !important;
-    grid-template-columns: 1fr auto 1fr !important;
+    grid-template-columns: 1fr min-content 1fr !important;
     align-items: center !important;
     width: 100% !important;
-    justify-items: center;
+    box-sizing: border-box !important;
 }
 
 .rsvp-word-frame.orp-grid-mode .orp-left {
     justify-self: end;
     text-align: right;
     white-space: pre;
+    overflow: hidden;
+    color: var(--text);
 }
 
 .rsvp-word-frame.orp-grid-mode .orp-center {
     justify-self: center;
     text-align: center;
     padding: 0 1px;
+    white-space: pre;
 }
 
 .rsvp-word-frame.orp-grid-mode .orp-right {
     justify-self: start;
     text-align: left;
     white-space: pre;
+    overflow: hidden;
+    color: var(--text);
+}
+/* Theme Polish & ORP Alignment */
+#textInputSection,
+#normalReadingSection,
+#librarySection {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.action-btn,
+.secondary-btn,
+.book-btn,
+.bookmark-btn,
+.control-btn {
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--border);
+
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover,
+.secondary-btn:hover,
+.book-btn:hover,
+.bookmark-btn:hover,
+.control-btn:hover {
+    background: var(--btn-hover);
+}
+
+.normal-text {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.normal-text span {
+    color: var(--text);
+}
+
+.normal-text span:hover {
+    background: var(--surface-3);
+}
+
+.rsvp-word-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 140px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+.rsvp-word {
+    width: 100%;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    text-align: center;
+    color: var(--text);
+    box-sizing: border-box;
+}
+
+.orp-notch {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+    opacity: 0.95;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
+}
+
+.orp-notch.top-notch {
+    top: 6px;
+}
+
+.orp-notch.bottom-notch {
+    bottom: 6px;
+}
+
+.rsvp-pause-context {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.modal-content {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+
+/* Disabled Button Styling */
+button:disabled,
+.control-btn:disabled,
+.action-btn:disabled,
+.secondary-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--surface-3);
+    color: var(--muted);
 }
