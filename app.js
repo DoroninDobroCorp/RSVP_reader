@@ -1359,13 +1359,39 @@ class RSVPReader {
 
     updateSpeedControls() {
         let wpmText = `${Math.round(this.settings.wpm)} слов/мин`;
-        if (this.isPlaying && this.runStartTime && (this.currentIndex - (this.rsvpRunStartIndex || 0)) > 3) {
+
+        // 1. Live measured WPM during playback
+        if (this.isPlaying && this.runStartTime && (this.currentIndex - (this.rsvpRunStartIndex || 0)) >= 2) {
             const elapsedMin = (Date.now() - this.runStartTime) / 60000;
-            if (elapsedMin > 0.02) {
-                const currentRunWords = Math.max(0, this.currentIndex - (this.rsvpRunStartIndex || 0));
+            if (elapsedMin > 0.01) {
+                const currentRunWords = Math.max(1, this.currentIndex - (this.rsvpRunStartIndex || 0));
                 const realWpm = Math.round(currentRunWords / elapsedMin);
-                if (Math.abs(realWpm - this.settings.wpm) >= 5) {
+                if (Math.abs(realWpm - this.settings.wpm) >= 3) {
                     wpmText = `Цель: ${Math.round(this.settings.wpm)} • Факт: ${realWpm} WPM`;
+                }
+            }
+        } 
+        // 2. Estimated Real WPM when paused or starting if dynamic optimizations are enabled
+        else if (this.settings.lengthScaling || this.settings.speedRampUp) {
+            let sampleWords = this.words.slice(Math.max(0, this.currentIndex), Math.min(this.words.length, this.currentIndex + 50));
+            if (sampleWords.length === 0) sampleWords = this.words.slice(0, 50);
+            if (sampleWords.length > 0) {
+                let totalDelayMs = 0;
+                const baseDelay = 60000 / this.settings.wpm;
+                for (const w of sampleWords) {
+                    let d = baseDelay;
+                    if (this.settings.lengthScaling && w.length > 0) {
+                        const len = w.length;
+                        if (len <= 3) d *= 0.75;
+                        else if (len >= 8 && len <= 10) d *= 1.25;
+                        else if (len >= 11) d *= 1.45;
+                    }
+                    totalDelayMs += d;
+                }
+                const avgDelay = totalDelayMs / sampleWords.length;
+                const estimatedWpm = Math.round(60000 / avgDelay);
+                if (Math.abs(estimatedWpm - this.settings.wpm) >= 3) {
+                    wpmText = `Цель: ${Math.round(this.settings.wpm)} • Факт: ~${estimatedWpm} WPM`;
                 }
             }
         }
@@ -1616,6 +1642,8 @@ class RSVPReader {
         if (this.rsvpProgressBar) {
             this.rsvpProgressBar.style.width = `${percentage}%`;
         }
+
+        this.updateSpeedControls();
         if (this.rsvpProgressText) {
             this.rsvpProgressText.textContent = `Забег ${rsvpRunPercentage}% • книга ${percentage}% • осталось ${timeRemaining}`;
         }
