@@ -1224,3 +1224,50 @@ button:disabled,
     background: var(--surface-3);
     color: var(--muted);
 }
+
+.orp-axis-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    background: var(--accent);
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.rsvp-word-frame.orp-grid-mode {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.rsvp-word-frame.orp-grid-mode .orp-left {
+    min-width: 0 !important;
+    justify-self: end !important;
+    text-align: right !important;
+    white-space: pre !important;
+    overflow: visible !important;
+    color: var(--text) !important;
+}
+
+.rsvp-word-frame.orp-grid-mode .orp-center {
+    justify-self: center !important;
+    text-align: center !important;
+    padding: 0 1px !important;
+    white-space: pre !important;
+    z-index: 6;
+}
+
+.rsvp-word-frame.orp-grid-mode .orp-right {
+    min-width: 0 !important;
+    justify-self: start !important;
+    text-align: left !important;
+    white-space: pre !important;
+    overflow: visible !important;
+    color: var(--text) !important;
+}

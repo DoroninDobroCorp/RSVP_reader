@@ -54,7 +54,7 @@ class RSVPReader {
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
-            orpAlignment: false,
+            orpAlignment: true,
             lengthScaling: false,
             chunkingEnabled: false,
             speedRampUp: false,
@@ -129,6 +129,7 @@ class RSVPReader {
         this.lengthScalingInput = document.getElementById('lengthScalingInput');
         this.speedRampUpInput = document.getElementById('speedRampUpInput');
         this.chunkingEnabledInput = document.getElementById('chunkingEnabledInput');
+        this.orpAxisLine = document.getElementById('orpAxisLine');
         this.orpNotchTop = document.getElementById('orpNotchTop');
         this.orpNotchBottom = document.getElementById('orpNotchBottom');
         this.orpNotchesInput = document.getElementById('orpNotchesInput');
@@ -1437,9 +1438,11 @@ class RSVPReader {
         if (this.settings.orpNotches) {
             if (this.orpNotchTop) this.orpNotchTop.style.display = 'block';
             if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'block';
+            if (this.orpAxisLine) this.orpAxisLine.style.display = 'block';
         } else {
             if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
             if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
+            if (this.orpAxisLine) this.orpAxisLine.style.display = 'none';
         }
 
         this.updatePauseContext();
@@ -1737,7 +1740,7 @@ class RSVPReader {
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
-            orpAlignment: false,
+            orpAlignment: true,
             lengthScaling: false,
             chunkingEnabled: false,
             speedRampUp: false,
