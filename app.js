@@ -1389,21 +1389,44 @@ class RSVPReader {
         const word = this.words[this.currentIndex] || '';
         const focusIndex = this.calculateFocusPoint(word);
         const wordFrame = document.createElement('span');
-        wordFrame.className = 'rsvp-word-frame';
         wordFrame.setAttribute('aria-label', word);
         wordFrame.dataset.paintToken = String(this.wordPaintToken + 1);
 
-        for (let index = 0; index < word.length; index++) {
-            const letter = document.createElement('span');
-            letter.className = 'rsvp-letter';
-            letter.textContent = word[index];
+        if (this.settings.orpAlignment) {
+            wordFrame.className = 'rsvp-word-frame orp-grid-mode';
 
-            if (index === focusIndex) {
-                letter.classList.add('focus-letter');
-                letter.style.color = this.settings.focusLetterColor;
+            const leftText = word.slice(0, focusIndex);
+            const focusText = word[focusIndex] || '';
+            const rightText = word.slice(focusIndex + 1);
+
+            const leftSpan = document.createElement('span');
+            leftSpan.className = 'orp-left';
+            leftSpan.textContent = leftText;
+
+            const focusSpan = document.createElement('span');
+            focusSpan.className = 'rsvp-letter focus-letter orp-center';
+            focusSpan.textContent = focusText;
+            focusSpan.style.color = this.settings.focusLetterColor;
+
+            const rightSpan = document.createElement('span');
+            rightSpan.className = 'orp-right';
+            rightSpan.textContent = rightText;
+
+            wordFrame.append(leftSpan, focusSpan, rightSpan);
+        } else {
+            wordFrame.className = 'rsvp-word-frame';
+            for (let index = 0; index < word.length; index++) {
+                const letter = document.createElement('span');
+                letter.className = 'rsvp-letter';
+                letter.textContent = word[index];
+
+                if (index === focusIndex) {
+                    letter.classList.add('focus-letter');
+                    letter.style.color = this.settings.focusLetterColor;
+                }
+
+                wordFrame.appendChild(letter);
             }
-
-            wordFrame.appendChild(letter);
         }
 
         this.wordPaintToken++;
@@ -1417,22 +1440,6 @@ class RSVPReader {
         } else {
             if (this.orpNotchTop) this.orpNotchTop.style.display = 'none';
             if (this.orpNotchBottom) this.orpNotchBottom.style.display = 'none';
-        }
-
-        if (this.settings.orpAlignment) {
-            requestAnimationFrame(() => {
-                const focusLetter = wordFrame.querySelector('.focus-letter');
-                if (focusLetter) {
-                    const wordRect = wordFrame.getBoundingClientRect();
-                    const letterRect = focusLetter.getBoundingClientRect();
-                    const letterCenter = (letterRect.left + letterRect.right) / 2 - wordRect.left;
-                    const wordCenter = wordRect.width / 2;
-                    const offset = wordCenter - letterCenter;
-                    wordFrame.style.transform = `translateX(${offset}px)`;
-                }
-            });
-        } else {
-            wordFrame.style.transform = 'none';
         }
 
         this.updatePauseContext();
