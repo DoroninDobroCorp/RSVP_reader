@@ -47,11 +47,11 @@ class RSVPReader {
         this.libraryFilter = '';
 
         this.settings = {
-            settingsVersion: 5,
+            settingsVersion: 6,
             wpm: 350,
             commaPause: 1.05,
-            periodPause: 1.75,
-            semicolonPause: 1.4,
+            periodPause: 1.6,
+            semicolonPause: 1.3,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
             orpAlignment: true,
@@ -1818,8 +1818,8 @@ class RSVPReader {
     updateSettings() {
         this.settings.wpm = this.numberInRange(this.wpmInput ? this.wpmInput.value : 250, 100, 1000, 250);
         this.settings.commaPause = this.numberInRange(this.commaPauseInput ? this.commaPauseInput.value : 1.05, 1, 5, 1.05);
-        this.settings.periodPause = this.numberInRange(this.periodPauseInput ? this.periodPauseInput.value : 1.75, 1, 5, 1.75);
-        this.settings.semicolonPause = this.numberInRange(this.semicolonPauseInput ? this.semicolonPauseInput.value : 1.4, 1, 5, 1.4);
+        this.settings.periodPause = this.numberInRange(this.periodPauseInput ? this.periodPauseInput.value : 1.6, 1, 5, 1.6);
+        this.settings.semicolonPause = this.numberInRange(this.semicolonPauseInput ? this.semicolonPauseInput.value : 1.3, 1, 5, 1.3);
         if (this.focusLetterColorInput) this.settings.focusLetterColor = this.focusLetterColorInput.value;
         if (this.fontSizeInput) this.settings.fontSize = this.numberInRange(this.fontSizeInput.value, 30, 120, 35);
         if (this.orpAlignmentInput) this.settings.orpAlignment = this.orpAlignmentInput.checked;
@@ -1842,11 +1842,11 @@ class RSVPReader {
 
     resetSettings() {
         this.settings = {
-            settingsVersion: 5,
+            settingsVersion: 6,
             wpm: 350,
             commaPause: 1.05,
-            periodPause: 1.75,
-            semicolonPause: 1.4,
+            periodPause: 1.6,
+            semicolonPause: 1.3,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
             orpAlignment: true,
@@ -1920,9 +1920,17 @@ class RSVPReader {
         const migrated = { ...(settings || {}) };
         let changed = false;
 
-        if (migrated.settingsVersion !== 5) {
+        if (migrated.settingsVersion !== 6) {
             if (migrated.wpm === undefined || migrated.wpm === 250 || migrated.wpm === 300) {
                 migrated.wpm = 350;
+                changed = true;
+            }
+            if (migrated.periodPause === undefined || migrated.periodPause === 1.75 || migrated.periodPause === 2.5) {
+                migrated.periodPause = 1.6;
+                changed = true;
+            }
+            if (migrated.semicolonPause === undefined || migrated.semicolonPause === 1.4 || migrated.semicolonPause === 2.0) {
+                migrated.semicolonPause = 1.3;
                 changed = true;
             }
             if (migrated.fontSize === undefined || migrated.fontSize === 60) {
@@ -1949,7 +1957,7 @@ class RSVPReader {
                 migrated.orpNotches = false;
                 changed = true;
             }
-            migrated.settingsVersion = 5;
+            migrated.settingsVersion = 6;
             changed = true;
         }
 

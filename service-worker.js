@@ -1,5 +1,5 @@
-const CACHE_NAME = 'rsvp-reader-v31';
-const ASSET_VERSION = 'v=31';
+const CACHE_NAME = 'rsvp-reader-v32';
+const ASSET_VERSION = 'v=32';
 const APP_SHELL = [
   './',
   './index.html',
