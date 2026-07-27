@@ -776,8 +776,53 @@ class RSVPReader {
     }
 
     getFileExtension(fileName) {
-        const match = fileName.toLowerCase().match(/\.([a-z0-9]+)$/);
+        const lower = fileName.toLowerCase();
+        if (lower.endsWith('.fb2.zip')) return 'fb2.zip';
+        if (lower.endsWith('.fb2.gz')) return 'fb2.gz';
+        const match = lower.match(/\.([a-z0-9]+)$/);
         return match ? match[1] : 'txt';
+    }
+
+    readTextWithEncoding(arrayBuffer) {
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        let asciiHeader = '';
+        const headerLimit = Math.min(uint8Array.length, 600);
+        for (let i = 0; i < headerLimit; i++) {
+            asciiHeader += String.fromCharCode(uint8Array[i]);
+        }
+
+        const encodingMatch = asciiHeader.match(/encoding=["']([^"']+)["']/i);
+        let declaredEncoding = encodingMatch ? encodingMatch[1].toLowerCase().trim() : null;
+
+        if (declaredEncoding === 'win-1251' || declaredEncoding === 'windows1251' || declaredEncoding === 'cp1251') {
+            declaredEncoding = 'windows-1251';
+        }
+
+        if (declaredEncoding && declaredEncoding !== 'utf-8' && declaredEncoding !== 'utf8') {
+            try {
+                return new TextDecoder(declaredEncoding).decode(arrayBuffer);
+            } catch (e) {
+                console.warn(`TextDecoder for ${declaredEncoding} failed:`, e);
+            }
+        }
+
+        const utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+        const decodedUtf8 = utf8Decoder.decode(arrayBuffer);
+
+        if (decodedUtf8.includes('\uFFFD') || (declaredEncoding && declaredEncoding.includes('1251'))) {
+            try {
+                const win1251Decoder = new TextDecoder('windows-1251');
+                const decodedWin1251 = win1251Decoder.decode(arrayBuffer);
+                if (/[а-яА-Я]/.test(decodedWin1251)) {
+                    return decodedWin1251;
+                }
+            } catch (e) {
+                console.warn('Windows-1251 decoding failed:', e);
+            }
+        }
+
+        return decodedUtf8;
     }
 
     async extractTextFromFile(file, extension) {
@@ -787,21 +832,78 @@ class RSVPReader {
             case 'docx':
                 return this.extractTextFromDocx(file);
             case 'fb2':
-            case 'xml':
-                return this.extractTextFromFB2(await this.readTextFile(file));
+            case 'xml': {
+                const buffer = await this.readArrayBuffer(file);
+                const text = this.readTextWithEncoding(buffer);
+                return this.extractTextFromFB2(text);
+            }
+            case 'zip':
+            case 'fb2.zip':
+            case 'fb2.gz':
+                return this.extractTextFromZip(file);
             case 'html':
-            case 'htm':
-                return this.extractTextFromHTMLDocument(await this.readTextFile(file));
+            case 'htm': {
+                const buffer = await this.readArrayBuffer(file);
+                const text = this.readTextWithEncoding(buffer);
+                return this.extractTextFromHTMLDocument(text);
+            }
             case 'md':
-            case 'markdown':
-                return this.extractTextFromMarkdown(await this.readTextFile(file));
+            case 'markdown': {
+                const buffer = await this.readArrayBuffer(file);
+                const text = this.readTextWithEncoding(buffer);
+                return this.extractTextFromMarkdown(text);
+            }
             case 'rtf':
                 return this.extractTextFromRTF(await this.readArrayBuffer(file));
-            case 'txt':
-                return this.readTextFile(file);
-            default:
+            case 'txt': {
+                const buffer = await this.readArrayBuffer(file);
+                return this.readTextWithEncoding(buffer);
+            }
+            default: {
+                const buffer = await this.readArrayBuffer(file);
+                const uint8 = new Uint8Array(buffer);
+                if (uint8.length >= 4 && uint8[0] === 0x50 && uint8[1] === 0x4B && uint8[2] === 0x03 && uint8[3] === 0x04) {
+                    return this.extractTextFromZip(file);
+                }
                 throw new Error(`Формат .${extension} пока не поддерживается`);
+            }
         }
+    }
+
+    async extractTextFromZip(file) {
+        const JSZip = await this.loadZipLibrary();
+        const zip = await JSZip.loadAsync(file);
+
+        let targetEntry = null;
+        zip.forEach((relativePath, zipEntry) => {
+            if (!zipEntry.dir && !targetEntry) {
+                const lower = relativePath.toLowerCase();
+                if (lower.endsWith('.fb2') || lower.endsWith('.xml') || lower.endsWith('.txt')) {
+                    targetEntry = zipEntry;
+                }
+            }
+        });
+
+        if (!targetEntry) {
+            zip.forEach((relativePath, zipEntry) => {
+                if (!zipEntry.dir && !targetEntry) {
+                    targetEntry = zipEntry;
+                }
+            });
+        }
+
+        if (!targetEntry) {
+            throw new Error('В ZIP архиве не найден файл книги (FB2 или TXT)');
+        }
+
+        const arrayBuffer = await targetEntry.async('arraybuffer');
+        const text = this.readTextWithEncoding(arrayBuffer);
+
+        if (targetEntry.name.toLowerCase().endsWith('.fb2') || targetEntry.name.toLowerCase().endsWith('.xml') || text.includes('<FictionBook')) {
+            return this.extractTextFromFB2(text);
+        }
+
+        return text;
     }
 
     readTextFile(file) {
@@ -1012,7 +1114,7 @@ class RSVPReader {
     }
 
     nameFromFile(fileName) {
-        return fileName.replace(/\.(txt|epub|fb2|xml|docx|html|htm|md|markdown|rtf)$/i, '').replace(/[_-]+/g, ' ').trim();
+        return fileName.replace(/\.(txt|epub|fb2|fb2\.zip|zip|xml|docx|html|htm|md|markdown|rtf)$/i, '').replace(/[_-]+/g, ' ').trim();
     }
 
     async startNormalReading() {

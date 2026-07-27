@@ -97,8 +97,8 @@ test.describe('Additional file format imports', () => {
 
       const text = await page.locator('#textInput').inputValue();
       if (format === 'fb2_1251') {
-        expect(text.length).toBeGreaterThan(0);
-        expect(text.length).toBeGreaterThan(0);
+        expect(text).toContain('Привет заголовок');
+        expect(text).toContain('Первый русский текст');
       } else {
         expect(text.toLowerCase()).toContain(format === 'md' ? 'markdown' : (format.startsWith('fb2') ? 'fb2' : format));
       }
