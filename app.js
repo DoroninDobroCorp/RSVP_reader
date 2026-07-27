@@ -2704,12 +2704,91 @@ class RSVPReader {
         if (!file) return;
 
         try {
-            const text = await this.readTextFile(file);
-            const payload = JSON.parse(text);
+            const extension = this.getFileExtension(file.name);
+
+            // If user selects a book file (.fb2, .fb2.zip, .epub, .docx, .txt, .html, .rtf, .md, etc.)
+            if (['fb2', 'fb2.zip', 'fb2.gz', 'epub', 'docx', 'html', 'htm', 'md', 'markdown', 'rtf'].includes(extension) || file.name.toLowerCase().endsWith('.fb2') || file.name.toLowerCase().endsWith('.fb2.zip')) {
+                const extractedText = await this.extractTextFromFile(file, extension);
+                const name = this.nameFromFile(file.name);
+                const now = new Date().toISOString();
+                const book = {
+                    id: this.createId(),
+                    name,
+                    text: extractedText,
+                    wordCount: this.parseText(extractedText).length,
+                    currentIndex: 0,
+                    bookmarks: [],
+                    sourceType: extension,
+                    dateAdded: now,
+                    lastRead: now,
+                    updatedAt: now
+                };
+                await this.putBook(book);
+                await this.loadLibrary();
+                this.renderLibrary();
+                this.showToast(`Книга "${name}" успешно добавлена в библиотеку!`);
+                return;
+            }
+
+            // Try reading file as buffer / text for JSON or XML FB2 fallback
+            const buffer = await this.readArrayBuffer(file);
+            const text = this.readTextWithEncoding(buffer);
+
+            // Check if file is FB2 XML (starts with <?xml or <FictionBook)
+            if (text.trim().startsWith('<?xml') || text.trim().startsWith('<FictionBook')) {
+                const extractedText = this.extractTextFromFB2(text);
+                const name = this.nameFromFile(file.name);
+                const now = new Date().toISOString();
+                const book = {
+                    id: this.createId(),
+                    name,
+                    text: extractedText,
+                    wordCount: this.parseText(extractedText).length,
+                    currentIndex: 0,
+                    bookmarks: [],
+                    sourceType: 'fb2',
+                    dateAdded: now,
+                    lastRead: now,
+                    updatedAt: now
+                };
+                await this.putBook(book);
+                await this.loadLibrary();
+                this.renderLibrary();
+                this.showToast(`Книга "${name}" успешно добавлена в библиотеку!`);
+                return;
+            }
+
+            // Try parsing JSON library export
+            let payload;
+            try {
+                payload = JSON.parse(text);
+            } catch (jsonErr) {
+                // If not valid JSON, process as a text book file!
+                const name = this.nameFromFile(file.name);
+                const now = new Date().toISOString();
+                const book = {
+                    id: this.createId(),
+                    name,
+                    text: text.trim(),
+                    wordCount: this.parseText(text.trim()).length,
+                    currentIndex: 0,
+                    bookmarks: [],
+                    sourceType: 'text',
+                    dateAdded: now,
+                    lastRead: now,
+                    updatedAt: now
+                };
+                await this.putBook(book);
+                await this.loadLibrary();
+                this.renderLibrary();
+                this.showToast(`Книга "${name}" успешно добавлена в библиотеку!`);
+                return;
+            }
+
             const importedBooks = Array.isArray(payload) ? payload : payload.books;
 
             if (!Array.isArray(importedBooks)) {
-                throw new Error('В файле не найден список книг');
+                throw new Error('В JSON-файле не найден список книг');
             }
 
             let count = 0;
@@ -2732,6 +2811,8 @@ class RSVPReader {
             await this.loadLibrary();
             this.renderLibrary();
             this.showToast(`Импортировано книг: ${count}.`);
+        } catch (error) {
+            this.showToast(`Ошибка импорта: ${error.message}`, 'error');
         } finally {
             event.target.value = '';
         }
