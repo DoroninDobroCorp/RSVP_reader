@@ -27,14 +27,14 @@
 [data-theme="day"] {
     --bg: #f5f0e8;
     --bg-gradient: linear-gradient(180deg, #f5f0e8 0%, #eae4d5 100%);
-    --surface: #eae4d5;
-    --surface-2: #fbf9f4;
-    --surface-3: #dfd8c7;
+    --surface: #ffffff;
+    --surface-2: #f5f0e8;
+    --surface-3: #e2dacb;
     --border: #d8d0c0;
-    --border-strong: #bfb4a0;
-    --text: #2d2d2d;
-    --text-heading: #1a1a1a;
-    --muted: #6e7681;
+    --border-strong: #a89f8d;
+    --text: #1e293b;
+    --text-heading: #0f172a;
+    --muted: #64748b;
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
     --secondary: #16a34a;
@@ -45,8 +45,8 @@
     --rsvp-bottom-zone-height: clamp(132px, 18vh, 180px);
     --run-fill: #2563eb;
     --total-fill: #94a3b8;
-    --btn-bg: #dfd8c7;
-    --btn-text: #2d2d2d;
+    --btn-bg: #e2dacb;
+    --btn-text: #0f172a;
     --btn-hover: #d3caba;
 }
 
@@ -212,16 +212,20 @@ header h1 {
 .primary-btn {
     padding: 10px 16px;
     background: var(--primary);
+    color: #ffffff !important;
 }
 
 .primary-btn:hover {
     background: var(--primary-hover);
+    color: #ffffff !important;
 }
 
 .secondary-btn {
     padding: 9px 14px;
-    background: #19212a;
-    border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
+    background: var(--btn-bg);
+    color: var(--btn-text) !important;
+    border: 1px solid var(--border);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .secondary-btn:hover,
@@ -229,7 +233,8 @@ header h1 {
 .search-nav-btn:hover,
 .book-btn:hover {
     border-color: var(--border-strong);
-    background: #25303b;
+    background: var(--btn-hover);
+    color: var(--btn-text) !important;
 }
 
 .compact-btn {
@@ -241,8 +246,10 @@ header h1 {
 .icon-btn {
     min-width: 44px;
     padding: 8px 12px;
-    background: #19212a;
-    border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
+    background: var(--btn-bg);
+    color: var(--btn-text) !important;
+    border: 1px solid var(--border);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .status-pill {
@@ -251,17 +258,25 @@ header h1 {
     min-height: 32px;
     padding: 5px 10px;
     border-radius: 999px;
-    color: #dff7e9;
-    background: rgba(47, 191, 113, 0.16);
-    border: 1px solid rgba(47, 191, 113, 0.45);
+    color: #15803d;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.45);
     font-size: 0.82rem;
     font-weight: 700;
 }
 
+[data-theme="night"] .status-pill {
+    color: #4ade80;
+}
+
 .status-pill.offline {
-    color: #fff1c2;
-    background: rgba(242, 201, 76, 0.16);
-    border-color: rgba(242, 201, 76, 0.45);
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.45);
+}
+
+[data-theme="night"] .status-pill.offline {
+    color: #fde047;
 }
 
 .search-container {
@@ -275,8 +290,10 @@ header h1 {
 .search-nav-btn {
     width: 42px;
     padding: 0;
-    background: #19212a;
-    border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
+    background: var(--btn-bg);
+    color: var(--btn-text) !important;
+    border: 1px solid var(--border);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .search-nav-btn:disabled {
@@ -515,7 +532,7 @@ header h1 {
 .book-progress-bar {
     width: 100%;
     overflow: hidden;
-    background: #10161d;
+    background: var(--surface-3);
     border-radius: 999px;
 }
 
@@ -599,8 +616,10 @@ header h1 {
 .library-item,
 .bookmark-item,
 .empty-state {
-    background: #151c24;
-    border: 1px solid var(--border); transition: background 0.3s ease, border-color 0.3s ease;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: background 0.3s ease, border-color 0.3s ease;
     border-radius: 8px;
     padding: 14px;
 }
@@ -785,8 +804,8 @@ header h1 {
 
 .toast {
     padding: 11px 12px;
-    color: var(--text);
-    background: #17261f;
+    color: #ffffff;
+    background: #1e293b;
     border: 1px solid rgba(47, 191, 113, 0.45);
     border-radius: 8px;
     box-shadow: var(--shadow);
