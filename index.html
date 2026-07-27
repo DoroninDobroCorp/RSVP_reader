@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="description" content="RSVP Speed Reader - быстрое чтение по одному слову">
     <title>RSVP Reader</title>
-    <link rel="manifest" href="manifest.json?v=33">
-    <link rel="stylesheet" href="style.css?v=33">
+    <link rel="manifest" href="manifest.json?v=34">
+    <link rel="stylesheet" href="style.css?v=34">
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAISSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=">
 </head>
 <body>
@@ -39,7 +39,7 @@
                 <button id="addToLibraryBtn" class="secondary-btn">💾 Сохранить книгу</button>
                 <button id="libraryBtn" class="secondary-btn">📚 Моя библиотека</button>
             </div>
-            <input type="file" id="fileInput" accept=".txt,.epub,.fb2,.fb2.zip,.zip,.xml,.docx,.html,.htm,.md,.markdown,.rtf,text/plain,text/html,application/epub+zip,application/x-zip-compressed,application/zip,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/rtf" style="display: none;">
+            <input type="file" id="fileInput" accept=".fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*" style="display: none;">
         </section>
 
         <section id="librarySection" style="display: none;">
@@ -56,7 +56,7 @@
                 </div>
             </div>
             <ul id="booksList" class="books-list" aria-live="polite"></ul>
-            <input type="file" id="libraryImportInput" accept=".json,application/json" style="display: none;">
+            <input type="file" id="libraryImportInput" accept=".fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*" style="display: none;">
         </section>
 
         <section id="normalReadingSection" style="display: none;">
@@ -233,8 +233,8 @@
         </div>
     </div>
 
-    <script src="vendor/jszip.min.js?v=33"></script>
-    <script src="epub-parser.js?v=33"></script>
-    <script src="app.js?v=33"></script>
+    <script src="vendor/jszip.min.js?v=34"></script>
+    <script src="epub-parser.js?v=34"></script>
+    <script src="app.js?v=34"></script>
 </body>
 </html>
