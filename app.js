@@ -1453,7 +1453,7 @@ class RSVPReader {
             return ['.', '!', '?', ';', ':', '…'].includes(lastChar) || w.endsWith('...');
         };
 
-        if (this.settings.chunkingEnabled && this.settings.wpm >= 400 && index < this.words.length - 1) {
+        if (this.settings.chunkingEnabled && this.settings.wpm >= 350 && index < this.words.length - 1) {
             const secondWord = this.words[index + 1];
             if (!hasPunctuation(firstWord) && secondWord !== '' && !secondWord.startsWith('\n')) {
                 wordCount = 2;

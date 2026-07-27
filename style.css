@@ -1124,7 +1124,7 @@ button:disabled,
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 50%;
+    left: 40%;
     transform: translateX(-50%);
     width: 1px;
     background: var(--accent);
@@ -1135,7 +1135,7 @@ button:disabled,
 
 .orp-notch {
     position: absolute;
-    left: 50%;
+    left: 40%;
     transform: translateX(-50%);
     width: 4px;
     height: 18px;
@@ -1162,7 +1162,7 @@ button:disabled,
 
 .rsvp-word-frame.orp-grid-mode {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 40fr) auto minmax(0, 60fr) !important;
     align-items: center !important;
     width: 100% !important;
     box-sizing: border-box !important;

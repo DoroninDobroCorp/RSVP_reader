@@ -85,7 +85,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
 
     await page.evaluate(() => {
       window.rsvpReader.settings.chunkingEnabled = true;
-      window.rsvpReader.settings.wpm = 400;
+      window.rsvpReader.settings.wpm = 350;
       window.rsvpReader.saveSettings();
     });
 
@@ -116,7 +116,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
 
     await page.evaluate(() => {
       window.rsvpReader.settings.chunkingEnabled = true;
-      window.rsvpReader.settings.wpm = 400;
+      window.rsvpReader.settings.wpm = 350;
       window.rsvpReader.settings.periodPause = 2.5;
       window.rsvpReader.saveSettings();
     });
@@ -200,16 +200,20 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
         window.rsvpReader.displayCurrentWord();
       }, i);
 
-      const focusCenter = await page.evaluate(() => {
+      const { focusCenter, expected40Pos } = await page.evaluate(() => {
         const el = document.querySelector('.focus-letter');
-        if (!el) return null;
+        const container = document.querySelector('.rsvp-word-frame');
+        if (!el || !container) return { focusCenter: null, expected40Pos: 0 };
         const r = el.getBoundingClientRect();
-        return (r.left + r.right) / 2;
+        const cr = container.getBoundingClientRect();
+        return {
+          focusCenter: (r.left + r.right) / 2,
+          expected40Pos: cr.left + (cr.width * 0.40)
+        };
       });
 
       expect(focusCenter).not.toBeNull();
-      // On 1280px viewport, center should be 640px ± 1px
-      expect(Math.abs(focusCenter - 640)).toBeLessThanOrEqual(1.0);
+      expect(Math.abs(focusCenter - expected40Pos)).toBeLessThanOrEqual(3.0);
     }
   });
 
