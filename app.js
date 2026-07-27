@@ -47,17 +47,17 @@ class RSVPReader {
         this.libraryFilter = '';
 
         this.settings = {
-            settingsVersion: 4,
-            wpm: 250,
+            settingsVersion: 5,
+            wpm: 350,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
             orpAlignment: true,
-            lengthScaling: false,
-            chunkingEnabled: false,
-            speedRampUp: false,
+            lengthScaling: true,
+            chunkingEnabled: true,
+            speedRampUp: true,
             orpNotches: false
         };
 
@@ -1453,12 +1453,19 @@ class RSVPReader {
             return ['.', '!', '?', ';', ':', '…'].includes(lastChar) || w.endsWith('...');
         };
 
+        const cleanLength = (w) => {
+            if (!w) return 0;
+            return w.replace(/[.,!?;:…"'«»()—\-\s]/g, '').length;
+        };
+
         if (this.settings.chunkingEnabled && this.settings.wpm >= 350 && index < this.words.length - 1) {
             const secondWord = this.words[index + 1];
             if (!hasPunctuation(firstWord) && secondWord !== '' && !secondWord.startsWith('\n')) {
-                wordCount = 2;
-                combinedText = `${firstWord} ${secondWord}`;
-                sourceWords.push(secondWord);
+                if (cleanLength(firstWord) <= 5 && cleanLength(secondWord) <= 5) {
+                    wordCount = 2;
+                    combinedText = `${firstWord} ${secondWord}`;
+                    sourceWords.push(secondWord);
+                }
             }
         }
 
@@ -1835,17 +1842,17 @@ class RSVPReader {
 
     resetSettings() {
         this.settings = {
-            settingsVersion: 4,
-            wpm: 250,
+            settingsVersion: 5,
+            wpm: 350,
             commaPause: 1.05,
             periodPause: 1.75,
             semicolonPause: 1.4,
             focusLetterColor: '#ff6b6b',
             fontSize: 35,
             orpAlignment: true,
-            lengthScaling: false,
-            chunkingEnabled: false,
-            speedRampUp: false,
+            lengthScaling: true,
+            chunkingEnabled: true,
+            speedRampUp: true,
             orpNotches: false
         };
         this.loadSettingsToForm();
@@ -1913,9 +1920,9 @@ class RSVPReader {
         const migrated = { ...(settings || {}) };
         let changed = false;
 
-        if (migrated.settingsVersion !== 4) {
-            if (migrated.wpm === undefined || migrated.wpm === 300) {
-                migrated.wpm = 250;
+        if (migrated.settingsVersion !== 5) {
+            if (migrated.wpm === undefined || migrated.wpm === 250 || migrated.wpm === 300) {
+                migrated.wpm = 350;
                 changed = true;
             }
             if (migrated.fontSize === undefined || migrated.fontSize === 60) {
@@ -1923,26 +1930,26 @@ class RSVPReader {
                 changed = true;
             }
             if (typeof migrated.orpAlignment !== 'boolean') {
-                migrated.orpAlignment = false;
+                migrated.orpAlignment = true;
                 changed = true;
             }
             if (typeof migrated.lengthScaling !== 'boolean') {
-                migrated.lengthScaling = false;
+                migrated.lengthScaling = true;
                 changed = true;
             }
             if (typeof migrated.chunkingEnabled !== 'boolean') {
-                migrated.chunkingEnabled = false;
+                migrated.chunkingEnabled = true;
                 changed = true;
             }
             if (typeof migrated.speedRampUp !== 'boolean') {
-                migrated.speedRampUp = false;
+                migrated.speedRampUp = true;
                 changed = true;
             }
             if (typeof migrated.orpNotches !== 'boolean') {
                 migrated.orpNotches = false;
                 changed = true;
             }
-            migrated.settingsVersion = 4;
+            migrated.settingsVersion = 5;
             changed = true;
         }
 

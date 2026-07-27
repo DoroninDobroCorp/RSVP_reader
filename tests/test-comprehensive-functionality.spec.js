@@ -356,7 +356,7 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
         console.log(`   WPM loaded: ${wpmValue}`);
         console.log(`   Font size loaded: ${fontSizeValue}`);
         
-        expect(wpmValue).toBe('250');
+        expect(wpmValue).toBe('350');
         expect(fontSizeValue).toBe('35');
         
         // Change settings

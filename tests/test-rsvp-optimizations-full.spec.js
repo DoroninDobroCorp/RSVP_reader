@@ -62,24 +62,24 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
     // Click Reset
     await page.click('#resetSettingsBtn');
 
-    // Assert UI and runtime defaults (orpAlignment: true, others false)
+    // Assert UI and runtime defaults (all ON except notches, wpm 350)
     expect(await page.isChecked('#orpAlignmentInput')).toBe(true);
-    expect(await page.isChecked('#lengthScalingInput')).toBe(false);
-    expect(await page.isChecked('#chunkingEnabledInput')).toBe(false);
-    expect(await page.isChecked('#speedRampUpInput')).toBe(false);
+    expect(await page.isChecked('#lengthScalingInput')).toBe(true);
+    expect(await page.isChecked('#chunkingEnabledInput')).toBe(true);
+    expect(await page.isChecked('#speedRampUpInput')).toBe(true);
     expect(await page.isChecked('#orpNotchesInput')).toBe(false);
-    expect(await page.inputValue('#wpmInput')).toBe('250');
+    expect(await page.inputValue('#wpmInput')).toBe('350');
 
     const resetSettings = await page.evaluate(() => window.rsvpReader.settings);
-    expect(resetSettings.wpm).toBe(250);
+    expect(resetSettings.wpm).toBe(350);
     expect(resetSettings.orpAlignment).toBe(true);
-    expect(resetSettings.lengthScaling).toBe(false);
-    expect(resetSettings.chunkingEnabled).toBe(false);
-    expect(resetSettings.speedRampUp).toBe(false);
+    expect(resetSettings.lengthScaling).toBe(true);
+    expect(resetSettings.chunkingEnabled).toBe(true);
+    expect(resetSettings.speedRampUp).toBe(true);
     expect(resetSettings.orpNotches).toBe(false);
   });
 
-  test('3. Chunking shows pairs and increments index correctly without missing/duplicating words', async ({ page }) => {
+  test('3. Chunking shows pairs for short words (<=5 letters) and single for long words', async ({ page }) => {
     await page.goto('http://localhost:8081');
     await page.waitForLoadState('networkidle');
 
@@ -89,25 +89,31 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
       window.rsvpReader.saveSettings();
     });
 
-    const words = ['первое', 'второе', 'третье', 'четвёртое', 'пятое'];
-    await page.locator('#textInput').fill(words.join(' '));
+    // Short words (<= 5 letters): 'в' (1), 'доме' (4), 'на' (2), 'лугу' (4), 'он' (2)
+    const shortWords = ['в', 'доме', 'на', 'лугу', 'он'];
+    await page.locator('#textInput').fill(shortWords.join(' '));
     await page.click('#startReadingBtn');
     await page.click('#startRSVPBtn');
 
-    // First frame should display "первое второе" (2 words)
+    // First frame should display "в доме" (2 words)
     const frame0 = await page.evaluate(() => window.rsvpReader.getFrameAt(0));
-    expect(frame0.text).toBe('первое второе');
+    expect(frame0.text).toBe('в доме');
     expect(frame0.wordCount).toBe(2);
 
-    // Frame after advancing by 2 should display "третье четвёртое"
+    // Frame after advancing by 2 should display "на лугу" (2 words)
     const frame2 = await page.evaluate(() => window.rsvpReader.getFrameAt(2));
-    expect(frame2.text).toBe('третье четвёртое');
+    expect(frame2.text).toBe('на лугу');
     expect(frame2.wordCount).toBe(2);
 
-    // Frame at index 4 (odd word) should display "пятое" (1 word)
-    const frame4 = await page.evaluate(() => window.rsvpReader.getFrameAt(4));
-    expect(frame4.text).toBe('пятое');
-    expect(frame4.wordCount).toBe(1);
+    // Test long words (> 5 letters) are NOT chunked
+    await page.evaluate(() => {
+      window.rsvpReader.words = ['исследование', 'показало'];
+      window.rsvpReader.currentIndex = 0;
+    });
+
+    const longFrame0 = await page.evaluate(() => window.rsvpReader.getFrameAt(0));
+    expect(longFrame0.text).toBe('исследование');
+    expect(longFrame0.wordCount).toBe(1);
   });
 
   test('4. Punctuation boundary isolates chunks and preserves delay multiplier', async ({ page }) => {
