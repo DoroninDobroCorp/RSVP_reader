@@ -5,7 +5,7 @@ playwright-report/
 *.log
 .DS_Store
 Thumbs.db
-package-lock.json
+dist/
 
 # Local Netlify folder
 .netlify

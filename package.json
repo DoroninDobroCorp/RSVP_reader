@@ -1,14 +1,22 @@
 {
-  "name": "rsvp_reader",
-  "version": "1.0.0",
-  "description": "Быстрая читалка по методу RSVP (Rapid Serial Visual Presentation) с поддержкой оффлайн-режима и мобильных устройств.",
+  "name": "paceflow-reader",
+  "version": "2.0.0",
+  "description": "A calm, private pace reader for real books, with smart rhythm, context and reliable progress.",
   "main": "app.js",
   "scripts": {
     "start": "node server.js",
-    "test": "playwright test",
-    "test:local": "playwright test test-comprehensive-functionality.spec.js test-bottom-tap-zone.spec.js test-epub.spec.js test-format-imports.spec.js test-library-bookmarks.spec.js test-mobile-doubletap.spec.js test-last-word-stopping.spec.js",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
+    "build": "npm run build:web",
+    "build:web": "node scripts/build-web.mjs",
+    "cap:sync": "npm run build && cap sync",
+    "ios:add": "npm run build && cap add ios",
+    "ios:open": "npm run cap:sync && cap open ios",
+    "test": "npm run test:unit && npm run test:production",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:production": "playwright test tests/test-production-regressions.spec.js tests/test-offline-production.spec.js",
+    "test:local": "playwright test tests/test-production-regressions.spec.js --project=chromium",
+    "test:legacy": "playwright test test-comprehensive-functionality.spec.js test-bottom-tap-zone.spec.js test-epub.spec.js test-format-imports.spec.js test-library-bookmarks.spec.js test-mobile-doubletap.spec.js test-last-word-stopping.spec.js --project=chromium",
+    "test:headed": "playwright test tests/test-production-regressions.spec.js --project=chromium --headed",
+    "test:debug": "playwright test tests/test-production-regressions.spec.js --project=chromium --debug",
     "test:prod": "playwright test --config=playwright.prod.config.js"
   },
   "keywords": [
@@ -26,10 +34,19 @@
     "url": "https://github.com/DoroninDobroCorp/RSVP_reader.git"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
-    "netlify-cli": "^23.9.2"
+    "@capacitor/cli": "^8.5.0",
+    "@playwright/test": "^1.62.1"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/preferences": "^8.0.1",
     "jszip": "^3.10.1"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

@@ -9,6 +9,13 @@ module.exports = defineConfig({
   retries: 0,
   workers: 1,
   reporter: 'list',
+
+  webServer: {
+    command: 'node server.js',
+    url: 'http://localhost:8081',
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
   
   use: {
     baseURL: 'http://localhost:8081',
@@ -21,6 +28,16 @@ module.exports = defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'webkit',
+      testIgnore: '**/test-offline-production.spec.js',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-safari',
+      testIgnore: '**/test-offline-production.spec.js',
+      use: { ...devices['iPhone 13'] },
     },
   ],
 });

@@ -1,15 +1,17 @@
-Скорочтение по методу RSVP - это эффективная техника быстрого чтения. Слова появляются по одному в центре экрана, что позволяет глазам оставаться неподвижными. Это значительно ускоряет процесс чтения, так как исключается необходимость движения глаз по строке.
+Chapter One: A Quiet Morning
 
-Основной принцип: каждое слово отображается на короткий промежуток времени. Одна буква в слове выделяется другим цветом - это точка оптимальной фокусировки. Исследования показывают, что большинство людей фокусируются примерно на трети расстояния от начала слова.
+The first light reached the kitchen table before the city fully woke. Mira set down a cup of tea, opened the window, and listened to the small sounds outside: a bicycle bell, a closing gate, and sparrows gathering beneath the trees.
 
-При встрече знаков препинания делаются паузы. Запятая даёт короткую паузу, точка - более длинную. Это помогает мозгу лучше усваивать информацию и структурировать прочитанное.
+She had promised herself ten unhurried minutes before the day began. There was no target to beat and no message waiting for an instant reply. She simply followed the sentence in front of her, one phrase at a time.
 
-Скорость чтения измеряется в словах в минуту. Средняя скорость чтения составляет 200-250 слов в минуту, но с тренировкой можно достичь 400-600 слов в минуту! Некоторые продвинутые читатели достигают скорости до 1000 слов в минуту.
+Chapter Two: Finding a Rhythm
 
-Приложение сохраняет вашу позицию чтения, так что вы можете продолжить с того места, где остановились. Все настройки сохраняются локально на вашем устройстве. Приложение работает полностью оффлайн после первой загрузки.
+Some passages moved easily. Others asked for a pause. A short sentence could carry a surprising amount of meaning, while a longer one became clear only after she looked back at its beginning.
 
-Попробуйте разные настройки: измените скорость, настройте паузы, выберите цвет фокусной буквы. Найдите параметры, которые работают лучше всего для вас.
+Mira changed the pace until it felt comfortable. When an unfamiliar word appeared, she stopped and let the surrounding paragraph return. The earlier lines reminded her how the idea had started; the next few words showed where it was going.
 
-Двойной клик по тексту запускает режим RSVP. Двойной клик во время чтения возвращает к обычному просмотру текста. Используйте пробел для паузы, стрелки для навигации.
+Chapter Three: Keeping Your Place
 
-Приятного чтения!
+Later, a delivery arrived and the morning became busy. Mira closed the reader without making a note of the page. In the evening, she opened it again and found the same passage waiting for her.
+
+The point was not to rush. The useful rhythm was the one that helped her stay present, notice when attention wandered, and return without losing the thread.

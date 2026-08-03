@@ -7,6 +7,22 @@ const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'sync-store.json');
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
+let storeWriteSequence = 0;
+let storeMutationQueue = Promise.resolve();
+// The historical endpoint is intentionally off for public/native releases: it
+// was designed for one trusted owner and has no multi-user authentication.
+const LEGACY_SINGLE_USER_SYNC = process.env.PACEFLOW_ENABLE_LEGACY_SYNC === '1';
+const PUBLIC_FILES = new Set([
+  'index.html',
+  'style.css',
+  'i18n.js',
+  'app.js',
+  'epub-parser.js',
+  'service-worker.js',
+  'manifest.json',
+  'sample_text.txt'
+]);
+const PUBLIC_DIRECTORIES = ['assets/', 'vendor/'];
 
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -45,9 +61,20 @@ async function readStore() {
 
 async function writeStore(store) {
   await fs.promises.mkdir(DATA_DIR, { recursive: true });
-  const tmpFile = `${STORE_FILE}.${process.pid}.tmp`;
+  storeWriteSequence += 1;
+  const tmpFile = `${STORE_FILE}.${process.pid}.${storeWriteSequence}.tmp`;
   await fs.promises.writeFile(tmpFile, JSON.stringify(store, null, 2));
   await fs.promises.rename(tmpFile, STORE_FILE);
+}
+
+function mutateStore(payload) {
+  const operation = storeMutationQueue.then(async () => {
+    const store = mergeStore(await readStore(), payload);
+    await writeStore(store);
+    return store;
+  });
+  storeMutationQueue = operation.catch(() => undefined);
+  return operation;
 }
 
 function timestamp(value) {
@@ -151,6 +178,13 @@ function readRequestBody(request) {
 }
 
 async function handleSync(request, response) {
+  if (!LEGACY_SINGLE_USER_SYNC) {
+    sendJson(response, 410, {
+      error: 'Cloud sync is disabled. PaceFlow Reader stores books locally.'
+    });
+    return;
+  }
+
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
       'Access-Control-Allow-Headers': 'Content-Type',
@@ -169,8 +203,7 @@ async function handleSync(request, response) {
   try {
     const body = await readRequestBody(request);
     const payload = JSON.parse(body || '{}');
-    const store = mergeStore(await readStore(), payload);
-    await writeStore(store);
+    const store = await mutateStore(payload);
     sendJson(response, 200, publicStore(store));
   } catch (error) {
     sendJson(response, 400, { error: error.message || 'Sync failed' });
@@ -178,14 +211,32 @@ async function handleSync(request, response) {
 }
 
 function sendStatic(request, response, url) {
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname);
+  } catch (error) {
+    response.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Bad request');
+    return;
+  }
   if (pathname.startsWith('/rsvp/')) pathname = pathname.slice('/rsvp'.length);
   if (pathname === '/' || pathname === '') pathname = '/index.html';
 
-  const filePath = path.normalize(path.join(ROOT, pathname));
-  if (!filePath.startsWith(ROOT)) {
-    response.writeHead(403);
+  const requestedRelativePath = pathname.replace(/^\/+/, '');
+  const filePath = path.resolve(ROOT, requestedRelativePath);
+  const relativeToRoot = path.relative(ROOT, filePath);
+  if (relativeToRoot.startsWith('..') || path.isAbsolute(relativeToRoot)) {
+    response.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Forbidden');
+    return;
+  }
+
+  const relativePath = relativeToRoot.split(path.sep).join('/');
+  const isPublic = PUBLIC_FILES.has(relativePath)
+    || PUBLIC_DIRECTORIES.some((directory) => relativePath.startsWith(directory));
+  if (!isPublic) {
+    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Not found');
     return;
   }
 
@@ -194,18 +245,8 @@ function sendStatic(request, response, url) {
 
     fs.readFile(finalPath, (readError, data) => {
       if (readError) {
-        fs.readFile(path.join(ROOT, 'index.html'), (fallbackError, fallbackData) => {
-          if (fallbackError) {
-            response.writeHead(404);
-            response.end('Not found');
-            return;
-          }
-          response.writeHead(200, {
-            'Content-Type': MIME_TYPES['.html'],
-            'Cache-Control': 'no-cache'
-          });
-          response.end(fallbackData);
-        });
+        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        response.end('Not found');
         return;
       }
 
@@ -220,7 +261,14 @@ function sendStatic(request, response, url) {
 }
 
 const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  let url;
+  try {
+    url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  } catch (error) {
+    response.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Bad request');
+    return;
+  }
 
   if (url.pathname === '/api/sync' || url.pathname === '/rsvp/api/sync') {
     await handleSync(request, response);

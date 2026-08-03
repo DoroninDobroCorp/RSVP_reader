@@ -1,29 +1,27 @@
 {
-  "name": "RSVP Speed Reader",
-  "short_name": "RSVP Reader",
-  "description": "Быстрое чтение по одному слову с настраиваемыми паузами",
+  "name": "PaceFlow Reader",
+  "short_name": "PaceFlow",
+  "description": "A calm, private pace reader for real books, with smart rhythm and context.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "background_color": "#0b1220",
+  "theme_color": "#0f172a",
   "orientation": "any",
+  "categories": ["books", "productivity"],
   "icons": [
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAICSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAICSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=",
+      "src": "assets/icons/app-icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAICSURBVFiF7ZbPaxNBFMc/M5vdJJvdpFZbK1j/AEFQxJMHb+LBi4d68ODBo//Bo3jx4EUQBEXxJl5E8ODFiwcvgiAoKFpbW1vaJm2SZjeb3V2/Q7LJJpsmm0qpH3jMm3nzZj7z5s2P4X8fCohVzwOrgIsqEAEiwAIwC3wH0gr0NwOeB54BF3DQOiaBMWAKKDRmq9zXBF4F7mGf/FfgHXAbSBgZzAMvAi/QH/w68JZU0r4ZsAy8BgJaBpeB90A1YBvwDPCqloE/wEtSSs3AEvC2RnjfRj86BzytGZkDXiK7VxHo08j+AcZ17Mk14HFgsO5RBF7U3OllYEAj3w+8Atxt9L7+yy8Cd5G1VSUOPCGV1Qpko1fBQh4HbgDjwAP0A1ZOELjVQFYHQaAP6EIOxCCwqGFzBRjTkTcNTaPwQpZIEPm9bQ1gKXlX80qiQu5Ck2i7oYXSq5gk0N2CAdWgqwG8Atne1MYcmhdSuyC/UWt4f2tsBUhp9Jk2BaziHfLMqJLHVsAK+RWwC/lgfmmDXQWLwDclFwFmuvgprAKflfxPZF+vKbln1O0Dfodc19VAT5vIAX6VVJ1cWI0bU8A74C9gI3t+AGzWM94J5IFJZKntkl3tNv/a/QJ8VHwuqntOXy+QBd5u8Xtq4RvwBbiE8TTsSXwCPgF39Rp7uQ9OIdeGHuXXDuyOTN0Y+fvZS+wBvmz9jOsxEjoAAAAASUVORK5CYII=",
+      "src": "assets/icons/app-icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

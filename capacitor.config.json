@@ -1,0 +1,13 @@
+{
+  "appId": "team.ibet.paceflow",
+  "appName": "PaceFlow Reader",
+  "webDir": "dist",
+  "server": {
+    "iosScheme": "capacitor"
+  },
+  "ios": {
+    "backgroundColor": "#0b1220",
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile"
+  }
+}

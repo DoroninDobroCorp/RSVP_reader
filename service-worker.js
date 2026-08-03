@@ -1,13 +1,19 @@
-const CACHE_NAME = 'rsvp-reader-v35';
-const ASSET_VERSION = 'v=35';
+const CACHE_NAME = 'paceflow-reader-v42';
+const ASSET_VERSION = 'v=42';
 const APP_SHELL = [
   './',
   './index.html',
   `./style.css?${ASSET_VERSION}`,
+  `./i18n.js?${ASSET_VERSION}`,
   `./app.js?${ASSET_VERSION}`,
   `./epub-parser.js?${ASSET_VERSION}`,
   `./vendor/jszip.min.js?${ASSET_VERSION}`,
   `./manifest.json?${ASSET_VERSION}`,
+  './assets/icons/app-icon-32.png',
+  './assets/icons/app-icon-64.png',
+  './assets/icons/app-icon-180.png',
+  './assets/icons/app-icon-192.png',
+  './assets/icons/app-icon-512.png',
   './sample_text.txt'
 ];
 
@@ -24,7 +30,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((cacheNames) => Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .filter((cacheName) => cacheName.startsWith('paceflow-reader-') && cacheName !== CACHE_NAME)
           .map((cacheName) => caches.delete(cacheName))
       ))
       .then(() => self.clients.claim())
@@ -55,7 +61,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(event.request));
+  event.respondWith(staleWhileRevalidate(event.request, event));
 });
 
 function isVersionedAppAsset(requestUrl) {
@@ -63,6 +69,7 @@ function isVersionedAppAsset(requestUrl) {
 
   return [
     '/app.js',
+    '/i18n.js',
     '/style.css',
     '/epub-parser.js',
     '/vendor/jszip.min.js',
@@ -73,8 +80,15 @@ function isVersionedAppAsset(requestUrl) {
 async function handleNavigation(request) {
   try {
     const response = await fetch(request);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put('./index.html', response.clone());
+    const responseType = response.headers.get('content-type') || '';
+    if (response.status >= 500 && isAppShellNavigation(request.url)) {
+      const cachedShell = await caches.match('./index.html', { ignoreSearch: true });
+      if (cachedShell) return cachedShell;
+    }
+    if (response.ok && responseType.includes('text/html') && isAppShellNavigation(request.url)) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put('./index.html', response.clone());
+    }
     return response;
   } catch (error) {
     return caches.match(request, { ignoreSearch: true })
@@ -82,20 +96,29 @@ async function handleNavigation(request) {
   }
 }
 
-async function staleWhileRevalidate(request) {
+function isAppShellNavigation(url) {
+  const pathname = new URL(url).pathname.replace(/\/+/g, '/');
+  return ['/', '/index.html', '/rsvp/', '/rsvp/index.html'].includes(pathname);
+}
+
+async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request, { ignoreSearch: true });
 
   const networkFetch = fetch(request)
-    .then((response) => {
+    .then(async (response) => {
       if (response && response.status === 200 && response.type === 'basic') {
-        cache.put(request, response.clone());
+        await cache.put(request, response.clone());
       }
       return response;
     })
     .catch(() => cached);
 
-  return cached || networkFetch;
+  if (cached) {
+    event.waitUntil(networkFetch.then(() => undefined));
+    return cached;
+  }
+  return networkFetch;
 }
 
 async function networkFirst(request) {
@@ -105,6 +128,9 @@ async function networkFirst(request) {
     const response = await fetch(request);
     if (response && response.status === 200 && response.type === 'basic') {
       await cache.put(request, response.clone());
+    }
+    if (response && response.status >= 500) {
+      return (await cache.match(request, { ignoreSearch: true })) || response;
     }
     return response;
   } catch (error) {
