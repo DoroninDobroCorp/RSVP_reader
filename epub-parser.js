@@ -41,7 +41,11 @@ class EPUBParser {
     async readEntryText(entry) {
         this.assertEntrySafe(entry);
         const text = await entry.async('string');
-        if (text.length > this.limits.maxEntryBytes) throw new Error(this.t('importSafetyLimit'));
+        // Every caller feeds this string into an XML/HTML parser or into the final
+        // text aggregate. Reject it before DOMParser can duplicate a huge source.
+        if (text.length > Math.min(this.limits.maxEntryBytes, this.limits.maxTextCharacters)) {
+            throw new Error(this.t('importSafetyLimit'));
+        }
         return text;
     }
 
@@ -182,6 +186,7 @@ class EPUBParser {
 
     parsePackage(opfContent) {
         const doc = new DOMParser().parseFromString(opfContent, 'text/xml');
+        if (doc.querySelector('parsererror')) throw new Error(this.t('epubReadFailed', { message: 'Invalid package XML' }));
         const manifestItems = {};
         Array.from(doc.querySelectorAll('manifest > item')).forEach((item) => {
             const id = item.getAttribute('id');

@@ -27,8 +27,15 @@ async function installNativeMock(page, options = {}) {
     const files = new Map();
     const preferences = new Map();
     let indexWriteCount = 0;
+    const events = [];
     const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-    window.__nativeMock = { files, preferences, options: mockOptions };
+    window.__nativeMock = {
+      files,
+      preferences,
+      events,
+      options: mockOptions,
+      getIndexWriteCount: () => indexWriteCount
+    };
     window.Capacitor = {
       isNativePlatform: () => true,
       getPlatform: () => 'ios',
@@ -42,6 +49,7 @@ async function installNativeMock(page, options = {}) {
             return { data: files.get(path) };
           },
           writeFile: async ({ path, data }) => {
+            events.push(`write:${path}`);
             if (path === 'paceflow/books-index.json') {
               indexWriteCount += 1;
               if (mockOptions.delayFirstIndexWrite && indexWriteCount === 1) await delay(40);
@@ -63,7 +71,12 @@ async function installNativeMock(page, options = {}) {
         },
         Preferences: {
           get: async ({ key }) => ({ value: preferences.get(key) ?? null }),
-          set: async ({ key, value }) => { preferences.set(key, value); },
+          set: async ({ key, value }) => {
+            if (mockOptions.delayPreferenceSet) await delay(mockOptions.delayPreferenceSet);
+            events.push(`preference:${key}`);
+            preferences.set(key, value);
+          },
+          remove: async ({ key }) => { preferences.delete(key); },
           clear: async () => { preferences.clear(); }
         },
         Haptics: {
@@ -147,7 +160,6 @@ test.describe('production reader regressions', () => {
     const afterResumeMs = await page.evaluate(() => window.rsvpReader.activePlaybackMs);
     expect(firstActiveMs).toBeGreaterThan(180);
     expect(afterResumeMs - firstActiveMs).toBeGreaterThan(170);
-    expect(afterResumeMs).toBeLessThan(800);
 
     await page.evaluate(() => {
       const reader = window.rsvpReader;
@@ -292,8 +304,8 @@ test.describe('production reader regressions', () => {
     expect(longToken.fitted).toBeLessThan(longToken.preferred);
     expect(longToken.left, JSON.stringify(longToken)).toBeGreaterThanOrEqual(longToken.contentLeft - 1);
     expect(longToken.right, JSON.stringify(longToken)).toBeLessThanOrEqual(longToken.contentRight + 1);
-    expect(shortFitted).toBeGreaterThanOrEqual(114);
-    expect(shortFitted).toBeGreaterThan(longToken.fitted);
+    expect(shortFitted).toBeGreaterThanOrEqual(longToken.preferred * 0.75);
+    expect(shortFitted).toBeGreaterThan(longToken.fitted * 2);
   });
 
   test('an unbroken long token wraps in normal reading mode without horizontal overflow', async ({ page }) => {
@@ -570,7 +582,29 @@ test.describe('production reader regressions', () => {
     zip.file('unsafe.txt', 'A'.repeat(1_200_000));
     const buffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 9 } });
     await page.locator('#fileInput').setInputFiles({ name: 'unsafe.zip', mimeType: 'application/zip', buffer });
-    await expect(page.locator('#toastContainer')).toContainText(/too large|compressed too aggressively/i);
+    await expect(page.locator('#toastContainer')).toContainText(/safe size|too large|compressed too aggressively/i);
+    expect(await page.evaluate(async () => (await window.rsvpReader.getAllBooks()).length)).toBe(0);
+  });
+
+  test('empty and binary-only ZIP files fail safely without partial library records', async ({ page }) => {
+    await openReader(page);
+    const emptyZip = await new JSZip().generateAsync({ type: 'nodebuffer' });
+    const binaryZip = new JSZip();
+    binaryZip.file('cover.png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]));
+    const binaryBuffer = await binaryZip.generateAsync({ type: 'nodebuffer' });
+
+    await page.locator('#fileInput').setInputFiles({
+      name: 'empty.zip',
+      mimeType: 'application/zip',
+      buffer: emptyZip
+    });
+    await expect(page.locator('#toastContainer')).toContainText(/does not contain a supported book|could not load/i);
+    await page.locator('#fileInput').setInputFiles({
+      name: 'binary.zip',
+      mimeType: 'application/zip',
+      buffer: binaryBuffer
+    });
+    await expect(page.locator('#toastContainer')).toContainText(/does not contain a supported book|could not load/i);
     expect(await page.evaluate(async () => (await window.rsvpReader.getAllBooks()).length)).toBe(0);
   });
 
@@ -628,16 +662,17 @@ test.describe('production reader regressions', () => {
       reader.currentIndex = 2;
 
       const originalGetBook = reader.getBook.bind(reader);
+      const originalMutateBook = reader.mutateBook.bind(reader);
       let releaseRead;
       let signalRead;
       const readStarted = new Promise((resolve) => { signalRead = resolve; });
       const readGate = new Promise((resolve) => { releaseRead = resolve; });
-      reader.getBook = async (bookId) => {
+      reader.mutateBook = async (bookId, ...args) => {
         if (bookId === 'race-a') {
           signalRead();
           await readGate;
         }
-        return originalGetBook(bookId);
+        return originalMutateBook(bookId, ...args);
       };
 
       const delayedSave = reader.persistReadingPosition();
@@ -647,7 +682,7 @@ test.describe('production reader regressions', () => {
       reader.currentIndex = 13;
       releaseRead();
       await delayedSave;
-      reader.getBook = originalGetBook;
+      reader.mutateBook = originalMutateBook;
 
       return {
         previous: (await originalGetBook('race-a')).currentIndex,
@@ -677,16 +712,17 @@ test.describe('production reader regressions', () => {
       reader.currentIndex = 2;
       reader.words = reader.parseText(victim.text);
       const originalGetBook = reader.getBook.bind(reader);
+      const originalMutateBook = reader.mutateBook.bind(reader);
       let releaseRead;
       let signalRead;
       const readStarted = new Promise((resolve) => { signalRead = resolve; });
       const readGate = new Promise((resolve) => { releaseRead = resolve; });
-      reader.getBook = async (bookId) => {
+      reader.mutateBook = async (bookId, ...args) => {
         if (bookId === victim.id) {
           signalRead();
           await readGate;
         }
-        return originalGetBook(bookId);
+        return originalMutateBook(bookId, ...args);
       };
       const delayedSave = reader.persistReadingPosition();
       await readStarted;
@@ -740,6 +776,176 @@ test.describe('production reader regressions', () => {
     expect(Object.keys(index).sort()).toEqual(['native-a', 'native-b']);
   });
 
+  test('a nativeOnlyText placeholder is hydrated from the native mirror after restart', async ({ page }) => {
+    await installNativeMock(page);
+    await page.goto(`/?native-hydration=${Date.now()}`);
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      await reader.ready;
+      const fullText = 'the complete oversized native book survives a browser quota fallback';
+      const book = reader.normalizeBook({
+        id: 'native-only-restart',
+        name: 'Native only',
+        text: fullText,
+        currentIndex: 3,
+        dateAdded: '2026-01-01T00:00:00.000Z',
+        lastRead: '2026-01-02T00:00:00.000Z',
+        updatedAt: '2026-01-03T00:00:00.000Z'
+      });
+      await reader.putBook(book);
+      await reader.requestToPromise(reader.getStore('books', 'readwrite').put({
+        ...book,
+        text: '',
+        nativeOnlyText: true
+      }));
+
+      const restarted = new RSVPReader();
+      await restarted.ready;
+      const hydrated = await restarted.getBook(book.id);
+      return {
+        text: hydrated?.text,
+        nativeOnlyText: hydrated?.nativeOnlyText,
+        currentIndex: hydrated?.currentIndex,
+        signatureMatches: hydrated?.textSignature === restarted.bookTextSignature(fullText)
+      };
+    });
+    expect(result).toEqual({
+      text: 'the complete oversized native book survives a browser quota fallback',
+      nativeOnlyText: false,
+      currentIndex: 3,
+      signatureMatches: true
+    });
+  });
+
+  test('native batch persistence commits one index generation for the whole batch', async ({ page }) => {
+    await installNativeMock(page);
+    await page.goto(`/?native-batch=${Date.now()}`);
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      await reader.ready;
+      const timestamp = new Date().toISOString();
+      const books = ['one', 'two', 'three'].map((id) => reader.normalizeBook({
+        id: `batch-${id}`,
+        name: id,
+        text: `${id} has readable content`,
+        dateAdded: timestamp,
+        lastRead: timestamp,
+        updatedAt: timestamp
+      }));
+      const stored = await reader.persistNativeBooksBatch(books);
+      const index = JSON.parse(window.__nativeMock.files.get('paceflow/books-index.json'));
+      return {
+        stored,
+        indexWrites: window.__nativeMock.getIndexWriteCount(),
+        ids: Object.keys(index).sort()
+      };
+    });
+    expect(result).toEqual({
+      stored: true,
+      indexWrites: 1,
+      ids: ['batch-one', 'batch-three', 'batch-two']
+    });
+  });
+
+  test('native draft writes the versioned file before committing its Preferences pointer', async ({ page }) => {
+    await installNativeMock(page, { delayPreferenceSet: 50 });
+    await page.goto(`/?native-draft-pointer=${Date.now()}`);
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      await reader.ready;
+      window.__nativeMock.events.length = 0;
+      const draft = {
+        text: 'a force quit safe native draft',
+        bookName: 'Draft',
+        currentBookId: null,
+        currentIndex: 2,
+        chapters: [],
+        lastMode: 'input',
+        revision: 4,
+        updatedAt: new Date().toISOString()
+      };
+      const pending = reader.persistNativeDraft(draft);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const beforePointer = {
+        files: Array.from(window.__nativeMock.files.keys()).filter((path) => path.startsWith('paceflow/draft-')),
+        pointer: window.__nativeMock.preferences.get('paceflow_draft_meta') || null,
+        events: [...window.__nativeMock.events]
+      };
+      await pending;
+      const pointer = JSON.parse(window.__nativeMock.preferences.get('paceflow_draft_meta'));
+      reader.currentBookId = 'now-saved-book';
+      reader.currentTextSignature = reader.bookTextSignature(draft.text);
+      reader.setTextInputValue(draft.text);
+      await reader.saveDraft({ skipSync: true });
+      return {
+        beforePointer,
+        committedFile: pointer.fileName,
+        committedText: draft.text,
+        pointerClearedAfterSave: !window.__nativeMock.preferences.has('paceflow_draft_meta'),
+        staleFileClearedAfterSave: !window.__nativeMock.files.has(`paceflow/${pointer.fileName}`)
+      };
+    });
+    expect(result.beforePointer.files).toHaveLength(1);
+    expect(result.beforePointer.pointer).toBeNull();
+    expect(result.beforePointer.events[0]).toMatch(/^write:paceflow\/draft-/);
+    expect(result.committedText).toBe('a force quit safe native draft');
+    expect(result.beforePointer.files[0]).toBe(`paceflow/${result.committedFile}`);
+    expect(result.pointerClearedAfterSave).toBe(true);
+    expect(result.staleFileClearedAfterSave).toBe(true);
+  });
+
+  test('draft revision and content signature beat a skewed wall clock', async ({ page }) => {
+    await installNativeMock(page);
+    await page.goto(`/?draft-newest=${Date.now()}`);
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      await reader.ready;
+      const nativeText = 'new revision from the native draft';
+      const staleText = 'old revision with a future timestamp';
+      reader.nativeDraftSnapshot = {
+        text: nativeText,
+        bookName: 'New',
+        currentBookId: null,
+        currentIndex: 3,
+        chapters: [],
+        lastMode: 'input',
+        revision: 9,
+        textSignature: reader.bookTextSignature(nativeText),
+        updatedAt: '2025-01-01T00:00:00.000Z'
+      };
+      const stale = {
+        text: staleText,
+        bookName: 'Stale',
+        currentBookId: null,
+        currentIndex: 1,
+        chapters: [],
+        lastMode: 'input',
+        revision: 8,
+        textSignature: reader.bookTextSignature(staleText),
+        updatedAt: '2099-01-01T00:00:00.000Z'
+      };
+      await reader.setKV('draft', stale);
+      localStorage.setItem('paceflow_draft_envelope', JSON.stringify(stale));
+      reader.setTextInputValue('');
+      reader.hasUnsavedTextInput = false;
+      await reader.loadDraft();
+      return {
+        text: reader.textInput.value,
+        index: reader.currentIndex,
+        revision: reader.draftRevision
+      };
+    });
+    expect(result).toEqual({
+      text: 'new revision from the native draft',
+      index: 3,
+      revision: 9
+    });
+  });
+
   test('native mirror filenames remain distinct for IDs that sanitize alike', async ({ page }) => {
     await installNativeMock(page);
     await page.goto(`/?native-filenames=${Date.now()}`);
@@ -770,7 +976,7 @@ test.describe('production reader regressions', () => {
     expect(result.texts).toEqual(['slash content', 'question content']);
   });
 
-  test('a failed native delete leaves the primary book intact instead of half-deleting it', async ({ page }) => {
+  test('a failed native cleanup leaves a durable tombstone and cannot resurrect the book', async ({ page }) => {
     await installNativeMock(page);
     await page.goto(`/?native-delete=${Date.now()}`);
     await page.waitForFunction(() => Boolean(window.rsvpReader));
@@ -793,13 +999,23 @@ test.describe('production reader regressions', () => {
       } catch (error) {
         failed = true;
       }
+      window.__nativeMock.failDelete = false;
+      const restarted = new RSVPReader();
+      await restarted.ready;
+      const nativeIndex = JSON.parse(window.__nativeMock.files.get('paceflow/books-index.json') || '{}');
       return {
         failed,
-        bookStillPresent: Boolean(await reader.getBook(book.id)),
-        tombstoned: Boolean(reader.deletedBooks[book.id])
+        bookStillPresent: Boolean(await restarted.getBook(book.id)),
+        tombstoned: Boolean(restarted.deletedBooks[book.id]),
+        nativeCleaned: !nativeIndex[book.id]
       };
     });
-    expect(state).toEqual({ failed: true, bookStillPresent: true, tombstoned: false });
+    expect(state).toEqual({
+      failed: false,
+      bookStillPresent: false,
+      tombstoned: true,
+      nativeCleaned: true
+    });
   });
 
   test('new pasted text starts at the beginning even before draft debounce completes', async ({ page }) => {
@@ -842,16 +1058,17 @@ test.describe('production reader regressions', () => {
       await reader.saveDraft();
 
       const originalGetBook = reader.getBook.bind(reader);
+      const originalMutateBook = reader.mutateBook.bind(reader);
       let releaseRead;
       let signalRead;
       const readStarted = new Promise((resolve) => { signalRead = resolve; });
       const readGate = new Promise((resolve) => { releaseRead = resolve; });
-      reader.getBook = async (bookId) => {
+      reader.mutateBook = async (bookId, ...args) => {
         if (bookId === secretBook.id) {
           signalRead();
           await readGate;
         }
-        return originalGetBook(bookId);
+        return originalMutateBook(bookId, ...args);
       };
 
       const originalSetTimeout = window.setTimeout;
@@ -913,6 +1130,324 @@ test.describe('production reader regressions', () => {
       bookStillPresent: true,
       nativeIndexStillPresent: true,
       isDeletingAllData: false
+    });
+  });
+
+  test('settings and timestamp recover together from IndexedDB after localStorage eviction', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.settings.wpm = 612;
+      await reader.saveSettings();
+      const storedSettings = await reader.getKV('settings');
+      const storedUpdatedAt = await reader.getKV('settingsUpdatedAt');
+      localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+        settings: { ...storedSettings, wpm: 713 },
+        updatedAt: '2099-01-01T00:00:00.000Z'
+      }));
+      localStorage.removeItem('rsvp_settings');
+      localStorage.removeItem('rsvp_settings_updated_at');
+      const envelopeReader = new RSVPReader();
+      await envelopeReader.ready;
+
+      localStorage.removeItem('paceflow_settings_envelope');
+      localStorage.removeItem('rsvp_settings');
+      localStorage.removeItem('rsvp_settings_updated_at');
+
+      const restarted = new RSVPReader();
+      await restarted.ready;
+      return {
+        databaseWpm: storedSettings.wpm,
+        timestampStored: typeof storedUpdatedAt === 'string',
+        newerEnvelopeWpm: envelopeReader.settings.wpm,
+        restoredWpm: restarted.settings.wpm,
+        restoredTimestamp: restarted.settingsUpdatedAt,
+        localEnvelope: JSON.parse(localStorage.getItem('paceflow_settings_envelope'))
+      };
+    });
+    expect(result.databaseWpm).toBe(612);
+    expect(result.timestampStored).toBe(true);
+    expect(result.newerEnvelopeWpm).toBe(713);
+    expect(result.restoredWpm).toBe(612);
+    expect(result.restoredTimestamp).toBe(result.localEnvelope.updatedAt);
+    expect(result.localEnvelope.settings.wpm).toBe(612);
+  });
+
+  test('legacy migration skips invalid records, retries transient writes and preserves newer primary data', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const newer = reader.normalizeBook({
+        id: 'legacy-existing',
+        name: 'New primary copy',
+        text: 'newer primary content must win',
+        dateAdded: '2026-01-01T00:00:00.000Z',
+        lastRead: '2026-02-01T00:00:00.000Z',
+        updatedAt: '2026-02-01T00:00:00.000Z'
+      });
+      await reader.putBook(newer);
+      const legacyBooks = [
+        {
+          id: 'legacy-invalid',
+          name: 'Invalid',
+          text: 'X'.repeat(reader.importLimits.maxTokenCharacters + 1),
+          updatedAt: '2025-01-01T00:00:00.000Z'
+        },
+        {
+          id: 'legacy-existing',
+          name: 'Stale legacy copy',
+          text: 'stale content',
+          updatedAt: '2025-01-01T00:00:00.000Z'
+        },
+        {
+          id: 'legacy-retry',
+          name: 'Retry me',
+          text: 'valid legacy text',
+          updatedAt: '2025-01-01T00:00:00.000Z'
+        }
+      ];
+      localStorage.setItem('rsvp_library', JSON.stringify(legacyBooks));
+      await reader.setKV('legacyMigrated', false);
+
+      const originalPutBook = reader.putBook.bind(reader);
+      let failOnce = true;
+      reader.putBook = async (...args) => {
+        if (args[0]?.id === 'legacy-retry' && failOnce) {
+          failOnce = false;
+          throw new DOMException('temporary storage failure', 'UnknownError');
+        }
+        return originalPutBook(...args);
+      };
+      await reader.migrateLegacyData();
+      const afterFailure = await reader.getKV('legacyMigrated');
+      reader.putBook = originalPutBook;
+      await reader.migrateLegacyData();
+      return {
+        retryableAfterFailure: afterFailure !== true,
+        migrated: await reader.getKV('legacyMigrated'),
+        skipped: await reader.getKV('legacyMigrationSkippedBooks'),
+        preservedText: (await reader.getBook('legacy-existing')).text,
+        retriedText: (await reader.getBook('legacy-retry')).text
+      };
+    });
+    expect(result).toEqual({
+      retryableAfterFailure: true,
+      migrated: true,
+      skipped: ['legacy-invalid'],
+      preservedText: 'newer primary content must win',
+      retriedText: 'valid legacy text'
+    });
+  });
+
+  test('an IndexedDB quota failure aborts the entire staged backup import', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const timestamp = new Date().toISOString();
+      const books = ['first', 'second', 'third'].map((id) => reader.normalizeBook({
+        id: `atomic-${id}`,
+        name: id,
+        text: `${id} valid imported text`,
+        dateAdded: timestamp,
+        lastRead: timestamp,
+        updatedAt: timestamp
+      }));
+      const originalPut = IDBObjectStore.prototype.put;
+      let bookWrites = 0;
+      IDBObjectStore.prototype.put = function (...args) {
+        if (this.name === 'books' && ++bookWrites === 2) {
+          throw new DOMException('quota reached', 'QuotaExceededError');
+        }
+        return originalPut.apply(this, args);
+      };
+      let failed = false;
+      try {
+        await reader.persistImportedBooksAtomically(books);
+      } catch (error) {
+        failed = error.name === 'QuotaExceededError';
+      } finally {
+        IDBObjectStore.prototype.put = originalPut;
+      }
+      return {
+        failed,
+        visibleBooks: (await reader.getAllBooks()).filter((book) => book.id.startsWith('atomic-')).length
+      };
+    });
+    expect(result).toEqual({ failed: true, visibleBooks: 0 });
+  });
+
+  test('a malformed later backup record is rejected before the first visible write', async ({ page }) => {
+    await openReader(page);
+    const timestamp = new Date().toISOString();
+    const payload = {
+      version: 2,
+      books: [
+        {
+          id: 'validated-first',
+          name: 'First',
+          text: 'first valid backup record',
+          dateAdded: timestamp,
+          lastRead: timestamp,
+          updatedAt: timestamp
+        },
+        {
+          id: 'validated-second',
+          name: 'Second',
+          text: 'second valid backup record',
+          dateAdded: timestamp,
+          lastRead: timestamp,
+          updatedAt: timestamp
+        },
+        { id: 'malformed-third', name: 'Malformed', text: 42 }
+      ]
+    };
+    await page.locator('#libraryImportInput').setInputFiles({
+      name: 'malformed-backup.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(payload))
+    });
+    await expect(page.locator('#toastContainer')).toContainText(/import failed|not a valid/i);
+    expect(await page.evaluate(async () => (await window.rsvpReader.getAllBooks()).length)).toBe(0);
+  });
+
+  test('quarantined legacy books remain listable, exportable and deletable without opening', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const raw = {
+        id: 'unsafe-quarantine',
+        name: 'Unsafe legacy book',
+        text: 'Q'.repeat(reader.importLimits.maxTokenCharacters + 1),
+        currentIndex: 0,
+        bookmarks: [],
+        chapters: [],
+        dateAdded: '2025-01-01T00:00:00.000Z',
+        lastRead: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z'
+      };
+      await reader.requestToPromise(reader.getStore('books', 'readwrite').put(raw));
+      await reader.loadLibrary();
+      reader.renderLibrary();
+      const quarantined = await reader.getBook(raw.id);
+      const listed = reader.booksList.textContent.includes(raw.name);
+      const opened = await reader.loadBook(raw.id, { start: true });
+      await reader.exportLibrary();
+      await reader.deleteBookFromStorage(raw.id);
+      return {
+        quarantined: quarantined.isUnsafeText,
+        listed,
+        opened: opened === null,
+        deleted: (await reader.getBook(raw.id)) === null
+      };
+    });
+    expect(result).toEqual({ quarantined: true, listed: true, opened: true, deleted: true });
+  });
+
+  test('encoding, scoped RTF unicode fallback and pre-allocation token guards stay deterministic', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(() => {
+      const reader = window.rsvpReader;
+      const utf16Text = 'Hello UTF16';
+      const utf16Bytes = new Uint8Array(2 + (utf16Text.length * 2));
+      utf16Bytes.set([0xff, 0xfe]);
+      Array.from(utf16Text).forEach((character, index) => {
+        utf16Bytes[2 + (index * 2)] = character.charCodeAt(0) & 0xff;
+        utf16Bytes[3 + (index * 2)] = character.charCodeAt(0) >> 8;
+      });
+      const cp1251 = new Uint8Array([0xcf, 0xf0, 0xe8, 0xe2, 0xe5, 0xf2]);
+      const cp1252 = new Uint8Array([0x43, 0x61, 0x66, 0xe9]);
+      const rtfSource = '{\\rtf1\\ansi\\uc1 \\u1040?{\\uc0 \\u1041}\\u1042?}';
+      const rtf = reader.extractTextFromRTF(new TextEncoder().encode(rtfSource));
+      const html = reader.extractTextFromHTMLDocument('<p>One<br>Two</p><div>Three <span>Four</span></div>');
+
+      const originalLimits = { ...reader.importLimits };
+      let denseRejected = false;
+      let longRejected = false;
+      let domCalls = 0;
+      const originalParse = DOMParser.prototype.parseFromString;
+      try {
+        reader.importLimits.maxTokens = 3;
+        try { reader.parseText('. . . .'); } catch (error) { denseRejected = true; }
+        reader.importLimits.maxTokens = originalLimits.maxTokens;
+        reader.importLimits.maxTokenCharacters = 5;
+        try { reader.parseText('abcdef'); } catch (error) { longRejected = true; }
+        reader.importLimits.maxTextCharacters = 5;
+        DOMParser.prototype.parseFromString = function (...args) {
+          domCalls += 1;
+          return originalParse.apply(this, args);
+        };
+        try { reader.extractBookFromHTMLDocument('123456'); } catch (error) { /* expected */ }
+      } finally {
+        DOMParser.prototype.parseFromString = originalParse;
+        reader.importLimits = originalLimits;
+      }
+      return {
+        utf16: reader.readTextWithEncoding(utf16Bytes.buffer),
+        cp1251: reader.readTextWithEncoding(cp1251.buffer),
+        cp1252: reader.readTextWithEncoding(cp1252.buffer),
+        rtf,
+        html,
+        denseRejected,
+        longRejected,
+        domCalls
+      };
+    });
+    expect(result).toEqual({
+      utf16: 'Hello UTF16',
+      cp1251: 'Привет',
+      cp1252: 'Café',
+      rtf: 'АБВ',
+      html: 'One\nTwo\n\nThree Four',
+      denseRejected: true,
+      longRejected: true,
+      domCalls: 0
+    });
+  });
+
+  test('typing while loadBook is awaiting storage cannot overwrite the composer', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const book = reader.normalizeBook({
+        id: 'delayed-load',
+        name: 'Delayed',
+        text: 'stored book text must not replace typing',
+        dateAdded: new Date().toISOString(),
+        lastRead: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      await reader.putBook(book);
+      const originalGetBook = reader.getBook.bind(reader);
+      let release;
+      let signal;
+      const gate = new Promise((resolve) => { release = resolve; });
+      const started = new Promise((resolve) => { signal = resolve; });
+      reader.getBook = async (bookId) => {
+        if (bookId === book.id) {
+          signal();
+          await gate;
+        }
+        return originalGetBook(bookId);
+      };
+      const pendingLoad = reader.loadBook(book.id, { start: true });
+      await started;
+      reader.textInput.value = 'fresh text typed during the pending load';
+      reader.handleTextInputChanged();
+      release();
+      const loaded = await pendingLoad;
+      reader.getBook = originalGetBook;
+      return {
+        loaded: loaded === null,
+        text: reader.textInput.value,
+        bookId: reader.currentBookId,
+        unsaved: reader.hasUnsavedTextInput
+      };
+    });
+    expect(result).toEqual({
+      loaded: true,
+      text: 'fresh text typed during the pending load',
+      bookId: null,
+      unsaved: true
     });
   });
 

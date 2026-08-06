@@ -27,6 +27,8 @@ class RSVPReader {
         this.hasUnsafeDraft = false;
         this.suppressTextInputChange = false;
         this.composerRevision = 0;
+        this.draftRevision = 0;
+        this.resumeRevision = 0;
         this.lastBottomTapTime = 0;
         this.lastBottomTapType = '';
         this.wordPaintToken = 0;
@@ -81,6 +83,7 @@ class RSVPReader {
         this.syncRetryDelay = 5000;
         this.deletedBooks = {};
         this.settingsUpdatedAt = localStorage.getItem('rsvp_settings_updated_at') || new Date().toISOString();
+        this.settingsWritePromise = Promise.resolve();
 
         this.touchState = {
             lastTapTime: 0,
@@ -561,20 +564,27 @@ class RSVPReader {
             : {};
         this.deletedBooks = this.mergeDeletedBooks(databaseDeleted, localDeleted);
 
-        const localSettingsUpdatedAt = localStorage.getItem('rsvp_settings_updated_at');
+        const localSettingsEnvelope = this.readLocalSettingsEnvelope();
+        const localSettingsUpdatedAt = localSettingsEnvelope?.updatedAt
+            || localStorage.getItem('rsvp_settings_updated_at');
         const databaseSettingsUpdatedAt = this.storageMode !== 'localstorage' && this.db
             ? await this.getKV('settingsUpdatedAt')
             : null;
         const databaseSettings = this.storageMode !== 'localstorage' && this.db
             ? await this.getKV('settings')
             : null;
-        const localSettingsMissing = !localStorage.getItem('rsvp_settings');
+        const localSettingsMissing = !localSettingsEnvelope?.settings
+            && !localStorage.getItem('rsvp_settings');
         if (databaseSettings && typeof databaseSettings === 'object'
             && (localSettingsMissing || this.isNewer(databaseSettingsUpdatedAt, localSettingsUpdatedAt))) {
             const migrated = this.migrateSettingsDefaults(databaseSettings);
             this.settings = { ...this.settings, ...migrated.settings, cloudSyncEnabled: false };
             this.settingsUpdatedAt = databaseSettingsUpdatedAt || this.settingsUpdatedAt;
             try {
+                localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+                    settings: this.settings,
+                    updatedAt: this.settingsUpdatedAt
+                }));
                 localStorage.setItem('rsvp_settings', JSON.stringify(this.settings));
                 localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
             } catch (error) {
@@ -851,7 +861,7 @@ class RSVPReader {
                             nativeIndexChanged = true;
                         }
                         const restored = this.normalizeBook(
-                            { ...verifiedMetadata, id: bookId, text: textResult.data },
+                            { ...verifiedMetadata, id: bookId, text: textResult.data, nativeOnlyText: false },
                             { recalculateCounts: false, quarantineUnsafe: true }
                         );
                         if (this.storageMode === 'localstorage' || !this.db) {
@@ -870,9 +880,20 @@ class RSVPReader {
                             }
                         } else {
                             const existing = await this.requestToPromise(this.getStore('books').get(bookId));
-                            if ((!existing || this.isNewer(restored.updatedAt, existing.updatedAt))
+                            const existingNeedsNativeText = Boolean(existing?.nativeOnlyText && !existing?.text)
+                                && (!existing.textSignature || existing.textSignature === actualSignature);
+                            if ((!existing || existingNeedsNativeText || this.isNewer(restored.updatedAt, existing.updatedAt))
                                 && !this.isDeletingAllData && generation === this.dataGeneration) {
-                                await this.requestToPromise(this.getStore('books', 'readwrite').put(restored));
+                                const hydrated = existingNeedsNativeText
+                                    ? this.normalizeBook({
+                                        ...restored,
+                                        ...existing,
+                                        text: restored.text,
+                                        textSignature: actualSignature,
+                                        nativeOnlyText: false
+                                    }, { recalculateCounts: false, quarantineUnsafe: true })
+                                    : restored;
+                                await this.requestToPromise(this.getStore('books', 'readwrite').put(hydrated));
                             } else if (existing) {
                                 const primary = this.normalizeBook(existing, { recalculateCounts: false, quarantineUnsafe: true });
                                 if (primary.textSignature !== actualSignature
@@ -883,9 +904,26 @@ class RSVPReader {
                             }
                         }
                     } catch (error) {
-                        this.nativeBookIndex[bookId] = { ...metadata, textSignature: '' };
-                        nativeRepairIds.add(bookId);
-                        nativeIndexChanged = true;
+                        const primary = this.storageMode === 'localstorage' || !this.db
+                            ? this.library.find((book) => book.id === bookId)
+                            : await this.requestToPromise(this.getStore('books').get(bookId));
+                        const nativeIsOnlyTextCopy = Boolean(primary?.nativeOnlyText && !primary?.text);
+                        if (nativeIsOnlyTextCopy) {
+                            // Do not "repair" the only text copy with the empty
+                            // placeholder. Keep it indexed for a later retry while
+                            // quarantining the primary record from reader parsing.
+                            const quarantined = { ...primary, isUnsafeText: true };
+                            if (this.storageMode === 'localstorage' || !this.db) {
+                                const primaryIndex = this.library.findIndex((book) => book.id === bookId);
+                                if (primaryIndex >= 0) this.library[primaryIndex] = quarantined;
+                            } else {
+                                await this.requestToPromise(this.getStore('books', 'readwrite').put(quarantined));
+                            }
+                        } else {
+                            this.nativeBookIndex[bookId] = { ...metadata, textSignature: '' };
+                            nativeRepairIds.add(bookId);
+                            nativeIndexChanged = true;
+                        }
                         console.warn(`Could not restore native book ${bookId}:`, error);
                     }
                 }
@@ -964,12 +1002,14 @@ class RSVPReader {
         }
     }
 
-    async persistNativeBooksBatch(books, generation = this.dataGeneration) {
+    async persistNativeBooksBatch(books, generation = this.dataGeneration, expectedBookGenerations = null) {
         const filesystem = this.nativeFilesystem();
         if (!filesystem || this.isRestoringNativeBooks || !Array.isArray(books) || books.length === 0) return false;
         const entries = books.map((book) => ({
             book,
-            bookGeneration: this.getBookWriteGeneration(book.id)
+            bookGeneration: expectedBookGenerations instanceof Map && expectedBookGenerations.has(String(book.id))
+                ? expectedBookGenerations.get(String(book.id))
+                : this.getBookWriteGeneration(book.id)
         }));
         let persistedCount = 0;
         try {
@@ -1009,7 +1049,11 @@ class RSVPReader {
 
     async persistNativeBook(book, generation = this.dataGeneration, bookGeneration = this.getBookWriteGeneration(book.id)) {
         if (!this.canPersistBook(book.id, generation, bookGeneration)) return false;
-        return this.persistNativeBooksBatch([book], generation);
+        return this.persistNativeBooksBatch(
+            [book],
+            generation,
+            new Map([[String(book.id), bookGeneration]])
+        );
     }
 
     async removeNativeBook(bookId) {
@@ -1185,8 +1229,8 @@ class RSVPReader {
         return this.completeBookPersistence(normalized, generation, bookGeneration, options);
     }
 
-    async persistImportedBooksAtomically(books, generation = this.dataGeneration) {
-        if (!Array.isArray(books) || books.length === 0) return [];
+    async persistImportedBooksAtomically(books, generation = this.dataGeneration, options = {}) {
+        if (!Array.isArray(books) || (books.length === 0 && !options.settings)) return [];
         if (this.isDeletingAllData || generation !== this.dataGeneration) return [];
         let nativeBatchAlreadyStored = false;
 
@@ -1212,7 +1256,8 @@ class RSVPReader {
             this.library = nextLibrary;
         } else {
             await new Promise((resolve, reject) => {
-                const transaction = this.db.transaction('books', 'readwrite');
+                const storeNames = options.settings ? ['books', 'kv'] : ['books'];
+                const transaction = this.db.transaction(storeNames, 'readwrite');
                 const store = transaction.objectStore('books');
                 try {
                     if (this.isDeletingAllData || generation !== this.dataGeneration) {
@@ -1220,6 +1265,16 @@ class RSVPReader {
                         return;
                     }
                     books.forEach((book) => store.put(book));
+                    if (options.settings) {
+                        const kvStore = transaction.objectStore('kv');
+                        const writtenAt = Date.now();
+                        kvStore.put({ key: 'settings', value: options.settings, updatedAt: writtenAt });
+                        kvStore.put({
+                            key: 'settingsUpdatedAt',
+                            value: options.settingsUpdatedAt,
+                            updatedAt: writtenAt
+                        });
+                    }
                 } catch (error) {
                     transaction.abort();
                     reject(error);
@@ -1376,8 +1431,16 @@ class RSVPReader {
             : null;
         let draft = null;
         for (const candidate of [databaseDraft, localDraft, nativeDraft, resumeDraft]) {
-            if (candidate && typeof candidate.text === 'string'
-                && (!draft || this.isNewer(candidate.updatedAt, draft.updatedAt))) {
+            if (!candidate || typeof candidate.text !== 'string') continue;
+            const revision = this.persistedRevision(candidate);
+            this.draftRevision = Math.max(this.draftRevision, revision);
+            const candidateSignature = candidate.textSignature || '';
+            if (!candidate.currentBookId && candidateSignature
+                && candidateSignature !== this.bookTextSignature(candidate.text)) {
+                console.warn('Ignored a draft whose content signature does not match its text.');
+                continue;
+            }
+            if (!draft || this.isPersistedSnapshotNewer(candidate, draft)) {
                 draft = candidate;
             }
         }
@@ -1401,9 +1464,13 @@ class RSVPReader {
         const resumeMatches = resumeSnapshot?.currentBookId === content.currentBookId;
         const resumeIsCurrent = resumeMatches
             && (!authoritativeBook || this.resumeMatchesBook(resumeSnapshot, authoritativeBook));
+        const draftMatchesBook = !authoritativeBook || !draft.textSignature
+            || draft.textSignature === authoritativeBook.textSignature;
         const draftIndex = resumeIsCurrent
             ? resumeSnapshot.currentIndex
-            : (authoritativeBook?.currentIndex ?? content.currentIndex);
+            : (authoritativeBook && !draftMatchesBook
+                ? authoritativeBook.currentIndex
+                : (authoritativeBook?.currentIndex ?? content.currentIndex));
 
         this.setTextInputValue(content.text);
         this.bookNameInput.value = content.bookName || '';
@@ -1588,6 +1655,8 @@ class RSVPReader {
             currentIndex: this.currentIndex,
             chapters: this.currentChapters,
             lastMode: this.mode,
+            revision: ++this.draftRevision,
+            textSignature: this.bookTextSignature(this.textInput.value),
             updatedAt: new Date().toISOString()
         };
 
@@ -1645,6 +1714,7 @@ class RSVPReader {
             textSignature: this.currentBookId
                 ? (this.currentTextSignature || this.library.find((book) => book.id === this.currentBookId)?.textSignature || '')
                 : '',
+            revision: ++this.resumeRevision,
             updatedAt: new Date().toISOString()
         };
         try {
@@ -1677,9 +1747,14 @@ class RSVPReader {
         } catch (error) {
             localSnapshot = null;
         }
+        this.resumeRevision = Math.max(
+            this.resumeRevision,
+            this.persistedRevision(localSnapshot),
+            this.persistedRevision(this.nativeResumeSnapshot)
+        );
         if (!localSnapshot) return this.nativeResumeSnapshot;
         if (!this.nativeResumeSnapshot) return localSnapshot;
-        return this.isNewer(this.nativeResumeSnapshot.updatedAt, localSnapshot.updatedAt)
+        return this.isPersistedSnapshotNewer(this.nativeResumeSnapshot, localSnapshot)
             ? this.nativeResumeSnapshot
             : localSnapshot;
     }
@@ -1706,8 +1781,13 @@ class RSVPReader {
             } catch (error) {
                 localSnapshot = null;
             }
+            this.resumeRevision = Math.max(
+                this.resumeRevision,
+                this.persistedRevision(localSnapshot),
+                this.persistedRevision(this.nativeResumeSnapshot)
+            );
             if (this.nativeResumeSnapshot
-                && (!localSnapshot || this.isNewer(this.nativeResumeSnapshot.updatedAt, localSnapshot.updatedAt))) {
+                && (!localSnapshot || this.isPersistedSnapshotNewer(this.nativeResumeSnapshot, localSnapshot))) {
                 try {
                     localStorage.setItem('paceflow_resume', JSON.stringify(this.nativeResumeSnapshot));
                 } catch (error) {
@@ -1726,10 +1806,11 @@ class RSVPReader {
             || this.isDeletingAllData || generation !== this.dataGeneration) return false;
         const textSignature = this.bookTextSignature(draft.text);
         const fileName = `draft-${textSignature.replace(/[^a-z0-9]/gi, '-')}.txt`;
-        const previousFileName = this.lastNativeDraftFileName;
+        let committed = false;
         try {
             await this.queueNativeMutation(async () => {
                 if (this.isDeletingAllData || generation !== this.dataGeneration) return;
+                const previousFileName = this.lastNativeDraftFileName;
                 if (this.lastNativeDraftSignature !== textSignature || previousFileName !== fileName) {
                     await this.trackNativeWrite(filesystem.writeFile({
                         path: `paceflow/${fileName}`,
@@ -1744,6 +1825,11 @@ class RSVPReader {
                     key: 'paceflow_draft_meta',
                     value: JSON.stringify({ ...metadata, textSignature, fileName })
                 });
+                this.lastNativeDraftSignature = textSignature;
+                this.lastNativeDraftFileName = fileName;
+                this.hasNativeDraft = true;
+                this.nativeDraftSnapshot = { ...draft, textSignature, fileName };
+                committed = true;
                 // The pointer commit above makes the new version authoritative;
                 // an interrupted cleanup can only leave an unreferenced old file.
                 if (previousFileName && previousFileName !== fileName) {
@@ -1757,11 +1843,7 @@ class RSVPReader {
                     }
                 }
             });
-            this.lastNativeDraftSignature = textSignature;
-            this.lastNativeDraftFileName = fileName;
-            this.hasNativeDraft = true;
-            this.nativeDraftSnapshot = { ...draft, textSignature, fileName };
-            return !this.isDeletingAllData && generation === this.dataGeneration;
+            return committed && !this.isDeletingAllData && generation === this.dataGeneration;
         } catch (error) {
             console.warn('Could not persist the native draft mirror:', error);
             return false;
@@ -1797,19 +1879,23 @@ class RSVPReader {
     }
 
     async clearNativeDraft(generation = this.dataGeneration) {
-        if (!this.hasNativeDraft || this.isDeletingAllData || generation !== this.dataGeneration) return;
+        if (this.isDeletingAllData || generation !== this.dataGeneration) return;
         const filesystem = this.nativeFilesystem();
         const preferences = this.nativePreferences();
         if (!preferences) return;
-        const fileName = this.lastNativeDraftFileName;
         try {
             await this.queueNativeMutation(async () => {
                 if (this.isDeletingAllData || generation !== this.dataGeneration) return;
+                const fileName = this.lastNativeDraftFileName;
                 if (typeof preferences.remove === 'function') {
                     await preferences.remove({ key: 'paceflow_draft_meta' });
                 } else {
                     await preferences.set({ key: 'paceflow_draft_meta', value: '' });
                 }
+                this.hasNativeDraft = false;
+                this.nativeDraftSnapshot = null;
+                this.lastNativeDraftSignature = '';
+                this.lastNativeDraftFileName = '';
                 if (filesystem && fileName) {
                     try {
                         await this.trackNativeWrite(filesystem.deleteFile({ path: `paceflow/${fileName}`, directory: 'DATA' }));
@@ -1818,10 +1904,6 @@ class RSVPReader {
                     }
                 }
             });
-            this.hasNativeDraft = false;
-            this.nativeDraftSnapshot = null;
-            this.lastNativeDraftSignature = '';
-            this.lastNativeDraftFileName = '';
         } catch (error) {
             console.warn('Could not clear the native draft mirror:', error);
         }
@@ -2535,6 +2617,12 @@ class RSVPReader {
         }
     }
 
+    assertMarkupSourceSafe(source) {
+        if (typeof source !== 'string' || source.length > this.importLimits.maxTextCharacters) {
+            throw new Error(this.t('importSafetyLimit'));
+        }
+    }
+
     assertArchiveSafe(zip) {
         const entries = Object.values(zip?.files || {});
         if (entries.length > this.importLimits.maxArchiveEntries) {
@@ -2608,6 +2696,7 @@ class RSVPReader {
         if (!parsedBook.text.trim() || !/[\p{L}\p{N}]/u.test(parsedBook.text)) {
             throw new Error(this.t('noReadableText'));
         }
+        this.assertTextTokenSafety(parsedBook.text, { requireReadable: true });
         return parsedBook;
     }
 
@@ -2628,6 +2717,7 @@ class RSVPReader {
 
         this.assertArchiveEntrySafe(documentFile);
         const xml = await documentFile.async('string');
+        this.assertMarkupSourceSafe(xml);
         const doc = new DOMParser().parseFromString(xml, 'text/xml');
         if (doc.querySelector('parsererror')) {
             throw new Error(this.t('invalidDocxXml'));
@@ -2701,6 +2791,7 @@ class RSVPReader {
     }
 
     extractBookFromFB2(xmlText) {
+        this.assertMarkupSourceSafe(xmlText);
         const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
         if (doc.querySelector('parsererror') || doc.documentElement?.localName?.toLowerCase() !== 'fictionbook') {
             throw new Error(this.t('invalidFb2Xml'));
@@ -2758,6 +2849,7 @@ class RSVPReader {
     }
 
     extractBookFromHTMLDocument(htmlText) {
+        this.assertMarkupSourceSafe(htmlText);
         const doc = new DOMParser().parseFromString(htmlText, 'text/html');
         doc.querySelectorAll('script, style, noscript, template, svg, canvas').forEach((element) => element.remove());
 
@@ -4338,20 +4430,56 @@ class RSVPReader {
             this.settingsUpdatedAt = new Date().toISOString();
         }
 
-        localStorage.setItem('rsvp_settings', JSON.stringify(this.settings));
-        localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
+        const settingsSnapshot = { ...this.settings };
+        let localError = null;
+        try {
+            // This envelope is the browser-side commit boundary. The legacy keys
+            // remain mirrors for older builds, but can never expose a mismatched pair.
+            localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+                settings: settingsSnapshot,
+                updatedAt: this.settingsUpdatedAt
+            }));
+            localStorage.setItem('rsvp_settings', JSON.stringify(settingsSnapshot));
+            localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
+        } catch (error) {
+            localError = error;
+            console.warn('Failed to mirror settings to localStorage:', error);
+        }
         if (this.storageMode !== 'localstorage' && this.db) {
-            this.setKV('settings', this.settings).catch((error) => console.warn('Failed to save settings to IndexedDB:', error));
-            this.setKV('settingsUpdatedAt', this.settingsUpdatedAt).catch((error) => console.warn('Failed to save settings timestamp:', error));
+            this.settingsWritePromise = this.persistSettingsToDatabase(settingsSnapshot, this.settingsUpdatedAt)
+                .catch((error) => console.warn('Failed to save settings atomically to IndexedDB:', error));
+        } else if (localError) {
+            throw localError;
         }
 
         if (!options.skipSync && !this.isApplyingRemote) {
             this.markSyncPending();
         }
+        return this.settingsWritePromise;
+    }
+
+    readLocalSettingsEnvelope() {
+        try {
+            const envelope = JSON.parse(localStorage.getItem('paceflow_settings_envelope') || 'null');
+            if (envelope && typeof envelope === 'object' && !Array.isArray(envelope)
+                && envelope.settings && typeof envelope.settings === 'object' && !Array.isArray(envelope.settings)
+                && typeof envelope.updatedAt === 'string') {
+                return envelope;
+            }
+        } catch (error) {
+            console.warn('Failed to load the atomic settings envelope:', error);
+        }
+        return null;
     }
 
     loadSettings() {
-        const saved = localStorage.getItem('rsvp_settings');
+        let saved = localStorage.getItem('rsvp_settings');
+        let savedUpdatedAt = localStorage.getItem('rsvp_settings_updated_at');
+        const envelope = this.readLocalSettingsEnvelope();
+        if (envelope) {
+            saved = JSON.stringify(envelope.settings);
+            savedUpdatedAt = envelope.updatedAt;
+        }
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -4359,6 +4487,11 @@ class RSVPReader {
                 this.settings = { ...this.settings, ...migrated.settings };
                 if (migrated.changed) {
                     this.settingsUpdatedAt = new Date().toISOString();
+                    savedUpdatedAt = this.settingsUpdatedAt;
+                    localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+                        settings: this.settings,
+                        updatedAt: this.settingsUpdatedAt
+                    }));
                     localStorage.setItem('rsvp_settings', JSON.stringify(this.settings));
                     localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
                     localStorage.setItem('rsvp_sync_pending', '0');
@@ -4368,7 +4501,6 @@ class RSVPReader {
             }
         }
 
-        const savedUpdatedAt = localStorage.getItem('rsvp_settings_updated_at');
         if (savedUpdatedAt) {
             this.settingsUpdatedAt = savedUpdatedAt;
         }
@@ -4612,6 +4744,22 @@ class RSVPReader {
         return new Date(candidate || 0).getTime() > new Date(current || 0).getTime();
     }
 
+    persistedRevision(snapshot) {
+        const revision = Number(snapshot?.revision);
+        return Number.isSafeInteger(revision) && revision > 0 ? revision : 0;
+    }
+
+    isPersistedSnapshotNewer(candidate, current) {
+        if (!current) return Boolean(candidate);
+        if (!candidate) return false;
+        const candidateRevision = this.persistedRevision(candidate);
+        const currentRevision = this.persistedRevision(current);
+        if (candidateRevision !== currentRevision && (candidateRevision > 0 || currentRevision > 0)) {
+            return candidateRevision > currentRevision;
+        }
+        return this.isNewer(candidate.updatedAt, current.updatedAt);
+    }
+
     isNewerOrEqual(candidate, current) {
         return new Date(candidate || 0).getTime() >= new Date(current || 0).getTime();
     }
@@ -4763,8 +4911,10 @@ class RSVPReader {
             const item = document.createElement('li');
             item.className = 'library-item';
 
-            const bookTokens = this.parseText(book.text);
-            const currentWordNumber = this.wordOrdinalAtIndex(book.currentIndex, bookTokens);
+            const bookTokens = book.isUnsafeText ? [] : this.parseText(book.text);
+            const currentWordNumber = book.isUnsafeText
+                ? Math.min(book.wordCount, Math.max(0, Number(book.currentIndex) || 0))
+                : this.wordOrdinalAtIndex(book.currentIndex, bookTokens);
             const progress = book.wordCount > 0 ? Math.round((currentWordNumber / book.wordCount) * 100) : 0;
 
             const info = document.createElement('div');
@@ -4872,6 +5022,10 @@ class RSVPReader {
         if (!book) {
             this.showToast(this.t('bookNotFound'), 'error');
             return;
+        }
+        if (book.isUnsafeText || book.nativeOnlyText || !book.text) {
+            this.showToast(this.t('importSafetyLimit'), 'error');
+            return null;
         }
 
         const now = new Date().toISOString();
@@ -5466,14 +5620,25 @@ class RSVPReader {
                 return book;
             });
 
-            const savedBooks = await this.persistImportedBooksAtomically(stagedBooks);
-            const count = savedBooks.length;
-
+            let stagedSettings = null;
+            let stagedSettingsUpdatedAt = null;
             if (payload.settings) {
                 const migrated = this.migrateSettingsDefaults(payload.settings);
-                this.settings = { ...this.settings, ...migrated.settings, cloudSyncEnabled: false };
+                stagedSettings = { ...this.settings, ...migrated.settings, cloudSyncEnabled: false };
+                stagedSettingsUpdatedAt = this.toIsoDate(payload.settingsUpdatedAt) || new Date().toISOString();
+            }
+
+            const savedBooks = await this.persistImportedBooksAtomically(stagedBooks, this.dataGeneration, {
+                settings: stagedSettings,
+                settingsUpdatedAt: stagedSettingsUpdatedAt
+            });
+            const count = savedBooks.length;
+
+            if (stagedSettings) {
+                this.settings = stagedSettings;
+                this.settingsUpdatedAt = stagedSettingsUpdatedAt;
                 try {
-                    this.saveSettings();
+                    await this.saveSettings({ preserveTimestamp: true });
                 } catch (error) {
                     console.warn('Books were imported, but settings could not be stored:', error);
                 }

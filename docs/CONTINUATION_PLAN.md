@@ -95,3 +95,25 @@ npm run cap:sync
 - Не использовать volume buttons как play/pause на iOS.
 - Не включать legacy unauthenticated cloud sync в production.
 - Не выпускать под рабочим именем PaceFlow без проверки collision/trademark.
+
+## Статус выполнения — 2026-08-07
+
+Технические задачи P0 и P1 из этого плана закрыты. Реализованы и покрыты regression-тестами:
+
+- восстановление `nativeOnlyText`, пакетная запись native index и versioned draft с атомарным Preferences pointer;
+- newest-wins по revision/content signature, durable tombstones и защита от гонок при сохранении, удалении и вводе;
+- безопасная legacy migration, quarantine повреждённых книг и атомарный импорт backup без частичного состояния;
+- атомарное сохранение настроек с восстановлением после очистки `localStorage`;
+- ранние лимиты до DOM/крупных аллокаций, дополнительные кодировки, RTF/HTML/EPUB/DOCX/ZIP regressions;
+- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v43`.
+
+Итоговая проверка: 3/3 unit-теста и 140/140 production-тестов в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, копии основных assets совпадают. `Info.plist` и `PrivacyInfo.xcprivacy` проходят XML-проверку. `cap doctor` подтверждает Capacitor 8.5.0 и ожидаемо сообщает только об отсутствии Xcode на Linux-сервере.
+
+Серверная legacy cloud sync остаётся выключенной, приватное хранилище не публикуется. Тег отката `pre-app-store-polish-20260802` сохранён без изменений.
+
+Перед публикацией остаются внешние release-задачи, которые нельзя корректно завершить на Linux-сервере без решений и учётных данных владельца:
+
+- проверить финальное имя на collision/trademark и утвердить bundle ID;
+- выбрать Apple Developer Team/seller identity, signing, цену и territories;
+- опубликовать окончательные privacy/support URLs;
+- выполнить archive/signing в полном Xcode, QA на реальном iPhone и TestFlight/App Store Connect review.

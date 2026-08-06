@@ -1,15 +1,9 @@
 [build]
-  publish = "."
-  command = "echo 'Build complete'"
+  publish = "dist"
+  command = "npm run build"
 
-# GitHub интеграция
 [context.production]
-  command = "echo 'Production build'"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  command = "npm run build"
 
 [[headers]]
   for = "/service-worker.js"
