@@ -14,7 +14,8 @@ const packagedFiles = [
     'epub-parser.js',
     'manifest.json',
     'service-worker.js',
-    'sample_text.txt'
+    'sample_text.txt',
+    'sample_text_ru.txt'
 ];
 
 const digest = (contents) => createHash('sha256').update(contents).digest('hex');

@@ -14,7 +14,8 @@ const files = [
     'epub-parser.js',
     'manifest.json',
     'service-worker.js',
-    'sample_text.txt'
+    'sample_text.txt',
+    'sample_text_ru.txt'
 ];
 
 await rm(destination, { recursive: true, force: true });

@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PaceFlow">
     <title>PaceFlow Reader</title>
-    <link rel="manifest" href="manifest.json?v=42">
-    <link rel="stylesheet" href="style.css?v=42">
+    <link rel="manifest" href="manifest.json?v=45">
+    <link rel="stylesheet" href="style.css?v=45">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png">
 </head>
@@ -53,6 +53,13 @@
             </div>
 
             <label class="sr-only" for="textInput" data-i18n="textOrBook">Start reading</label>
+            <div class="demo-action">
+                <div>
+                    <strong data-i18n="tryDemoTitle">No book ready?</strong>
+                    <span data-i18n="tryDemoHint">Try the reading flow with a short built-in text. Nothing is added to your library.</span>
+                </div>
+                <button id="tryDemoBtn" class="secondary-btn compact-btn" type="button" data-i18n="tryDemo">Try the 45-second demo</button>
+            </div>
             <textarea id="textInput" data-i18n-placeholder="textPlaceholder" placeholder="Paste text here, or import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF…" spellcheck="false"></textarea>
             <div class="input-group">
                 <label class="sr-only" for="bookNameInput" data-i18n="bookTitleLabel">Book title</label>
@@ -166,6 +173,8 @@
                     <button id="stopRSVPBtn" class="control-btn" type="button" data-i18n-title="stopFocusMode" data-i18n-aria="stopFocusMode">×</button>
                 </div>
                 <div class="rsvp-progress">
+                    <label class="sr-only" for="rsvpScrubber" data-i18n="readingPosition">Reading position</label>
+                    <input id="rsvpScrubber" class="rsvp-scrubber" type="range" min="0" max="1000" value="0" step="1" data-i18n-aria="readingPosition" aria-label="Reading position">
                     <div class="progress-bars-container" aria-hidden="true">
                         <div id="rsvpTotalProgressBar" class="progress-bar progress-bar-total"><div id="rsvpTotalProgressFill" class="progress-fill total-fill"></div></div>
                         <div id="rsvpRunProgressBar" class="progress-bar progress-bar-run"><div id="rsvpRunProgressFill" class="progress-fill run-fill"></div></div>
@@ -317,9 +326,9 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=44"></script>
-    <script src="vendor/jszip.min.js?v=44"></script>
-    <script src="epub-parser.js?v=44"></script>
-    <script src="app.js?v=44"></script>
+    <script src="i18n.js?v=45"></script>
+    <script src="vendor/jszip.min.js?v=45"></script>
+    <script src="epub-parser.js?v=45"></script>
+    <script src="app.js?v=45"></script>
 </body>
 </html>

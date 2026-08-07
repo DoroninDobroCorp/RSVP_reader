@@ -1,5 +1,5 @@
-const CACHE_NAME = 'paceflow-reader-v44';
-const ASSET_VERSION = 'v=44';
+const CACHE_NAME = 'paceflow-reader-v45';
+const ASSET_VERSION = 'v=45';
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,7 +16,8 @@ const APP_SHELL = [
   './assets/icons/app-icon-180.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
-  './sample_text.txt'
+  './sample_text.txt',
+  './sample_text_ru.txt'
 ];
 
 self.addEventListener('install', (event) => {

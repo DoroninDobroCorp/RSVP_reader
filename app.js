@@ -146,6 +146,7 @@ class RSVPReader {
         this.fileInput = document.getElementById('fileInput');
         this.loadFileBtn = document.getElementById('loadFileBtn');
         this.startReadingBtn = document.getElementById('startReadingBtn');
+        this.tryDemoBtn = document.getElementById('tryDemoBtn');
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -200,6 +201,7 @@ class RSVPReader {
         this.rsvpProgressText = document.getElementById('rsvpProgressText');
         this.rsvpWordCount = document.getElementById('rsvpWordCount');
         this.rsvpSpeedText = document.getElementById('rsvpSpeedText');
+        this.rsvpScrubber = document.getElementById('rsvpScrubber');
         this.orpAlignmentInput = document.getElementById('orpAlignmentInput');
         this.lengthScalingInput = document.getElementById('lengthScalingInput');
         this.speedRampUpInput = document.getElementById('speedRampUpInput');
@@ -274,6 +276,7 @@ class RSVPReader {
         });
 
         this.startReadingBtn.addEventListener('click', () => this.runAsync(() => this.startNormalReading()));
+        this.tryDemoBtn.addEventListener('click', () => this.runAsync(() => this.openBuiltInDemo()));
         this.backToInputBtn.addEventListener('click', () => this.backToInput());
         this.homeBtn.addEventListener('click', () => this.backToInput());
         this.globalSearchBtn.addEventListener('click', () => this.openReaderSearch());
@@ -310,6 +313,8 @@ class RSVPReader {
         this.prevWordBtn.addEventListener('click', () => this.adjustSpeed(-20, this.prevWordBtn));
         this.nextWordBtn.addEventListener('click', () => this.adjustSpeed(20, this.nextWordBtn));
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
+        this.rsvpScrubber.addEventListener('input', () => this.seekFromScrubber());
+        this.rsvpScrubber.addEventListener('change', () => this.schedulePositionSave());
 
         this.normalReadingSection.addEventListener('dblclick', (event) => {
             if (!this.isButtonOrControl(event.target)) {
@@ -2250,6 +2255,21 @@ class RSVPReader {
         return count;
     }
 
+    tokenIndexForWordOrdinal(ordinal) {
+        this.ensureWordOrdinals();
+        if (!this.words.length || this.cachedReadableWordCount < 1) return 0;
+
+        const target = Math.min(Math.max(Math.round(Number(ordinal) || 1), 1), this.cachedReadableWordCount);
+        let low = 0;
+        let high = this.wordOrdinals.length - 1;
+        while (low < high) {
+            const middle = Math.floor((low + high) / 2);
+            if ((this.wordOrdinals[middle] || 0) < target) low = middle + 1;
+            else high = middle;
+        }
+        return this.nearestReadableIndex(low);
+    }
+
     ensureWordOrdinals() {
         if (this.wordOrdinalTokens === this.words && this.wordOrdinals?.length === this.words.length) return;
         this.wordOrdinalTokens = this.words;
@@ -2348,6 +2368,46 @@ class RSVPReader {
             throw new Error(this.t('fileLoadFailed', { file: fileName, message: error.message }));
         } finally {
             event.target.value = '';
+        }
+    }
+
+    async openBuiltInDemo() {
+        await this.ready;
+
+        if (this.textInput.value.trim()) {
+            const confirmed = await this.showActionDialog({
+                title: this.t('demoReplaceTitle'),
+                message: this.t('demoReplaceMessage'),
+                confirmLabel: this.t('tryDemo')
+            });
+            if (!confirmed) return;
+        }
+
+        try {
+            const demoFile = this.i18n.language === 'ru' ? 'sample_text_ru.txt' : 'sample_text.txt';
+            const response = await fetch(demoFile);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const text = (await response.text()).trim();
+            this.assertTextTokenSafety(text, { requireReadable: true });
+
+            this.composerRevision += 1;
+            this.currentBookId = null;
+            this.currentBookName = this.t('demoBookTitle');
+            this.currentTextSignature = '';
+            this.currentChapters = [];
+            this.pendingChapters = [];
+            this.currentIndex = 0;
+            this.words = [];
+            this.hasUnsavedTextInput = true;
+            this.hasUnsafeDraft = false;
+            this.setTextInputValue(text);
+            this.bookNameInput.value = this.currentBookName;
+
+            await this.startNormalReading();
+            this.startRSVP();
+        } catch (error) {
+            console.error(error);
+            this.showToast(this.t('demoLoadFailed'), 'error');
         }
     }
 
@@ -4216,6 +4276,19 @@ class RSVPReader {
         if (this.isPlaying) this.scheduleNextWord();
     }
 
+    seekFromScrubber() {
+        if (this.words.length === 0) return;
+        if (this.isPlaying) this.pause();
+
+        const totalWords = this.countReadableWords();
+        if (totalWords < 1) return;
+        const ratio = this.numberInRange(Number(this.rsvpScrubber.value) / 1000, 0, 1, 0);
+        const targetOrdinal = totalWords === 1 ? 1 : 1 + Math.round(ratio * (totalWords - 1));
+        this.currentIndex = this.tokenIndexForWordOrdinal(targetOrdinal);
+        this.displayCurrentWord();
+        this.updateProgress();
+    }
+
     savePositionCheckpoint(force = false) {
         this.saveResumeSnapshot(this.dataGeneration, { forceNative: force });
         const now = performance.now();
@@ -4260,6 +4333,18 @@ class RSVPReader {
         }
         if (this.rsvpProgressBar) {
             this.rsvpProgressBar.style.width = `${percentage}%`;
+        }
+        if (this.rsvpScrubber) {
+            const scrubberProgress = totalWords > 1
+                ? Math.round(((currentWordNumber - 1) / (totalWords - 1)) * 1000)
+                : 0;
+            this.rsvpScrubber.value = String(scrubberProgress);
+            this.rsvpScrubber.disabled = totalWords < 2;
+            this.rsvpScrubber.setAttribute('aria-valuetext', this.t('readingPositionValue', {
+                progress: percentage,
+                current: this.i18n.formatNumber(currentWordNumber),
+                total: this.i18n.formatNumber(totalWords)
+            }));
         }
 
         this.updateSpeedControls();
@@ -6096,7 +6181,7 @@ async function resetRuntimeCacheIfRequested() {
         sessionStorage.removeItem('rsvp-reader-reloaded-v24');
     } finally {
         url.searchParams.delete('reset-cache');
-        url.searchParams.set('v', '44');
+        url.searchParams.set('v', '45');
         window.location.replace(url.toString());
     }
 

@@ -17,6 +17,9 @@ test('the installed app shell reopens without a network connection', async ({ pa
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.locator('[data-i18n="textOrBook"]:visible').first()).toHaveText(/Start reading|Начать чтение/);
     await expect(page.locator('#offlineBadge')).toContainText(/Offline|Офлайн|local|локально/i);
+    await page.locator('#tryDemoBtn').click();
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    await expect(page.locator('#rsvpBookTitle')).toHaveText('A quiet reading demo');
   } finally {
     await context.setOffline(false);
   }

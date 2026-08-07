@@ -1,7 +1,8 @@
 # PaceFlow Reader — план продолжения
 
-Дата: 2026-08-03  
-Рабочая папка: `/Users/macbookprom1/Desktop/RSVP_reader`  
+Дата исходного плана: 2026-08-03
+Актуализирован: 2026-08-07
+Рабочая папка на сервере: `/srv/RSVP_reader`
 Сервер: `serverforvovka:/srv/RSVP_reader`
 
 ## Точка отката
@@ -11,7 +12,7 @@
 - commit: `d0902a2542b07e227c165d2eb7a21efa62ad99a8`
 - tag: `pre-app-store-polish-20260802`
 
-Не удалять и не переписывать этот тег. Все новые изменения пока не закоммичены. Не включать в будущий commit пользовательские данные, особенно `data/sync-store.json` и личные книги.
+Не удалять и не переписывать этот тег. Завершённые изменения после точки отката хранятся в `main`. Не включать в будущие commit пользовательские данные, особенно `data/sync-store.json`, личные книги и серверные вспомогательные файлы.
 
 ## Уже сделано
 
@@ -105,16 +106,16 @@ npm run cap:sync
 - безопасная legacy migration, quarantine повреждённых книг и атомарный импорт backup без частичного состояния;
 - атомарное сохранение настроек с восстановлением после очистки `localStorage`;
 - ранние лимиты до DOM/крупных аллокаций, дополнительные кодировки, RTF/HTML/EPUB/DOCX/ZIP regressions;
-- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v44`.
+- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v45`.
 - browser `prompt()` / `confirm()` заменены локализованными доступными диалогами; privacy/support встроены в приложение и доступны офлайн.
 - launch bootstrap отложен до первого paint, чтобы native storage bridge не удерживал пустой стартовый экран.
 - legacy `armv7` capability заменена на `arm64`; добавлена автоматическая проверка соответствия source, `dist`, iOS bundle и privacy metadata.
 
-Итоговая проверка: 3/3 unit-теста и 143/143 production-теста в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 10 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
+Итоговая проверка: 3/3 unit-теста и 146/146 production-тестов в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 11 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
 
 Серверная legacy cloud sync остаётся выключенной, приватное хранилище не публикуется. Тег отката `pre-app-store-polish-20260802` сохранён без изменений.
 
-Коммерческое решение пересмотрено в `docs/GO_NO_GO_2026-08-07.md`: платный публичный запуск сейчас **no-go**, пока ограниченный тест на 12–20 внешних читателях не покажет повторное использование и готовность платить. До этого не делать StoreKit, рекламу, Android или дорогой брендинг.
+Коммерческое решение пересмотрено в `docs/GO_NO_GO_2026-08-07.md`: слепой платный публичный запуск сейчас **no-go**. Более широкий product-discovery план находится в `docs/BROAD_STRATEGY_2026-08-07.md`: встроенное EN/RU-демо и точный focus scrub уже реализованы; следующий gate проверяет онлайн-аудиторию через бесплатное демо до StoreKit, Share Extension, PDF, рекламы или Android.
 
 Если validation gate будет пройден и владелец решит продолжать, перед публикацией останутся внешние release-задачи, которые нельзя корректно завершить без решений и учётных данных владельца:
 

@@ -1522,6 +1522,43 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('#libraryImportInput')).toHaveAttribute('aria-hidden', 'true');
   });
 
+  test('the built-in demo starts without a book and focus scrubbing seeks precisely', async ({ page }) => {
+    await openReader(page);
+    await expect(page.locator('#tryDemoBtn')).toHaveText('Try the 45-second demo');
+    await page.locator('#tryDemoBtn').click();
+
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    await expect(page.locator('#rsvpBookTitle')).toHaveText('A quiet reading demo');
+    await expect(page.locator('#textInput')).toHaveValue(/The first light reached the kitchen table/);
+    await expect(page.locator('#playPauseBtn')).toHaveAttribute('aria-label', 'Continue');
+
+    const before = await page.evaluate(() => window.rsvpReader.wordOrdinalAtIndex(window.rsvpReader.currentIndex));
+    await page.locator('#rsvpScrubber').fill('750');
+    const position = await page.evaluate(() => {
+      const reader = window.rsvpReader;
+      return {
+        current: reader.wordOrdinalAtIndex(reader.currentIndex),
+        total: reader.countReadableWords(),
+        playing: reader.isPlaying,
+        valueText: reader.rsvpScrubber.getAttribute('aria-valuetext')
+      };
+    });
+    expect(position.current).toBeGreaterThan(before);
+    expect(position.current / position.total).toBeGreaterThan(0.7);
+    expect(position.current / position.total).toBeLessThan(0.8);
+    expect(position.playing).toBe(false);
+    expect(position.valueText).toContain(`word ${position.current} of ${position.total}`);
+
+    await page.locator('#stopRSVPBtn').click();
+    await page.locator('#backToInputBtn').click();
+    await page.evaluate(() => window.rsvpReader.setLanguage('ru'));
+    await page.locator('#textInput').fill('Несохранённый черновик');
+    await page.locator('#tryDemoBtn').click();
+    await expect(page.locator('#actionDialogTitle')).toHaveText('Открыть демо?');
+    await page.locator('#actionDialogCancelBtn').click();
+    await expect(page.locator('#textInput')).toHaveValue('Несохранённый черновик');
+  });
+
   test('accessible app dialogs replace browser prompts and expose privacy and support', async ({ page }) => {
     let browserDialogOpened = false;
     page.on('dialog', async (dialog) => {

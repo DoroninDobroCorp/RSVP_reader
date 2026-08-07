@@ -22,7 +22,8 @@ const PUBLIC_FILES = new Set([
   'epub-parser.js',
   'service-worker.js',
   'manifest.json',
-  'sample_text.txt'
+  'sample_text.txt',
+  'sample_text_ru.txt'
 ]);
 const PUBLIC_DIRECTORIES = ['assets/', 'vendor/'];
 
