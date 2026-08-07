@@ -10,11 +10,15 @@ PaceFlow Reader is an offline document and ebook reader. The current iOS version
 
 ### Data processed on your device
 
-When you import a book or paste text, the app processes that content locally to display it, build supported chapter navigation, search it, and save your reading position. Imported text, library metadata, bookmarks, reading progress, and app settings remain in the app's private storage on your device. The developer does not receive this information.
+When you import a file or paste text, the app processes that content locally to display it, build supported chapter navigation, search it, and save your reading position. Imported files and pasted text, library metadata, bookmarks, reading progress, and app settings remain in the app's private storage on your device. The developer does not receive this information.
 
 ### Network use
 
-The current iOS app does not upload your books, reading history, bookmarks, or settings. Its core reading features work without an internet connection. Apple may process purchase, download, diagnostic, and support information under Apple's own policies; that processing is controlled by Apple, not by PaceFlow Reader.
+The current app does not upload your books, reading history, bookmarks, or settings. Its core reading features work without an internet connection.
+
+If you choose **Import article**, the URL you submit is sent to the PaceFlow server. The server downloads that public page, extracts its readable text, and returns the result to your device. The submitted URL and downloaded page are processed in memory for that request and are not stored in a server-side PaceFlow library or analytics database. Standard hosting security logs may retain your IP address, request time, and API path; the POST body containing the submitted URL and the extracted article text are not included in those logs. The source website receives a request from the PaceFlow server and handles it under its own policy. Do not use article import for private, authenticated, or confidential URLs.
+
+Apple may process purchase, download, diagnostic, and support information under Apple's own policies; that processing is controlled by Apple, not by PaceFlow Reader.
 
 ### Export and deletion
 
@@ -46,11 +50,15 @@ PaceFlow Reader — офлайн-читалка документов и элек
 
 ### Данные на устройстве
 
-При импорте книги или вставке текста приложение обрабатывает содержимое локально: показывает текст, создаёт доступное оглавление, выполняет поиск и сохраняет позицию чтения. Импортированный текст, сведения библиотеки, закладки, прогресс и настройки остаются в приватном хранилище приложения на вашем устройстве. Разработчик не получает эти данные.
+При импорте файла или вставке текста приложение обрабатывает содержимое локально: показывает текст, создаёт доступное оглавление, выполняет поиск и сохраняет позицию чтения. Импортированные файлы и вставленный текст, сведения библиотеки, закладки, прогресс и настройки остаются в приватном хранилище приложения на вашем устройстве. Разработчик не получает эти данные.
 
 ### Сеть
 
-Текущая iOS-версия не загружает книги, историю чтения, закладки или настройки. Основные функции чтения работают без интернета. Apple может обрабатывать сведения о покупке, загрузке, диагностике и обращениях по собственным правилам; PaceFlow Reader не управляет этой обработкой.
+Текущая версия не загружает книги, историю чтения, закладки или настройки. Основные функции чтения работают без интернета.
+
+Если вы выбираете **Импортировать статью**, введённая ссылка передаётся серверу PaceFlow. Сервер загружает публичную страницу, выделяет читаемый текст и возвращает результат на устройство. Ссылка и загруженная страница обрабатываются в памяти только для этого запроса и не сохраняются в серверной библиотеке PaceFlow или базе аналитики. Стандартные защитные журналы хостинга могут хранить IP-адрес, время запроса и путь API; POST-тело с введённой ссылкой и извлечённый текст статьи в эти журналы не входят. Исходный сайт получает запрос от сервера PaceFlow и обрабатывает его по собственным правилам. Не используйте импорт для приватных, авторизованных или конфиденциальных ссылок.
+
+Apple может обрабатывать сведения о покупке, загрузке, диагностике и обращениях по собственным правилам; PaceFlow Reader не управляет этой обработкой.
 
 ### Экспорт и удаление
 

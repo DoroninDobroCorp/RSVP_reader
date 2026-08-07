@@ -133,6 +133,73 @@ async function makeEpub({ sameFileFragments = false } = {}) {
 }
 
 test.describe('production reader regressions', () => {
+  test('article URL import confirms replacement, saves clean text and opens the reader', async ({ page }) => {
+    let articleRequests = 0;
+    let submittedUrl = '';
+    await page.route('**/api/article', async (route) => {
+      articleRequests += 1;
+      submittedUrl = JSON.parse(route.request().postData() || '{}').url || '';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          title: 'A useful imported article',
+          sourceUrl: 'https://news.example/useful-story',
+          text: [
+            'A useful imported article',
+            '',
+            'This first paragraph contains the clean article text without menus advertisements or navigation links.',
+            '',
+            'The second paragraph has enough words to exercise saving, chapter detection, normal reading, and later focus mode.',
+            '',
+            'The final paragraph confirms that imported web writing remains available in the private local library.'
+          ].join('\n'),
+          wordCount: 43
+        })
+      });
+    });
+
+    await openReader(page);
+    await expect(page.locator('#importArticleBtn')).toHaveText('Import article');
+    await page.locator('#textInput').fill('Keep this unfinished draft exactly as it is.');
+    await page.locator('#articleUrlInput').fill('news.example/useful-story#comments');
+    await page.locator('#importArticleBtn').click();
+    await expect(page.locator('#actionDialog')).toBeVisible();
+    await page.locator('#actionDialogCancelBtn').click();
+    await expect(page.locator('#textInput')).toHaveValue('Keep this unfinished draft exactly as it is.');
+    expect(articleRequests).toBe(0);
+
+    await page.locator('#textInput').fill('');
+    await page.locator('#importArticleBtn').click();
+    await expect(page.locator('#normalReadingSection')).toBeVisible();
+    expect(articleRequests).toBe(1);
+    expect(submittedUrl).toBe('https://news.example/useful-story');
+    await expect(page.locator('#currentBookInfo')).toContainText('A useful imported article');
+    await expect(page.locator('#normalTextDisplay')).toContainText('without menus advertisements');
+
+    await page.locator('#backToInputBtn').click();
+    await page.locator('#libraryBtn').click();
+    await expect(page.locator('.library-item')).toContainText('A useful imported article');
+    const storedBook = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const book = reader.library.find((item) => item.name === 'A useful imported article');
+      return { sourceType: book?.sourceType, fileName: book?.fileName };
+    });
+    expect(storedBook).toEqual({
+      sourceType: 'url',
+      fileName: 'https://news.example/useful-story'
+    });
+  });
+
+  test('article endpoint rejects loopback targets before downloading them', async ({ request }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium');
+    const response = await request.post('/api/article', {
+      data: { url: 'http://127.0.0.1:8081/private' }
+    });
+    expect(response.status()).toBe(400);
+    expect(await response.json()).toMatchObject({ code: 'private_address' });
+  });
+
   test('actual WPM is based on active playback time and excludes pauses', async ({ page }) => {
     await openReader(page);
     await loadPlainText(page, Array.from({ length: 80 }, (_, index) => `word${index}`).join(' '));

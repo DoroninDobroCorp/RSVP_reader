@@ -1,5 +1,5 @@
-const CACHE_NAME = 'paceflow-reader-v45';
-const ASSET_VERSION = 'v=45';
+const CACHE_NAME = 'paceflow-reader-v46';
+const ASSET_VERSION = 'v=46';
 const APP_SHELL = [
   './',
   './index.html',
@@ -52,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
 
-  if (requestUrl.pathname.endsWith('/api/sync')) return;
+  if (requestUrl.pathname.endsWith('/api/sync') || requestUrl.pathname.endsWith('/api/article')) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(handleNavigation(event.request));

@@ -84,9 +84,9 @@ Verified on August 7, 2026: after a clean `npm ci` and `npm run cap:sync`, the c
 
 ## App privacy answers
 
-For the current native build, books and reading state are processed locally, native cloud sync is disabled, and no analytics or advertising SDK is installed. The intended App Store Connect answer is **Data Not Collected**, subject to final network inspection of the archived Release build.
+For the current native build, books and reading state are processed locally, native cloud sync is disabled, and no analytics or advertising SDK is installed. Optional article import sends a user-submitted URL to the PaceFlow extraction endpoint; hosting security logs can contain IP address, request time and API path. Do **not** select **Data Not Collected** from the older draft without re-evaluating Apple's current definitions, the production log-retention policy and the exact archived Release traffic.
 
-- [ ] Publish a privacy policy that explicitly covers local book processing, exports, deletion, support contact, and future policy changes.
+- [ ] Publish a privacy policy that explicitly covers local book processing, optional server-assisted URL import, security logs, exports, deletion, support contact, and future policy changes.
 - [ ] Verify Release traffic on a physical device before selecting **Data Not Collected**.
 - [ ] Re-answer App Privacy if crash reporting, analytics, accounts, cloud sync, ads, or support uploads are added.
 - [ ] Keep `NSPrivacyTracking = false`; do not add ATT unless the product genuinely introduces cross-app tracking.

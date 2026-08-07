@@ -106,12 +106,13 @@ npm run cap:sync
 - безопасная legacy migration, quarantine повреждённых книг и атомарный импорт backup без частичного состояния;
 - атомарное сохранение настроек с восстановлением после очистки `localStorage`;
 - ранние лимиты до DOM/крупных аллокаций, дополнительные кодировки, RTF/HTML/EPUB/DOCX/ZIP regressions;
-- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v45`.
+- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v46`.
 - browser `prompt()` / `confirm()` заменены локализованными доступными диалогами; privacy/support встроены в приложение и доступны офлайн.
 - launch bootstrap отложен до первого paint, чтобы native storage bridge не удерживал пустой стартовый экран.
 - legacy `armv7` capability заменена на `arm64`; добавлена автоматическая проверка соответствия source, `dist`, iOS bundle и privacy metadata.
+- добавлен импорт публичной статьи по URL в браузере и native shell: Readability-извлечение, автоматическое локальное сохранение, EN/RU UI, CORS для Capacitor и SSRF-защита с DNS-проверкой каждого redirect, блокировкой private/local адресов и нестандартных портов, лимитами размера/времени/частоты.
 
-Итоговая проверка: 3/3 unit-теста и 146/146 production-тестов в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 11 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
+Итоговая проверка: 8/8 unit-тестов и 150 production-тестов в Chromium, WebKit и Mobile Safari (ещё 2 ожидаемых cross-project skip для одноразового серверного SSRF-теста); реальная русская FB2-книга (937 070 символов) импортируется успешно; реальная Wikipedia-статья на 3 099 слов извлекается через публичный endpoint; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 11 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
 
 Серверная legacy cloud sync остаётся выключенной, приватное хранилище не публикуется. Тег отката `pre-app-store-polish-20260802` сохранён без изменений.
 

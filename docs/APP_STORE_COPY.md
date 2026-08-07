@@ -82,13 +82,14 @@ Adjust the word size, appearance and focus color. Start or pause with a tap, or 
 
 PRIVATE. LOCAL. OFFLINE.
 
-Your imported books, reading position, bookmarks and settings stay on your device. Native v1 has no account, cloud sync, analytics or tracking. The reader works without an internet connection.
+Your imported books, reading position, bookmarks and settings stay on your device. Native v1 has no account, cloud sync, analytics or tracking. Core reading works without an internet connection. Optional article import sends only the link you submit to the PaceFlow extraction service; see the Privacy Policy for details.
 
 SUPPORTED CONTENT
 
 • DRM-free EPUB and FB2 ebooks
 • DOCX and TXT documents
 • Text pasted directly into the app
+• Public web articles imported by URL while online
 
 DRM-protected ebooks are not supported. Reading speed and comprehension vary by person and material. Start at a pace that feels comfortable, slow down for difficult passages, and return to earlier text whenever you need more context.
 ```

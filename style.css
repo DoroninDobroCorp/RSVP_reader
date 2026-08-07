@@ -450,6 +450,58 @@ input:focus {
     white-space: nowrap;
 }
 
+.article-import {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.article-import-copy {
+    display: grid;
+    gap: 3px;
+}
+
+.article-import-copy span,
+.article-import-status {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.article-import-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px;
+}
+
+.article-import-controls input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 13px;
+    color: var(--text);
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.article-import-controls button {
+    min-width: 148px;
+    white-space: nowrap;
+}
+
+.article-import-status {
+    min-height: 1.2em;
+    margin: 0;
+}
+
+.article-import[aria-busy="true"] .article-import-status {
+    color: var(--primary-hover);
+}
+
 .primary-btn,
 .secondary-btn,
 .danger-btn,
@@ -1688,6 +1740,15 @@ input:focus {
     }
 
     .demo-action button {
+        width: 100%;
+        white-space: normal;
+    }
+
+    .article-import-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .article-import-controls button {
         width: 100%;
         white-space: normal;
     }

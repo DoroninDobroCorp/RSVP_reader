@@ -147,6 +147,10 @@ class RSVPReader {
         this.loadFileBtn = document.getElementById('loadFileBtn');
         this.startReadingBtn = document.getElementById('startReadingBtn');
         this.tryDemoBtn = document.getElementById('tryDemoBtn');
+        this.articleImportForm = document.getElementById('articleImportForm');
+        this.articleUrlInput = document.getElementById('articleUrlInput');
+        this.importArticleBtn = document.getElementById('importArticleBtn');
+        this.articleImportStatus = document.getElementById('articleImportStatus');
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -277,6 +281,10 @@ class RSVPReader {
 
         this.startReadingBtn.addEventListener('click', () => this.runAsync(() => this.startNormalReading()));
         this.tryDemoBtn.addEventListener('click', () => this.runAsync(() => this.openBuiltInDemo()));
+        this.articleImportForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.runAsync(() => this.importArticleFromUrl());
+        });
         this.backToInputBtn.addEventListener('click', () => this.backToInput());
         this.homeBtn.addEventListener('click', () => this.backToInput());
         this.globalSearchBtn.addEventListener('click', () => this.openReaderSearch());
@@ -2408,6 +2416,133 @@ class RSVPReader {
         } catch (error) {
             console.error(error);
             this.showToast(this.t('demoLoadFailed'), 'error');
+        }
+    }
+
+    normalizeArticleUrlInput(value) {
+        let raw = String(value || '').trim();
+        if (raw && !/^[a-z][a-z\d+.-]*:/iu.test(raw)) raw = `https://${raw}`;
+        try {
+            const url = new URL(raw);
+            if (!['http:', 'https:'].includes(url.protocol) || !url.hostname || url.username || url.password) {
+                throw new Error('invalid article URL');
+            }
+            url.hash = '';
+            return url.href;
+        } catch (error) {
+            return '';
+        }
+    }
+
+    resolveArticleImportEndpoint() {
+        if (this.isNativePlatform()) {
+            return 'https://145.239.82.124.sslip.io/rsvp/api/article';
+        }
+        return new URL('api/article', window.location.href).href;
+    }
+
+    articleImportErrorMessage(code) {
+        const messageKeys = {
+            invalid_url: 'articleInvalidUrl',
+            private_address: 'articlePrivateAddress',
+            too_large: 'articleTooLarge',
+            not_html: 'articleNotPage',
+            unreadable: 'articleUnreadable',
+            timeout: 'articleTimeout',
+            rate_limited: 'articleRateLimited',
+            draft_changed: 'articleDraftChanged'
+        };
+        return this.t(messageKeys[code] || 'articleImportFailed');
+    }
+
+    setArticleImportBusy(isBusy, statusMessage = '') {
+        this.articleImportForm.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+        this.articleUrlInput.disabled = isBusy;
+        this.importArticleBtn.disabled = isBusy;
+        this.importArticleBtn.textContent = this.t(isBusy ? 'importingArticle' : 'importArticle');
+        this.articleImportStatus.textContent = statusMessage || this.t(isBusy ? 'importingArticle' : 'articleOnlineOnly');
+    }
+
+    async importArticleFromUrl() {
+        await this.ready;
+
+        const sourceUrl = this.normalizeArticleUrlInput(this.articleUrlInput.value);
+        if (!sourceUrl) {
+            const message = this.t('articleInvalidUrl');
+            this.articleImportStatus.textContent = message;
+            this.showToast(message, 'error');
+            this.articleUrlInput.focus();
+            return;
+        }
+        this.articleUrlInput.value = sourceUrl;
+
+        if (this.textInput.value.trim()) {
+            const confirmed = await this.showActionDialog({
+                title: this.t('articleReplaceTitle'),
+                message: this.t('articleReplaceMessage'),
+                confirmLabel: this.t('importArticle')
+            });
+            if (!confirmed) return;
+        }
+
+        const composerRevision = this.composerRevision;
+        this.setArticleImportBusy(true);
+        try {
+            const response = await fetch(this.resolveArticleImportEndpoint(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: sourceUrl })
+            });
+            let payload = null;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = null;
+            }
+            if (!response.ok) {
+                const importError = new Error(this.articleImportErrorMessage(payload?.code));
+                importError.code = payload?.code || 'fetch_failed';
+                throw importError;
+            }
+            if (composerRevision !== this.composerRevision) {
+                const draftChangedError = new Error(this.t('articleDraftChanged'));
+                draftChangedError.code = 'draft_changed';
+                throw draftChangedError;
+            }
+
+            const text = String(payload?.text || '').trim();
+            this.assertTextTokenSafety(text, { requireReadable: true });
+            const title = String(payload?.title || new URL(sourceUrl).hostname).trim().slice(0, 300)
+                || new URL(sourceUrl).hostname;
+            const tokens = this.parseText(text);
+            const savedBook = await this.addParsedBookToLibrary(title, {
+                text,
+                chapters: this.detectChaptersFromText(text)
+            }, 'url', {
+                silent: true,
+                fileName: String(payload?.sourceUrl || sourceUrl),
+                select: true,
+                selectRevision: composerRevision
+            });
+            if (!savedBook) throw new Error(this.t('articleImportFailed'));
+
+            if (this.currentBookId === savedBook.id) {
+                await this.startNormalReading();
+            }
+            this.articleUrlInput.value = '';
+            const message = this.t('articleImported', {
+                title: savedBook.name,
+                count: this.formatWordCount(this.countReadableWords(tokens))
+            });
+            this.showToast(message);
+            this.setArticleImportBusy(false, message);
+        } catch (error) {
+            console.error(error);
+            const message = error?.code
+                ? this.articleImportErrorMessage(error.code)
+                : (error.message || this.t('articleImportFailed'));
+            this.setArticleImportBusy(false, message);
+            this.showToast(message, 'error');
         }
     }
 
