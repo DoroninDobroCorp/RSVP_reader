@@ -6,6 +6,8 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const destination = join(root, 'dist');
 const files = [
     'index.html',
+    'privacy.html',
+    'support.html',
     'style.css',
     'i18n.js',
     'app.js',

@@ -14,6 +14,8 @@ let storeMutationQueue = Promise.resolve();
 const LEGACY_SINGLE_USER_SYNC = process.env.PACEFLOW_ENABLE_LEGACY_SYNC === '1';
 const PUBLIC_FILES = new Set([
   'index.html',
+  'privacy.html',
+  'support.html',
   'style.css',
   'i18n.js',
   'app.js',

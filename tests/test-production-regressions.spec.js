@@ -1075,7 +1075,7 @@ test.describe('production reader regressions', () => {
       window.setTimeout = (callback, delay, ...args) => delay === 450 ? 0 : originalSetTimeout(callback, delay, ...args);
       const delayedSave = reader.persistReadingPosition();
       await readStarted;
-      window.confirm = () => true;
+      reader.showActionDialog = async () => true;
       await reader.deleteAllLocalData();
       releaseRead();
       await delayedSave;
@@ -1111,7 +1111,7 @@ test.describe('production reader regressions', () => {
       });
       await reader.putBook(book);
       window.__nativeMock.failRmdir = true;
-      window.confirm = () => true;
+      reader.showActionDialog = async () => true;
       let failed = false;
       try {
         await reader.deleteAllLocalData();
@@ -1522,6 +1522,45 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('#libraryImportInput')).toHaveAttribute('aria-hidden', 'true');
   });
 
+  test('accessible app dialogs replace browser prompts and expose privacy and support', async ({ page }) => {
+    let browserDialogOpened = false;
+    page.on('dialog', async (dialog) => {
+      browserDialogOpened = true;
+      await dialog.dismiss();
+    });
+
+    await openReader(page);
+    await page.locator('#textInput').fill('dialog regression book text');
+    await page.locator('#bookNameInput').fill('Original title');
+    await page.evaluate(async () => window.rsvpReader.saveCurrentTextAsBook({ silent: true }));
+    await page.evaluate(async () => window.rsvpReader.showLibrary());
+
+    await page.getByRole('button', { name: 'Rename' }).click();
+    await expect(page.locator('#actionDialog')).toHaveClass(/active/);
+    await expect(page.locator('#actionDialogTitle')).toHaveText('Rename book');
+    await page.locator('#actionDialogInput').fill('Renamed safely');
+    await page.locator('#actionDialogForm').evaluate((form) => form.requestSubmit());
+    await expect(page.locator('.book-title')).toHaveText('Renamed safely');
+
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await expect(page.locator('#actionDialogTitle')).toHaveText('Delete book?');
+    await page.locator('#actionDialogCancelBtn').click();
+    await expect(page.locator('#actionDialog')).not.toHaveClass(/active/);
+    await expect(page.locator('.book-title')).toHaveText('Renamed safely');
+
+    await page.locator('#settingsBtn').click();
+    await expect(page.locator('a[href="privacy.html"]')).toHaveText('Privacy policy');
+    await expect(page.locator('a[href="support.html"]')).toHaveText('Support');
+    await expect(page.locator('[data-i18n="versionLabel"]')).toHaveText('Version 1.0');
+    await page.locator('#deleteAllDataBtn').click();
+    await expect(page.locator('#actionDialog')).toHaveClass(/active/);
+    await expect(page.locator('#settingsModal')).toHaveClass(/active/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#actionDialog')).not.toHaveClass(/active/);
+    await expect(page.locator('#settingsModal')).toHaveClass(/active/);
+    expect(browserDialogOpened).toBe(false);
+  });
+
   test('resetting settings unregisters optional Media Session handlers', async ({ page }) => {
     await openReader(page);
     const result = await page.evaluate(() => {
@@ -1554,7 +1593,7 @@ test.describe('production reader regressions', () => {
       await reader.saveCurrentTextAsBook({ silent: true });
       reader.settings.wpm = 777;
       reader.saveSettings();
-      window.confirm = () => true;
+      reader.showActionDialog = async () => true;
       await reader.deleteAllLocalData();
     });
 

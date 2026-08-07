@@ -60,6 +60,9 @@ class RSVPReader {
         this.isDeletingAllData = false;
         this.activeModal = null;
         this.modalTrigger = null;
+        this.pendingActionDialog = null;
+        this.actionDialogParent = null;
+        this.actionDialogReturnFocus = null;
         this.dataGeneration = 0;
         this.pendingNativeWrites = new Set();
         this.bookWriteGenerations = new Map();
@@ -123,7 +126,11 @@ class RSVPReader {
         this.updateOnlineStatus();
         this.registerServiceWorker();
 
-        this.ready = this.bootstrap().then(() => {
+        // Capacitor bridges native calls through WebKit. Starting bootstrap in
+        // the constructor can therefore keep the launch view blank until the
+        // first storage round-trip finishes. Give WebKit two rendering turns so
+        // the usable shell is painted before recovery work begins.
+        this.ready = this.afterFirstPaint().then(() => this.bootstrap()).then(() => {
             this.setupHardwareControls();
             if (this.settings.cloudSyncEnabled && !this.isNativePlatform()) this.syncSoon(800);
         });
@@ -233,6 +240,17 @@ class RSVPReader {
         this.tocModal = document.getElementById('tocModal');
         this.closeTocBtn = document.getElementById('closeTocBtn');
         this.tocList = document.getElementById('tocList');
+
+        this.actionDialog = document.getElementById('actionDialog');
+        this.actionDialogForm = document.getElementById('actionDialogForm');
+        this.actionDialogTitle = document.getElementById('actionDialogTitle');
+        this.actionDialogMessage = document.getElementById('actionDialogMessage');
+        this.actionDialogInputGroup = document.getElementById('actionDialogInputGroup');
+        this.actionDialogInputLabel = document.getElementById('actionDialogInputLabel');
+        this.actionDialogInput = document.getElementById('actionDialogInput');
+        this.actionDialogCloseBtn = document.getElementById('actionDialogCloseBtn');
+        this.actionDialogCancelBtn = document.getElementById('actionDialogCancelBtn');
+        this.actionDialogConfirmBtn = document.getElementById('actionDialogConfirmBtn');
 
         this.offlineBadge = document.getElementById('offlineBadge');
         this.storageStatus = document.getElementById('storageStatus');
@@ -386,6 +404,17 @@ class RSVPReader {
             if (event.target === this.tocModal) this.closeToc();
         });
 
+        this.actionDialogForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const value = this.actionDialogInputGroup.hidden ? true : this.actionDialogInput.value;
+            this.finishActionDialog(value);
+        });
+        this.actionDialogCloseBtn.addEventListener('click', () => this.finishActionDialog(null));
+        this.actionDialogCancelBtn.addEventListener('click', () => this.finishActionDialog(null));
+        this.actionDialog.addEventListener('click', (event) => {
+            if (event.target === this.actionDialog) this.finishActionDialog(null);
+        });
+
         window.addEventListener('online', () => {
             this.updateOnlineStatus();
             this.syncSoon(0);
@@ -451,6 +480,12 @@ class RSVPReader {
         if (indexedDbFailed) {
             this.showToast(this.t('indexedDbUnavailable'), 'error');
         }
+    }
+
+    afterFirstPaint() {
+        return new Promise((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
     }
 
     runAsync(task) {
@@ -5060,7 +5095,13 @@ class RSVPReader {
         const book = await this.getBook(bookId);
         if (!book) return;
 
-        if (!confirm(this.t('confirmDeleteBook', { name: book.name }))) return;
+        const confirmed = await this.showActionDialog({
+            title: this.t('deleteBookTitle'),
+            message: this.t('confirmDeleteBook', { name: book.name }),
+            confirmLabel: this.t('delete'),
+            danger: true
+        });
+        if (!confirmed) return;
 
         await this.deleteBookFromStorage(bookId);
         if (this.currentBookId === String(bookId)) {
@@ -5081,12 +5122,17 @@ class RSVPReader {
         const book = await this.getBook(bookId);
         if (!book) return;
 
-        const newName = prompt(this.t('newTitle'), book.name);
-        if (!newName || !newName.trim()) return;
+        const newName = await this.showActionDialog({
+            title: this.t('renameBookTitle'),
+            inputLabel: this.t('newTitle'),
+            value: book.name,
+            confirmLabel: this.t('save')
+        });
+        if (newName === null || !String(newName).trim()) return;
 
         const savedBook = await this.mutateBook(bookId, (latest) => ({
             ...latest,
-            name: newName.trim(),
+            name: String(newName).trim(),
             updatedAt: new Date().toISOString()
         }), { bookGeneration });
         if (!savedBook) return;
@@ -5165,9 +5211,14 @@ class RSVPReader {
         const excerpt = this.makeExcerpt(this.currentIndex);
         const currentWordNumber = this.wordOrdinalAtIndex(this.currentIndex);
         const defaultName = `${Math.round((currentWordNumber / Math.max(this.countReadableWords(), 1)) * 100)}% — ${excerpt.slice(0, 32)}`;
-        const requestedName = prompt(this.t('bookmarkName'), defaultName);
+        const requestedName = await this.showActionDialog({
+            title: this.t('bookmarkDialogTitle'),
+            inputLabel: this.t('bookmarkName'),
+            value: defaultName,
+            confirmLabel: this.t('save')
+        });
         if (requestedName === null) return;
-        const name = requestedName.trim() || defaultName;
+        const name = String(requestedName).trim() || defaultName;
 
         const bookmark = {
             id: this.createId(),
@@ -5304,6 +5355,81 @@ class RSVPReader {
         if (this.activeModal === this.settingsModal) this.closeSettings();
         else if (this.activeModal === this.bookmarksModal) this.closeBookmarks();
         else if (this.activeModal === this.tocModal) this.closeToc();
+        else if (this.activeModal === this.actionDialog) this.finishActionDialog(null);
+    }
+
+    showActionDialog({ title, message = '', inputLabel = '', value = '', confirmLabel, danger = false }) {
+        if (this.pendingActionDialog) this.finishActionDialog(null);
+
+        this.actionDialogParent = this.activeModal && this.activeModal !== this.actionDialog
+            ? this.activeModal
+            : null;
+        this.actionDialogReturnFocus = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+        if (this.actionDialogParent) {
+            this.actionDialogParent.inert = true;
+            this.actionDialogParent.setAttribute('aria-hidden', 'true');
+        } else {
+            [document.querySelector('.app-header'), document.getElementById('mainContainer')]
+                .filter(Boolean)
+                .forEach((element) => {
+                    element.inert = true;
+                    element.setAttribute('aria-hidden', 'true');
+                });
+        }
+
+        this.actionDialogTitle.textContent = title;
+        this.actionDialogMessage.textContent = message;
+        this.actionDialogInputGroup.hidden = !inputLabel;
+        this.actionDialogInputLabel.textContent = inputLabel;
+        this.actionDialogInput.value = value;
+        this.actionDialogConfirmBtn.textContent = confirmLabel || this.t('confirm');
+        this.actionDialogConfirmBtn.classList.toggle('danger-btn', danger);
+        this.actionDialogConfirmBtn.classList.toggle('primary-btn', !danger);
+        this.activeModal = this.actionDialog;
+        this.actionDialog.classList.add('active');
+
+        requestAnimationFrame(() => {
+            const focusTarget = inputLabel ? this.actionDialogInput : this.actionDialogCancelBtn;
+            focusTarget.focus({ preventScroll: true });
+            if (inputLabel) this.actionDialogInput.select();
+        });
+
+        return new Promise((resolve) => {
+            this.pendingActionDialog = resolve;
+        });
+    }
+
+    finishActionDialog(value) {
+        if (!this.pendingActionDialog && !this.actionDialog?.classList.contains('active')) return;
+        this.actionDialog.classList.remove('active');
+
+        const parent = this.actionDialogParent;
+        const returnFocus = this.actionDialogReturnFocus;
+        this.actionDialogParent = null;
+        this.actionDialogReturnFocus = null;
+        this.activeModal = parent;
+
+        if (parent) {
+            parent.inert = false;
+            parent.removeAttribute('inert');
+            parent.removeAttribute('aria-hidden');
+        } else {
+            [document.querySelector('.app-header'), document.getElementById('mainContainer')]
+                .filter(Boolean)
+                .forEach((element) => {
+                    element.inert = false;
+                    element.removeAttribute('inert');
+                    element.removeAttribute('aria-hidden');
+                });
+        }
+
+        const resolve = this.pendingActionDialog;
+        this.pendingActionDialog = null;
+        if (returnFocus?.isConnected) requestAnimationFrame(() => returnFocus.focus({ preventScroll: true }));
+        if (resolve) resolve(value);
     }
 
     getModalFocusables(modal) {
@@ -5490,7 +5616,13 @@ class RSVPReader {
 
     async deleteAllLocalData() {
         await this.ready;
-        if (!window.confirm(this.t('confirmDeleteAllData'))) return;
+        const confirmed = await this.showActionDialog({
+            title: this.t('deleteAllTitle'),
+            message: this.t('confirmDeleteAllData'),
+            confirmLabel: this.t('deleteAllData'),
+            danger: true
+        });
+        if (!confirmed) return;
 
         this.isDeletingAllData = true;
         this.dataGeneration += 1;
@@ -5964,7 +6096,7 @@ async function resetRuntimeCacheIfRequested() {
         sessionStorage.removeItem('rsvp-reader-reloaded-v24');
     } finally {
         url.searchParams.delete('reset-cache');
-        url.searchParams.set('v', '42');
+        url.searchParams.set('v', '44');
         window.location.replace(url.toString());
     }
 

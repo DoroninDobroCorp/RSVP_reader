@@ -1271,6 +1271,95 @@ input:focus {
     margin-top: 14px;
 }
 
+.settings-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.settings-version {
+    display: block;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
+.action-dialog-sheet {
+    width: min(480px, 100%);
+}
+
+.action-dialog-message {
+    margin: 0 0 18px;
+    color: var(--text-soft);
+    line-height: 1.55;
+}
+
+.action-dialog-message:empty {
+    display: none;
+}
+
+.action-dialog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-dialog-actions button {
+    width: 100%;
+}
+
+.legal-page {
+    width: min(860px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: max(24px, env(safe-area-inset-top)) 0 max(48px, env(safe-area-inset-bottom));
+}
+
+.legal-back,
+.legal-contact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    text-decoration: none;
+}
+
+.legal-back {
+    margin-bottom: 18px;
+}
+
+.legal-card {
+    padding: clamp(22px, 5vw, 44px);
+}
+
+.legal-card + .legal-card {
+    margin-top: 20px;
+}
+
+.legal-card h1 {
+    margin: 8px 0 18px;
+    font-size: clamp(2rem, 7vw, 3.4rem);
+    letter-spacing: -0.04em;
+}
+
+.legal-card h2 {
+    margin: 28px 0 8px;
+    font-size: 1.05rem;
+}
+
+.legal-card p,
+.legal-card li {
+    color: var(--text-soft);
+    line-height: 1.65;
+}
+
+.legal-card a:not(.primary-btn) {
+    color: var(--primary-hover);
+}
+
 .setting-group input[type="color"] {
     width: 100%;
     height: 46px;

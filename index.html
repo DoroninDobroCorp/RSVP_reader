@@ -263,6 +263,16 @@
                     </div>
                 </section>
 
+                <section class="settings-section" aria-labelledby="aboutHeading">
+                    <h3 id="aboutHeading" data-i18n="aboutPrivacy">About and privacy</h3>
+                    <p class="setting-desc" data-i18n="aboutPrivacyHint">Review how local data is handled, get support, and check the installed version.</p>
+                    <div class="settings-data-actions">
+                        <a class="secondary-btn settings-link" href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a>
+                        <a class="secondary-btn settings-link" href="support.html" data-i18n="support">Support</a>
+                    </div>
+                    <small class="settings-version" data-i18n="versionLabel">Version 1.0</small>
+                </section>
+
                 <button id="resetSettingsBtn" class="secondary-btn full-width" type="button" data-i18n="resetSettings">Restore defaults</button>
             </div>
         </div>
@@ -285,9 +295,31 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=42"></script>
-    <script src="vendor/jszip.min.js?v=42"></script>
-    <script src="epub-parser.js?v=42"></script>
-    <script src="app.js?v=42"></script>
+    <div id="actionDialog" class="modal action-dialog" role="dialog" aria-modal="true" aria-labelledby="actionDialogTitle" aria-describedby="actionDialogMessage">
+        <div class="modal-content action-dialog-sheet">
+            <form id="actionDialogForm">
+                <div class="modal-header">
+                    <h2 id="actionDialogTitle">Confirm</h2>
+                    <button id="actionDialogCloseBtn" class="close-btn" type="button" data-i18n-aria="close">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="actionDialogMessage" class="action-dialog-message"></p>
+                    <div id="actionDialogInputGroup" class="setting-group" hidden>
+                        <label id="actionDialogInputLabel" for="actionDialogInput"></label>
+                        <input id="actionDialogInput" type="text" maxlength="240" autocomplete="off">
+                    </div>
+                    <div class="action-dialog-actions">
+                        <button id="actionDialogCancelBtn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+                        <button id="actionDialogConfirmBtn" class="primary-btn" type="submit" data-i18n="confirm">Confirm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="i18n.js?v=44"></script>
+    <script src="vendor/jszip.min.js?v=44"></script>
+    <script src="epub-parser.js?v=44"></script>
+    <script src="app.js?v=44"></script>
 </body>
 </html>

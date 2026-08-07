@@ -105,13 +105,18 @@ npm run cap:sync
 - безопасная legacy migration, quarantine повреждённых книг и атомарный импорт backup без частичного состояния;
 - атомарное сохранение настроек с восстановлением после очистки `localStorage`;
 - ранние лимиты до DOM/крупных аллокаций, дополнительные кодировки, RTF/HTML/EPUB/DOCX/ZIP regressions;
-- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v43`.
+- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v44`.
+- browser `prompt()` / `confirm()` заменены локализованными доступными диалогами; privacy/support встроены в приложение и доступны офлайн.
+- launch bootstrap отложен до первого paint, чтобы native storage bridge не удерживал пустой стартовый экран.
+- legacy `armv7` capability заменена на `arm64`; добавлена автоматическая проверка соответствия source, `dist`, iOS bundle и privacy metadata.
 
-Итоговая проверка: 3/3 unit-теста и 140/140 production-тестов в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, копии основных assets совпадают. `Info.plist` и `PrivacyInfo.xcprivacy` проходят XML-проверку. `cap doctor` подтверждает Capacitor 8.5.0 и ожидаемо сообщает только об отсутствии Xcode на Linux-сервере.
+Итоговая проверка: 3/3 unit-теста и 143/143 production-теста в Chromium, WebKit и Mobile Safari; реальная русская FB2-книга (937 070 символов) импортируется успешно; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 10 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
 
 Серверная legacy cloud sync остаётся выключенной, приватное хранилище не публикуется. Тег отката `pre-app-store-polish-20260802` сохранён без изменений.
 
-Перед публикацией остаются внешние release-задачи, которые нельзя корректно завершить на Linux-сервере без решений и учётных данных владельца:
+Коммерческое решение пересмотрено в `docs/GO_NO_GO_2026-08-07.md`: платный публичный запуск сейчас **no-go**, пока ограниченный тест на 12–20 внешних читателях не покажет повторное использование и готовность платить. До этого не делать StoreKit, рекламу, Android или дорогой брендинг.
+
+Если validation gate будет пройден и владелец решит продолжать, перед публикацией останутся внешние release-задачи, которые нельзя корректно завершить без решений и учётных данных владельца:
 
 - проверить финальное имя на collision/trademark и утвердить bundle ID;
 - выбрать Apple Developer Team/seller identity, signing, цену и territories;

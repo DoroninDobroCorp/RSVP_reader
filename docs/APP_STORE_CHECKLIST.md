@@ -35,6 +35,8 @@ Before every submission:
 
 ## Local machine and Xcode setup
 
+Verified on August 7, 2026: after a clean `npm ci` and `npm run cap:sync`, the committed project builds in Release for iOS Simulator with Xcode 26.3 / iOS 26 SDK and passes `xcodebuild analyze`. Signing, archive validation, and physical-device checks still require the final Apple team and bundle identifier.
+
 - [ ] Install full Xcode 26 or a newer App Store Connect-supported version; Command Line Tools alone cannot build or validate the app.
 - [ ] Select it with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` and accept the license.
 - [ ] Install the matching iOS platform/simulator runtimes.

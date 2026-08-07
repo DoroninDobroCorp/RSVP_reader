@@ -1,8 +1,8 @@
 # PaceFlow Reader — Privacy Policy Draft
 
-Effective date: **[PUBLICATION DATE]**
+Effective date: **August 7, 2026**
 
-This is a publication-ready content draft, but the bracketed contact details and final product name must be completed before it is hosted and submitted to Apple.
+This policy describes the current local-only iOS build. A copy is bundled inside the app; the public source remains available in this repository until a final product domain is selected.
 
 ## English
 
@@ -34,9 +34,11 @@ This policy may change if the app's data practices change. The effective date ab
 
 ### Contact
 
-Developer: **[LEGAL NAME OR COMPANY]**  
-Email: **[SUPPORT EMAIL]**  
-Website: **[SUPPORT URL]**
+Developer: **DoroninDobroCorp / PaceFlow Reader project**
+
+Support: **https://github.com/DoroninDobroCorp/RSVP_reader/issues**
+
+Project: **https://github.com/DoroninDobroCorp/RSVP_reader**
 
 ## Русский
 
@@ -64,6 +66,8 @@ PaceFlow Reader — офлайн-читалка документов и элек
 
 ### Контакты
 
-Разработчик: **[ЮРИДИЧЕСКОЕ ИМЯ ИЛИ КОМПАНИЯ]**  
-Email: **[EMAIL ПОДДЕРЖКИ]**  
-Сайт: **[URL ПОДДЕРЖКИ]**
+Разработчик: **DoroninDobroCorp / проект PaceFlow Reader**
+
+Поддержка: **https://github.com/DoroninDobroCorp/RSVP_reader/issues**
+
+Проект: **https://github.com/DoroninDobroCorp/RSVP_reader**

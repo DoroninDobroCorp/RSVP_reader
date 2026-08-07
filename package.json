@@ -8,6 +8,8 @@
     "build": "npm run build:web",
     "build:web": "node scripts/build-web.mjs",
     "cap:sync": "npm run build && cap sync",
+    "verify:package": "node scripts/verify-packaged-assets.mjs",
+    "release:check": "npm test && npm run cap:sync && npm run verify:package",
     "ios:add": "npm run build && cap add ios",
     "ios:open": "npm run cap:sync && cap open ios",
     "test": "npm run test:unit && npm run test:production",

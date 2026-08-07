@@ -223,7 +223,8 @@ The submitted native v1 build is local-only. Imported files, extracted text, rea
 
 There is no public catalog, social feed, user-to-user sharing or account-generated content. The current submitted build has no in-app purchase, paywall or subscription.
 
-Support contact: [SUPPORT_EMAIL]
+Support contact: https://github.com/DoroninDobroCorp/RSVP_reader/issues
+Privacy policy: https://github.com/DoroninDobroCorp/RSVP_reader/blob/main/docs/PRIVACY_POLICY.md
 ```
 
 ## Pre-submission truthfulness checklist
