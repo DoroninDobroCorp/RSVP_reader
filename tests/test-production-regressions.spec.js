@@ -194,7 +194,9 @@ test.describe('production reader regressions', () => {
   test('article endpoint rejects loopback targets before downloading them', async ({ request }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium');
     const response = await request.post('/api/article', {
-      data: { url: 'http://127.0.0.1:8081/private' }
+      // Keep the default HTTP port so this assertion exercises the private
+      // address guard rather than the separate non-standard-port guard.
+      data: { url: 'http://127.0.0.1/private' }
     });
     expect(response.status()).toBe(400);
     expect(await response.json()).toMatchObject({ code: 'private_address' });

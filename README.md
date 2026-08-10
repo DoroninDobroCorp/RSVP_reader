@@ -100,10 +100,11 @@ Then run:
 npm test              # Node unit tests + complete Playwright suite
 npm run test:unit     # unit tests only
 npm run test:local    # focused local regression suite
+npm run test:prod     # smoke-test the deployed web demo
 npm run test:headed   # Playwright with a visible browser
 ```
 
-Playwright starts the local server automatically on port 8081. Native release QA, privacy checks, physical-device coverage, and App Store steps are tracked in [docs/APP_STORE_CHECKLIST.md](docs/APP_STORE_CHECKLIST.md).
+Playwright starts the local server automatically on port 8081. The production smoke suite targets the public PaceFlow demo by default; set `PACEFLOW_PRODUCTION_URL` (including its trailing slash) to validate another deployment. Native release QA, privacy checks, physical-device coverage, and App Store steps are tracked in [docs/APP_STORE_CHECKLIST.md](docs/APP_STORE_CHECKLIST.md).
 
 ## Project structure
 
@@ -224,10 +225,11 @@ npx playwright install chromium webkit
 npm test              # unit-тесты Node + полный набор Playwright
 npm run test:unit     # только unit-тесты
 npm run test:local    # сфокусированный локальный регресс
+npm run test:prod     # smoke-тест опубликованного web-demo
 npm run test:headed   # Playwright с видимым браузером
 ```
 
-Playwright автоматически поднимает локальный сервер на порту 8081. Проверки нативного релиза, приватности, физических устройств и App Store собраны в [docs/APP_STORE_CHECKLIST.md](docs/APP_STORE_CHECKLIST.md).
+Playwright автоматически поднимает локальный сервер на порту 8081. Production smoke suite по умолчанию проверяет публичное demo PaceFlow; другой deployment можно указать в `PACEFLOW_PRODUCTION_URL` с завершающим `/`. Проверки нативного релиза, приватности, физических устройств и App Store собраны в [docs/APP_STORE_CHECKLIST.md](docs/APP_STORE_CHECKLIST.md).
 
 ## Структура проекта
 

@@ -111,6 +111,7 @@ npm run cap:sync
 - launch bootstrap отложен до первого paint, чтобы native storage bridge не удерживал пустой стартовый экран.
 - legacy `armv7` capability заменена на `arm64`; добавлена автоматическая проверка соответствия source, `dist`, iOS bundle и privacy metadata.
 - добавлен импорт публичной статьи по URL в браузере и native shell: Readability-извлечение, автоматическое локальное сохранение, EN/RU UI, CORS для Capacitor и SSRF-защита с DNS-проверкой каждого redirect, блокировкой private/local адресов и нестандартных портов, лимитами размера/времени/частоты.
+- восстановлен отдельный production smoke-gate для публичного web-demo: desktop Chromium и Mobile Safari проверяют загрузку shell и мгновенный запуск встроенного demo, а Chromium дополнительно подтверждает SSRF-отказ article endpoint. Адрес можно переопределить через `PACEFLOW_PRODUCTION_URL`.
 
 Итоговая проверка: 8/8 unit-тестов и 150 production-тестов в Chromium, WebKit и Mobile Safari (ещё 2 ожидаемых cross-project skip для одноразового серверного SSRF-теста); реальная русская FB2-книга (937 070 символов) импортируется успешно; реальная Wikipedia-статья на 3 099 слов извлекается через публичный endpoint; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 11 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
 
