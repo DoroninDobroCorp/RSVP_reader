@@ -76,6 +76,18 @@ for (const id of ['articleImportForm', 'chromeExtensionPanel']) {
     }
 }
 
+for (const id of ['fileInput', 'libraryImportInput']) {
+    const match = sourceIndex.match(new RegExp(`id="${id}"[^>]*accept="([^"]+)"`, 'u'));
+    if (!match) throw new Error(`${id} must keep an explicit file-type allowlist.`);
+    const acceptedTypes = match[1].split(',').map((value) => value.trim());
+    if (acceptedTypes.includes('*/*')) {
+        throw new Error(`${id} must not request every media type; iOS should open the document picker directly.`);
+    }
+    for (const extension of ['.epub', '.fb2', '.docx', '.txt', '.html', '.md', '.rtf']) {
+        if (!acceptedTypes.includes(extension)) throw new Error(`${id} is missing ${extension}.`);
+    }
+}
+
 const previewIndex = await readFile(join(root, 'dist', 'index.html'), 'utf8');
 const previewRobots = await readFile(join(root, 'dist', 'robots.txt'), 'utf8');
 if (!previewIndex.includes('content="noindex,nofollow,noarchive"')

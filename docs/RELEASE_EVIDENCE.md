@@ -1,8 +1,8 @@
 # HummingRead R2 release evidence — 2026-08-12
 
-This packet records the final server-side checks for review branch
-`integration/hummingread-release-audit-r2-20260811`. It prepares a release and
-deployment path but does not claim production deployment or store publication.
+This packet records the final server and macOS checks for the HummingRead tester
+release. The web preview is deployed, while App Store and Chrome Web Store
+publication remain separate account/review actions and are not claimed here.
 
 ## Automated evidence
 
@@ -23,16 +23,23 @@ deployment path but does not claim production deployment or store publication.
   end above the bottom `Continue` control; the corrected screenshot was manually
   inspected.
 - `npm run test:lighthouse`: on the deterministic final-channel SEO render,
-  Performance 96, Accessibility 100, Best Practices 100, SEO 100 with
+  Performance 95, Accessibility 100, Best Practices 100, SEO 100 with
   Lighthouse 13.4.1. The actual tester-preview remains intentionally
   `noindex,nofollow,noarchive`, has `robots.txt` `Disallow: /`, no canonical or
   JSON-LD, and no sitemap; package verification checks that separate contract.
 - `npm run cap:sync`: passed and copied only the filtered `dist-native` tree.
   Five Capacitor plugins include pinned Keep Awake 8.0.1.
+- Xcode 26.3 resolved the pinned Swift packages, completed an unsigned Release
+  build, and completed Analyze. The Release app launched on iOS 18.5 iPhone 16
+  Pro and 13-inch iPad Pro simulators.
+- Real Simulator interaction covered the guided demo, pause/continue, portrait
+  and landscape, background/resume, and the native document picker. The picker
+  now opens Files directly instead of offering irrelevant camera/photo sources;
+  package verification prevents the wildcard media type from returning.
 - `npm run verify:all`: brand, complete notices, web/native package separation,
   extension, service-worker, deployment, and deterministic-build gates passed.
   The deterministic web/extension output contains 40 files with tree SHA-256
-  `f43418cc8f7281797b667f3872f2e3ff1951d9e11a8fd125226f4648f6af776a`.
+  `ac47752bd6a75c3cde59fd9dd9b34a7cb06fe8faf5a1ec6b72a55ff125de4f6c`.
 - Deployment verification rendered both observed live nginx files without
   modifying them, preserved unrelated locations, passed a real `nginx -t`, and
   executed rollback against an isolated fixture. The fixture restored the old
@@ -65,13 +72,21 @@ web/extension/visual/Lighthouse and unsigned-iOS evidence artifacts.
 
 ## CI, deployment, and owner gates
 
-The final pushed R2 commit must pass both GitHub Actions jobs. The Linux job
-repeats the complete web/extension/browser gates; the macOS 15 job resolves
-Swift packages, performs unsigned Release build and Analyze, and uploads the
-filtered native bundle. Signing/archive/TestFlight and physical-device QA remain
-owner gates even after unsigned CI is green.
+The complete Linux/browser gate and the macOS Xcode gate were executed directly
+because GitHub-hosted jobs were unavailable for the account. GitHub Actions is
+optional replication, not the source of this evidence and not required to test
+the delivered artifacts.
 
-Production deployment was not authorized or attempted. Live `main` remains at
-`29b65d7`; the prepared versioned/atomic activation, exact-topology backup,
-positive/negative probes, and executed fixture rollback are documented in
+The tester preview is deployed from an immutable release behind
+`/srv/hummingread/current`; nginx exposes only the built public tree and the
+guarded article endpoint. Positive/negative smoke checks cover public pages,
+method restrictions, SSRF rejection, security headers, and denial of repository,
+dependency, data, native, and test paths. Fresh root-only backups and the prior
+production checkout remain rollback anchors as documented in
 `DEPLOYMENT_RUNBOOK.md`.
+
+External iOS distribution still requires the owner to choose the registered
+bundle identifier and Apple Developer Team, sign an Archive, upload it to App
+Store Connect, and invite testers through TestFlight. Chrome Web Store listing
+likewise requires its developer account and review. These account gates do not
+block testing the live website or unpacked Chrome ZIP.

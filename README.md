@@ -2,6 +2,8 @@
 
 HummingRead is a local-first RSVP reader for EPUB, FB2/ZIP, DOCX, TXT, HTML, Markdown, RTF, pasted text, and optional public web articles. Pico—the hummingbird focus pilot—anchors a calm, graphic interface built around a still gaze and moving words.
 
+Tester preview: <https://145.239.82.124.sslip.io/rsvp/>. The website includes the deterministic unpacked Chrome tester ZIP. See `docs/TESTER_GUIDE.md` for the three-surface test scope and the honest iOS distribution boundary.
+
 The release brand is **provisional pending owner/legal confirmation**. The current public URLs are tester-preview values. The existing iOS bundle identifier stays unchanged until the owner approves and registers the final identifier.
 
 ## What works
@@ -61,7 +63,7 @@ HUMMINGREAD_RELEASE_MODE=production npm run verify:brand
 
 Work on a review branch, keep the production `main` checkout untouched, and never serve the repository root. The prepared unit runs direct Node as locked user `paceflow` on loopback; nginx exposes only `dist/`, keeps `/api/sync` at 404, makes `/api/article` POST-only/rate-limited/unlogged/no-store, and denies repository, data, native, test, dependency, and book paths.
 
-Deployment is not automatic. Follow `docs/DEPLOYMENT_RUNBOOK.md` only after owner approval; its backup and rollback preserve the old build and quarantined legacy sync store without `git reset --hard`.
+Deployment is not automatic. The current tester preview was activated through `docs/DEPLOYMENT_RUNBOOK.md`; subsequent releases use the same versioned backup, activation, smoke-test, and rollback path without `git reset --hard`.
 
 ## Key artifacts
 
@@ -69,6 +71,7 @@ Deployment is not automatic. Follow `docs/DEPLOYMENT_RUNBOOK.md` only after owne
 - Editable artwork and provenance: `assets/brand/`, `docs/ASSET_PROVENANCE.md`
 - Chrome source and store notes: `chrome-extension/`, `docs/CHROME_EXTENSION.md`
 - iOS store copy and owner gates: `docs/APP_STORE_COPY.md`, `docs/APP_STORE_CHECKLIST.md`
+- Website, unpacked Chrome, and iOS tester workflow: `docs/TESTER_GUIDE.md`
 - Licenses: `docs/THIRD_PARTY_NOTICES.md`, `acknowledgements.html`
 - Final local test counts, checksums, and external gates: `docs/RELEASE_EVIDENCE.md`
 - Baseline and reconciliation: `docs/MISSION_BASELINE.md`, `docs/INTEGRATION_LEDGER.md`

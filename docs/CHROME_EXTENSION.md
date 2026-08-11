@@ -33,7 +33,7 @@ npm run verify:extension
 shasum -a 256 dist/downloads/hummingread-tester.zip
 ```
 
-The archive contains exactly 17 allowlisted public files, fixed timestamps, bundled scripts/assets/locales, self-only CSP, and no README, source map, secret, or private data. The website labels it **Tester build / Install unpacked for testing**; the Chrome Web Store state remains **coming after review**.
+The archive contains exactly 18 allowlisted public files, fixed timestamps, bundled scripts/assets/locales/notices, self-only CSP, and no README, source map, secret, or private data. The website labels it **Tester build / Install unpacked for testing**; the Chrome Web Store state remains **coming after review**.
 
 ## Chrome Web Store listing draft
 

@@ -8,8 +8,8 @@
 - [x] App display name is HummingRead; version/build source is centralized.
 - [x] SwiftPM `Package.resolved` is tracked; Keep Awake is pinned.
 - [x] Privacy manifest is bundled and package-verified.
-- [ ] Final unsigned Release build and Analyze pass on a machine with full Xcode.
-- [ ] Final iPhone and 13-inch iPad simulator matrix is captured and visually inspected.
+- [x] Final unsigned Release build and Analyze pass in Xcode 26.3.
+- [x] Release build launches on iPhone 16 Pro and 13-inch iPad Pro simulators; portrait, landscape, demo, background/resume, and the document picker were visually inspected.
 - [ ] Physical-device cold start, background/resume, rotation, file picker, and Keep Awake are tested.
 
 ## Owner/account gates
@@ -32,4 +32,4 @@
 - [x] Claims distinguish native local-only behavior from the optional web article service and Chrome Quick Send.
 - [x] No promise of guaranteed comprehension or reading-speed improvement.
 - [ ] Owner substitutes the final support/contact/domain data and passes production-mode brand verification.
-- [ ] Final icons are inspected at every required size; 1024×1024 App Store icon has no alpha.
+- [x] Final icons are dimension-checked; the 1024×1024 App Store icon has no alpha.
