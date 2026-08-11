@@ -20,6 +20,7 @@ const requiredFiles = [
     'reader.html',
     'reader.css',
     'reader.js',
+    'THIRD_PARTY_NOTICES.txt',
     'assets/pico-quick-send.png',
     '_locales/en/messages.json',
     '_locales/ru/messages.json',
@@ -67,16 +68,12 @@ if (sourceManifest.permissions.includes('clipboardRead')
 }
 
 const webArchive = await readFile(join(root, 'dist', 'downloads', 'hummingread-tester.zip'));
-const iosArchive = await readFile(join(root, 'ios', 'App', 'App', 'public', 'downloads', 'hummingread-tester.zip'));
 const digest = (value) => createHash('sha256').update(value).digest('hex');
-if (digest(webArchive) !== digest(iosArchive)) {
-    throw new Error('Web and iOS extension tester archives differ.');
-}
 
 const zip = await JSZip.loadAsync(webArchive);
 const archiveEntries = Object.values(zip.files);
 if (archiveEntries.some((entry) => entry.dir) || archiveEntries.length !== requiredFiles.length) {
-    throw new Error('Chrome ZIP must contain only the 17 fixed file entries and no generated directory records.');
+    throw new Error(`Chrome ZIP must contain only the ${requiredFiles.length} fixed file entries and no generated directory records.`);
 }
 const fixedTimestamp = new Date('2026-08-11T00:00:00Z').getTime();
 if (archiveEntries.some((entry) => entry.date.getTime() !== fixedTimestamp)) {
@@ -90,7 +87,10 @@ if (JSON.stringify(packagedFiles) !== JSON.stringify([...requiredFiles].sort()))
 for (const file of requiredFiles) {
     const archived = zip.file(file);
     if (!archived) throw new Error(`Chrome ZIP is missing ${file}.`);
-    const source = await readFile(join(extensionRoot, file));
+    const sourcePath = file === 'THIRD_PARTY_NOTICES.txt'
+        ? join(root, file)
+        : join(extensionRoot, file);
+    const source = await readFile(sourcePath);
     const packaged = await archived.async('nodebuffer');
     const expected = transformExtensionFile(file, source);
     if (digest(expected) !== digest(packaged)) throw new Error(`Chrome ZIP differs from configured source: ${file}`);

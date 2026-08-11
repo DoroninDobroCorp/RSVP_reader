@@ -7,6 +7,7 @@ artifacts/
 .DS_Store
 Thumbs.db
 dist/
+dist-native/
 
 # Local Netlify folder
 .netlify

@@ -1168,8 +1168,16 @@ input:focus {
     overflow: hidden;
 }
 
+.web-only[hidden] {
+    display: none !important;
+}
+
 .pause-context-before {
     align-self: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-end;
+    column-gap: 0.24em;
 }
 
 .rsvp-section.is-paused .rsvp-pause-context.is-visible {
@@ -2117,7 +2125,7 @@ input:focus {
     }
 
     .rsvp-section.is-paused .rsvp-container {
-        grid-template-rows: 44px 42px minmax(70px, 82px) 44px 20px 44px;
+        grid-template-rows: 44px 38px minmax(54px, 64px) 44px 42px 44px;
     }
 
     .rsvp-topbar .icon-text-btn {
@@ -2142,7 +2150,7 @@ input:focus {
 
     .rsvp-section.is-paused .rsvp-word-wrapper,
     .rsvp-section.is-paused .rsvp-word {
-        min-height: 42px;
+        min-height: 38px;
     }
 
     .rsvp-word {
@@ -2152,7 +2160,7 @@ input:focus {
     .rsvp-pause-context.is-visible {
         height: 100%;
         min-height: 0;
-        max-height: 82px;
+        max-height: 64px;
         padding: 6px 10px;
         font-size: 0.78rem;
         line-height: 1.35;
@@ -2160,7 +2168,7 @@ input:focus {
 
     .rsvp-section.is-paused .rsvp-pause-context.is-visible {
         height: 100%;
-        max-height: 82px;
+        max-height: 64px;
     }
 
     .control-btn,
@@ -2203,9 +2211,25 @@ input:focus {
         display: none;
     }
 
+    .rsvp-progress {
+        min-height: 0;
+        display: grid;
+        grid-template-rows: 24px 16px;
+        align-content: start;
+    }
+
     .progress-stats {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 6px;
         margin-top: 0;
         font-size: 0.66rem;
+    }
+
+    #rsvpProgressText {
+        grid-column: auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .rsvp-bottom-tap {

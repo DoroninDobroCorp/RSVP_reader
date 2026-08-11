@@ -26,7 +26,7 @@ Optional **Quick Send** is a separate explicit action. It stores the selected pa
 
 Local content remains until the user removes a book, clears the extension/app, deletes all local data, or browser/OS storage is cleared. The developer cannot remotely delete content it never receives. Article text/URL is transient and not stored by the application server, so there is no retained server article record to retrieve or delete. Abuse buckets expire after at most ten minutes.
 
-Support must have a no-login public route. The current tester page provides that route and clearly labels the final branded support email as an owner input. GitHub Issues may remain an optional technical channel but is not the sole consumer route.
+Support must have a no-login contact route. The current tester page provides public recovery guidance, but not a no-login contact channel; a branded support email or equivalent route is therefore still an owner-supplied release blocker. GitHub Issues may remain an optional technical channel but cannot be the sole consumer contact route.
 
 ## Русская версия
 

@@ -152,6 +152,37 @@ async function makeEpub({ sameFileFragments = false } = {}) {
   return zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip' });
 }
 
+function encodeWindows1251(text) {
+  const bytes = [];
+  for (const character of text) {
+    const code = character.charCodeAt(0);
+    if (code >= 0x0410 && code <= 0x042f) bytes.push(code - 0x0410 + 0xc0);
+    else if (code >= 0x0430 && code <= 0x044f) bytes.push(code - 0x0430 + 0xe0);
+    else if (code === 0x0401) bytes.push(0xa8);
+    else if (code === 0x0451) bytes.push(0xb8);
+    else if (code < 0x80) bytes.push(code);
+    else bytes.push(0x3f);
+  }
+  return Buffer.from(bytes);
+}
+
+async function makeDocxBuffer(paragraphs) {
+  const zip = new JSZip();
+  const paragraphXml = paragraphs.map((paragraph) => (
+    `<w:p><w:r><w:t>${paragraph}</w:t></w:r></w:p>`
+  )).join('');
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8"?>
+    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+      <Default Extension="xml" ContentType="application/xml"/>
+      <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+    </Types>`);
+  zip.file('word/document.xml', `<?xml version="1.0" encoding="UTF-8"?>
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:body>${paragraphXml}</w:body>
+    </w:document>`);
+  return zip.generateAsync({ type: 'nodebuffer' });
+}
+
 test.describe('production reader regressions', () => {
   test('Pico home journey is branded, localised, loaded and free of horizontal overflow', async ({ page }) => {
     await openReader(page, 'en');
@@ -216,6 +247,27 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('.pico-hero h1')).toContainText('Длинные тексты.');
     await expect(page.locator('.pico-signature')).toHaveText('ПИКО · ПИЛОТ ФОКУСА');
     await expect(page.locator('.brand-copy small')).toHaveText('Читайте в ритме с Пико');
+  });
+
+  test('web-only controls are inaccessible in static HTML and revealed only after web bootstrap', async ({ request, page }) => {
+    const source = await (await request.get('/index.html')).text();
+    for (const id of ['articleImportForm', 'chromeExtensionPanel']) {
+      expect(source).toMatch(new RegExp(`id="${id}"[^>]*hidden[^>]*aria-hidden="true"`));
+    }
+
+    await page.goto('/?static-first-paint=1', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    await page.evaluate(async () => window.rsvpReader.ready);
+    for (const selector of ['.dock-inlets', '#articleImportForm', '#chromeExtensionPanel']) {
+      const state = await page.locator(selector).evaluate((element) => ({
+        hidden: element.hidden,
+        ariaHidden: element.getAttribute('aria-hidden')
+      }));
+      expect(state).toEqual({ hidden: false, ariaHidden: null });
+    }
+    await expect(page.locator('#offlineBadge')).toHaveText('Library · local on this device');
+    await expect(page.locator('#articleImportForm')).toBeVisible();
+    await expect(page.locator('#chromeExtensionPanel')).toBeVisible();
   });
 
   test('article URL import confirms replacement, saves clean text and opens the reader', async ({ page }) => {
@@ -710,6 +762,7 @@ test.describe('production reader regressions', () => {
       const regular = spans.find((span) => isWord(span) && span !== current);
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const contextRect = reader.rsvpPauseContext.getBoundingClientRect();
+      const lastBeforeRect = reader.rsvpPauseContext.querySelector('.pause-context-before').lastElementChild.getBoundingClientRect();
       const currentRect = current.getBoundingClientRect();
       return {
         before: spans.slice(0, currentPosition).filter(isWord).length,
@@ -718,7 +771,8 @@ test.describe('production reader regressions', () => {
         focusFontPx: parseFloat(getComputedStyle(current).fontSize),
         regularFontPx: parseFloat(getComputedStyle(regular).fontSize),
         pausedScale: getComputedStyle(reader.rsvpWordDisplay).transform,
-        spatialPosition: ((currentRect.top + currentRect.height / 2) - contextRect.top) / contextRect.height
+        spatialPosition: ((currentRect.top + currentRect.height / 2) - contextRect.top) / contextRect.height,
+        beforeToCurrentGap: currentRect.top - lastBeforeRect.bottom
       };
     });
     expect(context.before).toBe(48);
@@ -726,6 +780,8 @@ test.describe('production reader regressions', () => {
     expect(context.totalWords).toBe(61);
     expect(context.focusFontPx).toBeLessThan(context.regularFontPx);
     expect(context.pausedScale).not.toBe('none');
+    expect(context.beforeToCurrentGap).toBeGreaterThanOrEqual(-2);
+    expect(context.beforeToCurrentGap).toBeLessThanOrEqual(32);
     expect(context.spatialPosition).toBeGreaterThan(0.66);
     expect(context.spatialPosition).toBeLessThan(0.91);
   });
@@ -2261,12 +2317,149 @@ test.describe('production reader regressions', () => {
     });
   });
 
-  test('the web server never exposes private storage and survives malformed URLs', async ({ request }) => {
+  test('focus playback visibly stops on the actual final word, including a single-word book', async ({ page }) => {
+    await openReader(page);
+
+    for (const example of [
+      { text: 'First Second Final', expectedIndex: 2, expectedWord: 'Final' },
+      { text: 'Solitary', expectedIndex: 0, expectedWord: 'Solitary' }
+    ]) {
+      await page.evaluate(async ({ text }) => {
+        const reader = window.rsvpReader;
+        reader.stopRSVP();
+        reader.currentBookId = null;
+        reader.currentBookName = '';
+        reader.currentIndex = 0;
+        reader.words = [];
+        reader.setTextInputValue(text);
+        reader.settings.wpm = 1000;
+        reader.settings.periodPause = 1;
+        reader.settings.commaPause = 1;
+        await reader.startNormalReading();
+        reader.startRSVP();
+        reader.play();
+      }, example);
+
+      await page.waitForFunction(() => {
+        const reader = window.rsvpReader;
+        return !reader.isPlaying && reader.timer === null;
+      });
+      const endState = await page.evaluate(() => {
+        const reader = window.rsvpReader;
+        return {
+          currentIndex: reader.currentIndex,
+          display: reader.rsvpWordDisplay.textContent,
+          playing: reader.isPlaying,
+          timer: reader.timer
+        };
+      });
+      expect(endState).toEqual({
+        currentIndex: example.expectedIndex,
+        display: example.expectedWord,
+        playing: false,
+        timer: null
+      });
+      await expect(page.locator('#playPauseBtn')).toHaveAccessibleName(/continue|play/i);
+      await expect(page.locator('#playPauseBtn')).toHaveText('▶');
+    }
+  });
+
+  test('a named bookmark survives reload and returns to its exact word', async ({ page }) => {
+    await openReader(page);
+    await loadPlainText(page, 'Alpha one two three four five six seven eight nine ten.', 'Bookmark persistence');
+    await page.locator('#normalTextDisplay span[data-index="4"]').click();
+    await page.locator('#addBookmarkBtn').click();
+    await expect(page.locator('#actionDialog')).toBeVisible();
+    await page.locator('#actionDialogInput').fill('Important place');
+    await page.locator('#actionDialogForm').evaluate((form) => form.requestSubmit());
+    await expect(page.locator('#bookmarksList')).toContainText('Important place');
+
+    await page.reload();
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    await page.evaluate(async () => window.rsvpReader.ready);
+    const persisted = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const book = (await reader.getAllBooks()).find((item) => item.name === 'Bookmark persistence');
+      await reader.openBookmarksForBook(book.id);
+      return {
+        id: book.id,
+        bookmark: book.bookmarks.find((item) => item.name === 'Important place')
+      };
+    });
+    expect(persisted.bookmark.index).toBe(4);
+    await expect(page.locator('#bookmarksList')).toContainText('Important place');
+    await page.getByRole('button', { name: 'Go to' }).click();
+    await page.waitForFunction(() => window.rsvpReader.currentIndex === 4);
+    expect(await page.evaluate(() => ({
+      currentIndex: window.rsvpReader.currentIndex,
+      currentWord: window.rsvpReader.words[window.rsvpReader.currentIndex]
+    }))).toEqual({ currentIndex: 4, currentWord: 'four' });
+  });
+
+  test('release suite imports synthetic CP1251 FB2, DOCX, HTML, Markdown and RTF files', async ({ page }) => {
+    const docx = await makeDocxBuffer(['DOCX first paragraph.', 'DOCX second paragraph.']);
+    const files = [
+      {
+        name: 'synthetic-cp1251.fb2',
+        mimeType: 'application/xml',
+        buffer: encodeWindows1251(`<?xml version="1.0" encoding="windows-1251"?>
+          <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><body><section>
+            <title><p>Привет заголовок</p></title><p>Первый русский текст</p>
+          </section></body></FictionBook>`),
+        expected: 'Первый русский текст'
+      },
+      {
+        name: 'synthetic-docx.docx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        buffer: docx,
+        expected: 'DOCX second paragraph'
+      },
+      {
+        name: 'synthetic-html.html',
+        mimeType: 'text/html',
+        buffer: Buffer.from('<html><body><h1>HTML title</h1><p>Clean HTML paragraph.</p><script>PRIVATE_SCRIPT_SENTINEL()</script></body></html>'),
+        expected: 'Clean HTML paragraph'
+      },
+      {
+        name: 'synthetic-markdown.md',
+        mimeType: 'text/markdown',
+        buffer: Buffer.from('# Markdown title\n\nMarkdown **paragraph** with [a link](https://example.com).'),
+        expected: 'Markdown paragraph'
+      },
+      {
+        name: 'synthetic-rtf.rtf',
+        mimeType: 'application/rtf',
+        buffer: Buffer.from(String.raw`{\rtf1\ansi RTF first paragraph.\par RTF second paragraph.}`),
+        expected: 'RTF second paragraph'
+      }
+    ];
+
+    await openReader(page);
+    for (const file of files) {
+      await page.locator('#fileInput').setInputFiles(file);
+      await page.waitForFunction((expected) => (
+        document.querySelector('#textInput').value.includes(expected)
+      ), file.expected);
+    }
+
+    const imported = await page.evaluate(async () => (
+      (await window.rsvpReader.getAllBooks()).map(({ name, text, sourceType }) => ({ name, text, sourceType }))
+    ));
+    expect(imported).toHaveLength(5);
+    for (const file of files) expect(imported.some((book) => book.text.includes(file.expected))).toBe(true);
+    expect(new Set(imported.map((book) => book.sourceType))).toEqual(new Set(['fb2', 'docx', 'html', 'md', 'rtf']));
+    expect(imported.some((book) => book.text.includes('PRIVATE_SCRIPT_SENTINEL'))).toBe(false);
+  });
+
+  test('the owned test server exposes its marker, never exposes private storage and survives malformed URLs', async ({ request, baseURL }) => {
+    const markerResponse = await request.get('/__hummingread_test__/marker');
+    expect(await markerResponse.json()).toEqual({ marker: 'playwright-r2' });
+    const testPort = Number(new URL(baseURL).port);
     const privateResponse = await request.get('/data/sync-store.json');
     expect(privateResponse.status()).toBe(404);
 
     const malformedStatus = await new Promise((resolve, reject) => {
-      const malformedRequest = http.request({ hostname: '127.0.0.1', port: 8081, path: '/%', method: 'GET' }, (response) => {
+      const malformedRequest = http.request({ hostname: '127.0.0.1', port: testPort, path: '/%', method: 'GET' }, (response) => {
         response.resume();
         response.on('end', () => resolve(response.statusCode));
       });
@@ -2278,7 +2471,7 @@ test.describe('production reader regressions', () => {
     const traversalStatus = await new Promise((resolve, reject) => {
       const traversalRequest = http.request({
         hostname: '127.0.0.1',
-        port: 8081,
+        port: testPort,
         path: '/assets/%2e%2e/data/sync-store.json',
         method: 'GET'
       }, (response) => {

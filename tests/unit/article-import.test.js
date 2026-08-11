@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   ArticleImportError,
+  ArticleRateLimiter,
   downloadArticleSource,
   extractReadableArticle,
   isPublicRemoteAddress,
@@ -118,4 +119,72 @@ test('readability extraction keeps the article and drops navigation and scripts'
   assert.match(article.text, /opening paragraph/);
   assert.match(article.text, /second paragraph/);
   assert.doesNotMatch(article.text, /window\.secret|Home Products Pricing/);
+});
+
+function fakeClock() {
+  let current = 0;
+  let nextId = 1;
+  const timers = new Map();
+  return {
+    now: () => current,
+    setTimer(callback, delay) {
+      const handle = { id: nextId++, unref() {} };
+      timers.set(handle, { at: current + delay, callback });
+      return handle;
+    },
+    clearTimer(handle) {
+      timers.delete(handle);
+    },
+    advance(milliseconds) {
+      current += milliseconds;
+      for (;;) {
+        const due = [...timers.entries()]
+          .filter(([, timer]) => timer.at <= current)
+          .sort((left, right) => left[1].at - right[1].at)[0];
+        if (!due) break;
+        timers.delete(due[0]);
+        due[1].callback();
+      }
+    },
+    timerCount: () => timers.size
+  };
+}
+
+test('raw-IP rate buckets expire physically at the original deadline without retaining request data', () => {
+  const clock = fakeClock();
+  const limiter = new ArticleRateLimiter({
+    windowMs: 100,
+    limit: 2,
+    maxBuckets: 2,
+    now: clock.now,
+    setTimer: clock.setTimer,
+    clearTimer: clock.clearTimer
+  });
+
+  assert.equal(limiter.consume('198.51.100.10'), true);
+  assert.equal(limiter.buckets.has('198.51.100.10'), true);
+  const originalDeadline = limiter.buckets.get('198.51.100.10').expiresAt;
+  assert.deepEqual(
+    Object.keys(limiter.buckets.get('198.51.100.10')).sort(),
+    ['count', 'expiresAt', 'startedAt']
+  );
+
+  clock.advance(60);
+  assert.equal(limiter.consume('198.51.100.10'), true);
+  assert.equal(limiter.consume('198.51.100.10'), false);
+  assert.equal(limiter.buckets.get('198.51.100.10').expiresAt, originalDeadline);
+
+  clock.advance(40);
+  assert.equal(limiter.buckets.has('198.51.100.10'), false);
+  assert.equal(clock.timerCount(), 0);
+
+  limiter.consume('198.51.100.11');
+  limiter.consume('198.51.100.12');
+  limiter.consume('198.51.100.13');
+  assert.equal(limiter.buckets.size, 2);
+  assert.deepEqual([...limiter.buckets.keys()], ['198.51.100.12', '198.51.100.13']);
+
+  limiter.close();
+  assert.equal(limiter.buckets.size, 0);
+  assert.equal(clock.timerCount(), 0);
 });

@@ -21,6 +21,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm audit --omit=dev
+      - run: npm run test:isolation
       - run: npm run test:unit
       - run: npm run test:production
       - run: npm run test:extension
@@ -31,13 +32,17 @@ jobs:
       - run: npm run verify:all
       - run: git diff --check
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: hummingread-web-and-extension
+          name: hummingread-web-extension-and-qa
           path: |
             dist/
-            artifacts/lighthouse-summary.json
+            artifacts/
+            playwright-report/
+            test-results/
+            THIRD_PARTY_NOTICES.txt
             docs/THIRD_PARTY_NOTICES.md
-          if-no-files-found: error
+          if-no-files-found: warn
 
   unsigned-ios:
     runs-on: macos-15
@@ -58,3 +63,11 @@ jobs:
       - run: xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO analyze
       - run: npm run verify:package
       - run: git diff --check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hummingread-unsigned-ios-evidence
+          path: |
+            ios/App/App/public/
+            ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          if-no-files-found: warn

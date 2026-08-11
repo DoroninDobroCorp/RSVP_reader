@@ -6,19 +6,34 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const baseUrl = process.env.HUMMINGREAD_VISUAL_URL || 'http://127.0.0.1:8081/';
+const testPort = Number(process.env.HUMMINGREAD_VISUAL_TEST_PORT || 43183);
+const testMarker = 'visual-r2';
+const baseUrl = `http://127.0.0.1:${testPort}/`;
 const output = join(root, 'artifacts', 'visual');
 let server = null;
 
 async function serverReady() {
-  try { return (await fetch(baseUrl)).ok; } catch (error) { return false; }
+  try { return (await (await fetch(`${baseUrl}__hummingread_test__/marker`)).json()).marker === testMarker; } catch (error) { return false; }
 }
 
 async function ensureServer() {
-  if (await serverReady()) return;
+async function portIsOccupied() {
+  try {
+    await fetch(baseUrl);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+  if (await portIsOccupied()) throw new Error(`Visual test port ${testPort} is already occupied.`);
   server = spawn(process.execPath, ['server.js'], {
     cwd: root,
-    env: { ...process.env, HOST: '127.0.0.1', PORT: '8081' },
+    env: {
+      ...process.env,
+      HOST: '127.0.0.1',
+      PORT: String(testPort),
+      HUMMINGREAD_TEST_MARKER: testMarker
+    },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   const deadline = Date.now() + 15_000;
@@ -50,11 +65,13 @@ async function captureLanding(browser, viewport) {
     demo: document.querySelector('#tryDemoBtn').getBoundingClientRect().bottom,
     importBook: document.querySelector('#heroImportBtn').getBoundingClientRect().bottom,
     viewport: innerHeight,
-    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    privacyBadge: document.querySelector('#offlineBadge').textContent
   }));
   assert.ok(geometry.demo <= geometry.viewport, `Demo CTA is below ${viewport.width}x${viewport.height}.`);
   assert.ok(geometry.importBook <= geometry.viewport, `Import CTA is below ${viewport.width}x${viewport.height}.`);
   assert.ok(geometry.overflow <= 1, `Horizontal overflow at ${viewport.width}x${viewport.height}.`);
+  assert.match(geometry.privacyBadge, /Library · local on this device|Библиотека · локально на этом устройстве/u);
   await page.screenshot({ path: join(output, `landing-${viewport.width}x${viewport.height}-${viewport.language || 'en'}-first.png`) });
   if (viewport.fullPage) {
     await page.screenshot({ path: join(output, `landing-${viewport.width}x${viewport.height}-${viewport.language || 'en'}-full.png`), fullPage: true });
@@ -106,15 +123,53 @@ async function captureFocus(browser, options) {
     wpm: document.querySelector('#rsvpWpmLabel').textContent,
     rewind: document.querySelector('#rewindWordsBtn').getAttribute('aria-label'),
     bottom: document.querySelector('#rsvpBottomTapZone').getBoundingClientRect().bottom,
-    viewport: innerHeight
+    bottomTop: document.querySelector('#rsvpBottomTapZone').getBoundingClientRect().top,
+    progressBottom: document.querySelector('.rsvp-progress').getBoundingClientRect().bottom,
+    statRects: ['#rsvpProgressText', '#rsvpWordCount', '#rsvpSpeedText'].map((selector) => {
+      const rect = document.querySelector(selector).getBoundingClientRect();
+      return { width: rect.width, bottom: rect.bottom };
+    }),
+    viewport: innerHeight,
+    contextGap: document.querySelector('.pause-context-current').getBoundingClientRect().top
+      - document.querySelector('.pause-context-before').lastElementChild.getBoundingClientRect().bottom
   }));
   assert.equal(state.contextVisible, true);
   assert.match(state.wpm, /WPM/u);
   assert.ok(state.rewind);
   assert.ok(state.bottom <= state.viewport + 1);
+  assert.ok(state.progressBottom <= state.bottomTop - 2,
+    `Progress overlaps the bottom control by ${state.progressBottom - state.bottomTop}px.`);
+  assert.ok(state.statRects.every((rect) => rect.width > 0 && rect.bottom <= state.bottomTop - 2),
+    'One or more progress stats are clipped by the bottom control.');
+  assert.ok(state.contextGap >= -2 && state.contextGap <= 32, `Paused context gap is ${state.contextGap}px.`);
   await context.close();
 }
 
+
+async function captureNativeFirstPaint(browser) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'light' });
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      getPlatform: () => 'ios',
+      Plugins: {}
+    };
+  });
+  await page.goto(`file://${join(root, 'dist-native', 'index.html')}`, { waitUntil: 'domcontentloaded' });
+  await page.screenshot({ path: join(output, 'native-first-paint-390x844.png') });
+  const nativeState = await page.evaluate(() => ({
+    platform: document.documentElement.dataset.platform,
+    hero: document.querySelector('[data-i18n="nativeHeroHint"]')?.textContent,
+    article: document.querySelector('#articleImportForm'),
+    chrome: document.querySelector('#chromeExtensionPanel')
+  }));
+  assert.equal(nativeState.platform, 'native');
+  assert.match(nativeState.hero, /local books, documents and pasted text/u);
+  assert.equal(nativeState.article, null);
+  assert.equal(nativeState.chrome, null);
+  await context.close();
+}
 await mkdir(output, { recursive: true });
 await ensureServer();
 const browser = await chromium.launch({ headless: true });
@@ -131,6 +186,7 @@ try {
   ]) await captureLanding(browser, viewport);
 
   await captureReturning(browser);
+  await captureNativeFirstPaint(browser);
   await captureFocus(browser, { width: 390, height: 844, keepGuide: true, name: 'guided-demo-pause-context-390x844.png' });
   await captureFocus(browser, { width: 390, height: 844, name: 'focus-paused-light-390x844.png' });
   await captureFocus(browser, { width: 390, height: 844, theme: 'night', colorScheme: 'dark', name: 'focus-paused-dark-390x844.png' });
@@ -145,7 +201,8 @@ try {
       'phone landing first viewport EN/RU at 320/375/390/430',
       'returning reader with boundary-breaking Pico card',
       'desktop and iPad portrait/landscape landing',
-      'paused focus context light/dark and phone/iPad landscape'
+      'paused focus context light/dark and phone/iPad landscape',
+      'filtered native first paint without web article or Chrome surfaces'
     ]
   };
   await writeFile(join(output, 'matrix.json'), `${JSON.stringify(report, null, 2)}\n`);

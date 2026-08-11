@@ -74,7 +74,7 @@
                 <div class="pico-hero-copy">
                     <span class="hero-kicker"><span aria-hidden="true">◆</span><span data-i18n="heroKicker">Meet Pico · your reading wingmate</span></span>
                     <h1><span data-i18n="heroTitle">Long reads.</span> <em data-i18n="heroTitleAccent">Zero drag.</em></h1>
-                    <p data-i18n="heroHint">Pico turns books, articles and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.</p>
+                    <p data-i18n="heroHint" data-native-i18n="nativeHeroHint">Pico turns books, articles and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.</p>
                     <div class="hero-actions">
                         <button id="tryDemoBtn" class="primary-btn hero-demo-btn" type="button">
                             <span aria-hidden="true">▶</span>
@@ -107,7 +107,7 @@
             <ol class="flow-map" data-i18n-aria="flowMapLabel" aria-label="How HummingRead works">
                 <li>
                     <span class="flow-number">01</span>
-                    <div><strong data-i18n="flowBringTitle">Bring the text</strong><span data-i18n="flowBringHint">Paste, import, or send it from Chrome.</span></div>
+                    <div><strong data-i18n="flowBringTitle">Bring the text</strong><span data-i18n="flowBringHint" data-native-i18n="nativeFlowBringHint">Paste, import, or send it from Chrome.</span></div>
                 </li>
                 <li>
                     <span class="flow-number">02</span>
@@ -125,7 +125,7 @@
                         <span class="eyebrow" data-i18n="dockKicker">Pico's reading dock</span>
                         <h2 data-i18n="dockTitle">What are we reading?</h2>
                     </div>
-                    <p data-i18n="dockHint">Drop text into the main lane, or use a fast lane for a link or Chrome handoff.</p>
+                    <p data-i18n="dockHint" data-native-i18n="nativeDockHint">Drop text into the main lane, or use a fast lane for a link or Chrome handoff.</p>
                 </div>
 
                 <div class="dock-grid">
@@ -152,8 +152,9 @@
                         </div>
                     </div>
 
-                    <aside class="dock-inlets" data-i18n-aria="fastLanes" aria-label="Fast reading lanes">
-                        <form id="articleImportForm" class="article-import source-card" novalidate>
+                    <!-- WEB_ONLY_START -->
+                    <aside class="dock-inlets web-only" data-i18n-aria="fastLanes" aria-label="Fast reading lanes" hidden aria-hidden="true">
+                        <form id="articleImportForm" class="article-import source-card web-only" novalidate hidden aria-hidden="true">
                             <div class="source-card-heading">
                                 <span class="source-number">02</span>
                                 <div class="article-import-copy">
@@ -169,7 +170,7 @@
                             <p id="articleImportStatus" class="article-import-status" role="status" aria-live="polite" data-i18n="articleOnlineOnly">Requires an internet connection. Paywalled and app-only pages may not be readable.</p>
                         </form>
 
-                        <div id="chromeExtensionPanel" class="extension-action source-card">
+                        <div id="chromeExtensionPanel" class="extension-action source-card web-only" hidden aria-hidden="true">
                             <img class="pico-quick-send" src="assets/brand/pico-quick-send-640.webp" width="640" height="427" alt="" loading="lazy" decoding="async">
                             <div class="extension-action-copy">
                                 <span class="source-number">03</span>
@@ -192,6 +193,7 @@
                             </details>
                         </div>
                     </aside>
+                    <!-- WEB_ONLY_END -->
                 </div>
 
                 <div class="button-group secondary-actions dock-footer-actions">
@@ -209,7 +211,7 @@
                 <div class="benefit-grid">
                     <article><span aria-hidden="true">01</span><h3 data-i18n="benefitBooksTitle">Real books</h3><p data-i18n="benefitBooksText">EPUB, FB2, DOCX, TXT, HTML, Markdown and RTF—without an account.</p></article>
                     <article><span aria-hidden="true">02</span><h3 data-i18n="benefitContextTitle">Context on pause</h3><p data-i18n="benefitContextText">The surrounding passage returns with the current word visibly anchored.</p></article>
-                    <article><span aria-hidden="true">03</span><h3 data-i18n="benefitPrivateTitle">Surface-specific privacy</h3><p data-i18n="benefitPrivateText">Books, pasted text and progress stay local. The optional web article importer sends only the URL to the article service.</p></article>
+                    <article><span aria-hidden="true">03</span><h3 data-i18n="benefitPrivateTitle" data-native-i18n="nativeBenefitPrivateTitle">Surface-specific privacy</h3><p data-i18n="benefitPrivateText" data-native-i18n="nativeBenefitPrivateText">Books, pasted text and progress stay local. The optional web article importer sends only the URL to the article service.</p></article>
                 </div>
                 <div class="product-links">
                     <a href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a>

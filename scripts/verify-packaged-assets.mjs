@@ -2,15 +2,16 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { configureWebText } from './product-config.mjs';
+import { configureFinalSeoText, configureWebText } from './product-config.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const configuredTextFiles = new Set(['index.html', 'robots.txt', 'sitemap.xml']);
-const packagedFiles = [
+const configuredTextFiles = new Set(['index.html', 'robots.txt']);
+const webPackagedFiles = [
     'index.html',
     'privacy.html',
     'support.html',
     'acknowledgements.html',
+    'THIRD_PARTY_NOTICES.txt',
     'style.css',
     'i18n.js',
     'app.js',
@@ -18,7 +19,6 @@ const packagedFiles = [
     'manifest.json',
     'service-worker.js',
     'robots.txt',
-    'sitemap.xml',
     'sample_text.txt',
     'sample_text_ru.txt',
     'assets/brand/pico-hero.png',
@@ -49,17 +49,89 @@ function pngMetadata(buffer) {
     };
 }
 
-for (const file of packagedFiles) {
+for (const file of webPackagedFiles) {
     const source = await readFile(join(root, file));
     const expected = configuredTextFiles.has(file)
         ? Buffer.from(configureWebText(source.toString('utf8')))
         : source;
     const web = await readFile(join(root, 'dist', file));
-    const ios = await readFile(join(root, 'ios', 'App', 'App', 'public', file));
-
-    if (digest(web) !== digest(expected) || digest(ios) !== digest(expected)) {
-        throw new Error(`Packaged asset differs from configured source: ${file}`);
+    if (digest(web) !== digest(expected)) {
+        throw new Error(`Web packaged asset differs from configured source: ${file}`);
     }
+}
+
+async function expectMissing(path, description) {
+    try {
+        await readFile(path);
+        throw new Error(`${description} must not be packaged.`);
+    } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+    }
+}
+
+const sourceIndex = await readFile(join(root, 'index.html'), 'utf8');
+for (const id of ['articleImportForm', 'chromeExtensionPanel']) {
+    if (!new RegExp(`id="${id}"[^>]*hidden[^>]*aria-hidden="true"`, 'u').test(sourceIndex)) {
+        throw new Error(`${id} is not hidden and inaccessible in static source HTML.`);
+    }
+}
+
+const previewIndex = await readFile(join(root, 'dist', 'index.html'), 'utf8');
+const previewRobots = await readFile(join(root, 'dist', 'robots.txt'), 'utf8');
+if (!previewIndex.includes('content="noindex,nofollow,noarchive"')
+    || /rel="canonical"|application\/ld\+json/u.test(previewIndex)
+    || previewRobots !== 'User-agent: *\nDisallow: /\n') {
+    throw new Error('Tester-preview SEO output is not consistently noindex/disallow.');
+}
+await expectMissing(join(root, 'dist', 'sitemap.xml'), 'Tester-preview sitemap');
+
+const finalSeo = configureFinalSeoText(sourceIndex, 'https://reader.example/');
+for (const required of [
+    'content="index,follow"',
+    '<link rel="canonical" href="https://reader.example/">',
+    'application/ld+json',
+    '"url": "https://reader.example/"',
+    'https://reader.example/assets/brand/hummingread-og.png'
+]) {
+    if (!finalSeo.includes(required)) throw new Error(`Final-channel SEO structure is missing ${required}.`);
+}
+if (/__HUMMINGREAD_/u.test(finalSeo)) throw new Error('Final-channel SEO structure retains a placeholder.');
+
+const nativeRoot = join(root, 'dist-native');
+const iosRoot = join(root, 'ios', 'App', 'App', 'public');
+const nativeFiles = await listFiles(nativeRoot);
+const iosFiles = (await listFiles(iosRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js'].includes(file));
+if (JSON.stringify(iosFiles.sort()) !== JSON.stringify(nativeFiles.sort())) {
+    throw new Error('The iOS public tree has stale or missing files compared with dist-native.');
+}
+for (const file of nativeFiles) {
+    const native = await readFile(join(nativeRoot, file));
+    const ios = await readFile(join(iosRoot, file));
+    if (digest(native) !== digest(ios)) throw new Error(`iOS copy differs from filtered native asset: ${file}`);
+}
+
+for (const forbidden of [
+    'downloads/hummingread-tester.zip',
+    'manifest.json',
+    'robots.txt',
+    'service-worker.js',
+    'sitemap.xml',
+    'assets/brand/hummingread-chrome-marquee.png',
+    'assets/brand/hummingread-chrome-promo-small.png',
+    'assets/brand/hummingread-og.png',
+    'assets/brand/pico-quick-send.png'
+]) {
+    await expectMissing(join(nativeRoot, forbidden), `Native web/store-only payload ${forbidden}`);
+    await expectMissing(join(iosRoot, forbidden), `iOS web/store-only payload ${forbidden}`);
+}
+
+const nativeIndex = await readFile(join(nativeRoot, 'index.html'), 'utf8');
+const nativePrivacy = await readFile(join(nativeRoot, 'privacy.html'), 'utf8');
+if (!nativeIndex.includes('data-platform="native"')
+    || !nativeIndex.includes('data-i18n="nativeHeroHint"')
+    || /articleImportForm|chromeExtensionPanel|Chrome Web Store|hummingread-tester\.zip/u.test(nativeIndex)
+    || /article importer|Chrome extension|web\/PWA/iu.test(nativePrivacy)) {
+    throw new Error('Filtered native first-paint content still exposes a web article or Chrome surface.');
 }
 
 const rasterRequirements = new Map([
@@ -139,4 +211,4 @@ for (const requiredValue of ['NSPrivacyTracking', 'C617.1', 'CA92.1']) {
     }
 }
 
-console.log(`Verified ${packagedFiles.length} configured source/web/iOS assets, icon/OG dimensions and alpha, editable masters, native privacy metadata, and public-root isolation.`);
+console.log(`Verified ${webPackagedFiles.length} web assets, ${nativeFiles.length} filtered native/iOS assets, preview noindex and gated final SEO structure.`);

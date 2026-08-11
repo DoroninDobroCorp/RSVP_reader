@@ -1,7 +1,12 @@
 const { defineConfig, devices } = require('@playwright/test');
 
-const productionUrl = process.env.PACEFLOW_PRODUCTION_URL
-  || 'https://145.239.82.124.sslip.io/rsvp/';
+const productionUrl = process.env.HUMMINGREAD_SMOKE_URL;
+const expectedChannel = process.env.HUMMINGREAD_EXPECTED_CHANNEL;
+if (!productionUrl || !['tester-preview', 'production'].includes(expectedChannel)) {
+  throw new Error(
+    'Set HUMMINGREAD_SMOKE_URL and HUMMINGREAD_EXPECTED_CHANNEL=tester-preview|production explicitly.'
+  );
+}
 
 module.exports = defineConfig({
   testDir: './tests-prod',
@@ -15,6 +20,9 @@ module.exports = defineConfig({
 
   use: {
     baseURL: productionUrl,
+    extraHTTPHeaders: {
+      'X-HummingRead-Smoke-Expected-Channel': expectedChannel
+    },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'

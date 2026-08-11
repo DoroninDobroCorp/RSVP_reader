@@ -1,16 +1,33 @@
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { gzipSync } from 'node:zlib';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, extname, join, normalize, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { configureFinalSeoText } from '../../scripts/product-config.mjs';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const publicRoot = join(root, 'dist');
 const artifactRoot = join(root, 'artifacts');
-const port = 4173;
+const port = Number(process.env.HUMMINGREAD_LIGHTHOUSE_PORT || 43184);
 const origin = `http://127.0.0.1:${port}`;
+const publicRoot = await mkdtemp(join(tmpdir(), 'hummingread-lighthouse-final-'));
+await cp(join(root, 'dist'), publicRoot, { recursive: true });
+await Promise.all([
+  writeFile(
+    join(publicRoot, 'index.html'),
+    configureFinalSeoText(await readFile(join(root, 'index.html'), 'utf8'), `${origin}/`)
+  ),
+  writeFile(
+    join(publicRoot, 'robots.txt'),
+    configureFinalSeoText(await readFile(join(root, 'robots.txt'), 'utf8'), `${origin}/`)
+  ),
+  writeFile(
+    join(publicRoot, 'sitemap.xml'),
+    configureFinalSeoText(await readFile(join(root, 'sitemap.xml'), 'utf8'), `${origin}/`)
+  )
+]);
 const mime = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
@@ -52,54 +69,60 @@ const server = createServer(async (request, response) => {
   }
 });
 
-await new Promise((resolve, reject) => {
-  server.once('error', reject);
-  server.listen(port, '127.0.0.1', resolve);
-});
-await mkdir(artifactRoot, { recursive: true });
+try {
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', resolve);
+  });
+  await mkdir(artifactRoot, { recursive: true });
 
-const outputPath = join(artifactRoot, 'lighthouse-mobile.json');
-const lighthouseBin = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'lighthouse.cmd' : 'lighthouse');
-const child = spawn(lighthouseBin, [
+  const outputPath = join(artifactRoot, 'lighthouse-mobile.json');
+  const lighthouseBin = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'lighthouse.cmd' : 'lighthouse');
+  const child = spawn(lighthouseBin, [
   `${origin}/`,
   '--quiet',
   '--output=json',
   `--output-path=${outputPath}`,
   '--only-categories=performance,accessibility,best-practices,seo',
   '--chrome-flags=--headless=new --no-sandbox'
-], {
+  ], {
   cwd: root,
   env: { ...process.env, CHROME_PATH: process.env.CHROME_PATH || chromium.executablePath() },
   stdio: ['ignore', 'pipe', 'pipe']
-});
+  });
 
-let standardError = '';
-child.stderr.on('data', (chunk) => { standardError += chunk; });
-const exitCode = await new Promise((resolve) => child.once('exit', resolve));
-server.close();
-if (exitCode !== 0) throw new Error(`Lighthouse failed (${exitCode}): ${standardError.trim()}`);
+  let standardError = '';
+  child.stderr.on('data', (chunk) => { standardError += chunk; });
+  const exitCode = await new Promise((resolve) => child.once('exit', resolve));
+  if (exitCode !== 0) throw new Error(`Lighthouse failed (${exitCode}): ${standardError.trim()}`);
 
-const report = JSON.parse(await readFile(outputPath, 'utf8'));
-const scores = Object.fromEntries(
+  const report = JSON.parse(await readFile(outputPath, 'utf8'));
+  const scores = Object.fromEntries(
   ['performance', 'accessibility', 'best-practices', 'seo'].map((name) => [
     name,
     Math.round((report.categories[name]?.score || 0) * 100)
   ])
-);
-const thresholds = { performance: 90, accessibility: 95, 'best-practices': 95, seo: 95 };
-const summary = {
+  );
+  const thresholds = { performance: 90, accessibility: 95, 'best-practices': 95, seo: 95 };
+  const summary = {
   capturedAt: report.fetchTime,
   lighthouseVersion: report.lighthouseVersion,
   userAgent: report.userAgent,
   url: report.finalDisplayedUrl,
   scores,
-  thresholds
-};
-await writeFile(join(artifactRoot, 'lighthouse-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+    thresholds,
+    auditMode: 'final-seo-render',
+    previewIndexing: 'tester-preview is separately verified as noindex,nofollow with robots Disallow: /'
+  };
+  await writeFile(join(artifactRoot, 'lighthouse-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
 
-for (const [category, threshold] of Object.entries(thresholds)) {
-  if (scores[category] < threshold) {
-    throw new Error(`Lighthouse ${category} score ${scores[category]} is below required ${threshold}.`);
+  for (const [category, threshold] of Object.entries(thresholds)) {
+    if (scores[category] < threshold) {
+      throw new Error(`Lighthouse ${category} score ${scores[category]} is below required ${threshold}.`);
+    }
   }
+  console.log(`Lighthouse final-channel render: Performance ${scores.performance}, Accessibility ${scores.accessibility}, Best Practices ${scores['best-practices']}, SEO ${scores.seo}.`);
+} finally {
+  await new Promise((resolve) => server.close(() => resolve()));
+  await rm(publicRoot, { recursive: true, force: true });
 }
-console.log(`Lighthouse mobile: Performance ${scores.performance}, Accessibility ${scores.accessibility}, Best Practices ${scores['best-practices']}, SEO ${scores.seo}.`);

@@ -70,6 +70,10 @@ export async function buildChromeExtension(options = {}) {
             date: new Date('2026-08-11T00:00:00Z')
         });
     }
+    zip.file('THIRD_PARTY_NOTICES.txt', await readFile(join(root, 'THIRD_PARTY_NOTICES.txt')), {
+        createFolders: false,
+        date: new Date('2026-08-11T00:00:00Z')
+    });
 
     const archive = await zip.generateAsync({
         type: 'nodebuffer',

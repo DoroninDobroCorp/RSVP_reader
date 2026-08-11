@@ -2,7 +2,7 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildChromeExtension } from './build-chrome-extension.mjs';
-import { configureWebText } from './product-config.mjs';
+import { configureWebText, productConfig } from './product-config.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const destination = join(root, 'dist');
@@ -11,6 +11,7 @@ const files = [
     'privacy.html',
     'support.html',
     'acknowledgements.html',
+    'THIRD_PARTY_NOTICES.txt',
     'style.css',
     'i18n.js',
     'app.js',
@@ -20,7 +21,7 @@ const files = [
     'sample_text.txt',
     'sample_text_ru.txt',
     'robots.txt',
-    'sitemap.xml'
+    ...(productConfig.release.channel === 'production' ? ['sitemap.xml'] : [])
 ];
 
 await rm(destination, { recursive: true, force: true });
@@ -30,7 +31,11 @@ for (const file of files) {
     await cp(join(root, file), join(destination, file));
 }
 
-const configuredTextFiles = ['index.html', 'robots.txt', 'sitemap.xml'];
+const configuredTextFiles = [
+    'index.html',
+    'robots.txt',
+    ...(productConfig.release.channel === 'production' ? ['sitemap.xml'] : [])
+];
 for (const file of configuredTextFiles) {
     const path = join(destination, file);
     const configured = configureWebText(await readFile(path, 'utf8'));

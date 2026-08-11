@@ -146,9 +146,18 @@ class RSVPReader {
         // the usable shell is painted before recovery work begins.
         this.ready = this.afterFirstPaint().then(() => this.bootstrap()).then(() => {
             this.setupHardwareControls();
+            this.revealWebOnlySurfaces();
             if (this.settings.cloudSyncEnabled && !this.isNativePlatform()) this.syncSoon(800);
         });
         this.setupExtensionImportBridge();
+    }
+
+    revealWebOnlySurfaces() {
+        if (this.isNativePlatform()) return;
+        this.webOnlySurfaces.forEach((surface) => {
+            surface.hidden = false;
+            surface.removeAttribute('aria-hidden');
+        });
     }
 
     initElements() {
@@ -168,16 +177,10 @@ class RSVPReader {
         this.continueBookProgress = document.getElementById('continueBookProgress');
         this.articleImportForm = document.getElementById('articleImportForm');
         this.articleUrlInput = document.getElementById('articleUrlInput');
+        this.webOnlySurfaces = Array.from(document.querySelectorAll('.web-only'));
         this.importArticleBtn = document.getElementById('importArticleBtn');
         this.articleImportStatus = document.getElementById('articleImportStatus');
         this.chromeExtensionPanel = document.getElementById('chromeExtensionPanel');
-        if (this.isNativePlatform()) {
-            if (this.chromeExtensionPanel) this.chromeExtensionPanel.hidden = true;
-            if (this.articleImportForm) {
-                this.articleImportForm.hidden = true;
-                this.articleImportForm.setAttribute('aria-hidden', 'true');
-            }
-        }
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -321,7 +324,7 @@ class RSVPReader {
             const bookId = this.continueReadingCard.dataset.bookId;
             if (bookId) this.runAsync(() => this.loadBook(bookId, { start: true }));
         });
-        if (!this.isNativePlatform()) {
+        if (this.articleImportForm && !this.isNativePlatform()) {
             this.articleImportForm.addEventListener('submit', (event) => {
                 event.preventDefault();
                 this.runAsync(() => this.importArticleFromUrl());
@@ -5223,138 +5226,7 @@ class RSVPReader {
 
     async syncNow() {
         this.retireLegacyCloudSync();
-        return;
-
-        /* istanbul ignore next -- retained only as inert migration reference. */
-        this.isSyncing = true;
         this.updateOnlineStatus();
-
-        try {
-            const payload = await this.createSyncPayload();
-            const response = await fetch(this.syncEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error(`Sync failed with HTTP ${response.status}`);
-            }
-
-            const remoteState = await response.json();
-            await this.applyRemoteState(remoteState);
-            localStorage.setItem('rsvp_sync_pending', '0');
-            localStorage.setItem('rsvp_last_sync_at', new Date().toISOString());
-            this.syncRetryDelay = 5000;
-        } catch (error) {
-            console.warn('Offline sync postponed:', error);
-            localStorage.setItem('rsvp_sync_pending', '1');
-            this.syncRetryDelay = Math.min(this.syncRetryDelay * 1.7, 60000);
-            if (navigator.onLine) {
-                this.syncSoon(this.syncRetryDelay);
-            }
-        } finally {
-            this.isSyncing = false;
-            this.updateOnlineStatus();
-        }
-    }
-
-    async createSyncPayload() {
-        const draft = this.storageMode === 'localstorage'
-            ? {
-                text: localStorage.getItem('rsvp_text') || '',
-                bookName: this.bookNameInput.value.trim(),
-                currentBookId: this.currentBookId,
-                currentIndex: this.currentIndex,
-                updatedAt: new Date().toISOString()
-            }
-            : await this.getKV('draft');
-
-        const books = this.storageMode === 'localstorage'
-            ? this.library.map((book) => this.normalizeBook(book))
-            : await this.getAllBooks();
-
-        return {
-            version: 1,
-            clientId: this.syncClientId,
-            sentAt: new Date().toISOString(),
-            settings: this.settings,
-            settingsUpdatedAt: this.settingsUpdatedAt,
-            draft,
-            books,
-            deletedBooks: this.deletedBooks
-        };
-    }
-
-    async applyRemoteState(remoteState) {
-        if (!remoteState || !Array.isArray(remoteState.books)) return;
-
-        this.isApplyingRemote = true;
-        try {
-            this.deletedBooks = this.mergeDeletedBooks(this.deletedBooks, remoteState.deletedBooks || {});
-
-            const localBooks = this.storageMode === 'localstorage'
-                ? this.library.map((book) => this.normalizeBook(book))
-                : await this.getAllBooks();
-            for (const localBook of localBooks) {
-                const deletedAt = this.deletedBooks[localBook.id];
-                if (deletedAt && this.isNewerOrEqual(deletedAt, localBook.updatedAt || localBook.lastRead)) {
-                    await this.deleteBookFromStorage(localBook.id);
-                }
-            }
-
-            for (const remoteBook of remoteState.books) {
-                const normalized = this.normalizeBook(remoteBook);
-                const deletedAt = this.deletedBooks[normalized.id];
-                if (deletedAt && this.isNewerOrEqual(deletedAt, normalized.updatedAt || normalized.lastRead)) {
-                    continue;
-                }
-
-                const localBook = await this.getBook(normalized.id);
-                if (!localBook || this.isNewer(normalized.updatedAt || normalized.lastRead, localBook.updatedAt || localBook.lastRead)) {
-                    await this.putBook(normalized, { allowRestore: true });
-                }
-            }
-
-            if (remoteState.settings && this.isNewer(remoteState.settingsUpdatedAt, this.settingsUpdatedAt)) {
-                this.settings = { ...this.settings, ...remoteState.settings };
-                this.settingsUpdatedAt = remoteState.settingsUpdatedAt;
-                this.saveSettings({ preserveTimestamp: true, skipSync: true });
-                this.loadSettingsToForm();
-            }
-
-            await this.applyRemoteDraft(remoteState.draft);
-            await this.persistSyncMetadata();
-            await this.loadLibrary();
-            if (this.mode === 'library') this.renderLibrary();
-            this.updateCurrentBookInfo();
-            this.updateStorageStatus();
-        } finally {
-            this.isApplyingRemote = false;
-        }
-    }
-
-    async applyRemoteDraft(remoteDraft) {
-        if (!remoteDraft || typeof remoteDraft.text !== 'string') return;
-
-        const localDraft = this.storageMode === 'localstorage' ? null : await this.getKV('draft');
-        if (localDraft && !this.isNewer(remoteDraft.updatedAt, localDraft.updatedAt)) return;
-
-        this.storeLegacyTextSnapshot(remoteDraft.currentBookId ? '' : remoteDraft.text);
-        localStorage.setItem('rsvp_bookmark', String(remoteDraft.currentIndex || 0));
-
-        if (this.storageMode !== 'localstorage') {
-            await this.setKV('draft', remoteDraft);
-        }
-
-        if (this.mode === 'input') {
-            this.setTextInputValue(remoteDraft.text);
-            this.bookNameInput.value = remoteDraft.bookName || '';
-            this.currentBookId = remoteDraft.currentBookId || null;
-            this.currentBookName = remoteDraft.bookName || '';
-            this.currentTextSignature = '';
-            this.currentIndex = this.clampIndex(parseInt(remoteDraft.currentIndex || 0, 10), this.parseText(remoteDraft.text).length);
-        }
     }
 
     mergeDeletedBooks(localDeleted, remoteDeleted) {
@@ -6268,7 +6140,7 @@ class RSVPReader {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `paceflow-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        link.download = `hummingread-backup-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -6570,8 +6442,9 @@ class RSVPReader {
     updateOnlineStatus() {
         const online = navigator.onLine;
         const pending = localStorage.getItem('rsvp_sync_pending') === '1';
-        this.offlineBadge.textContent = (!this.settings.cloudSyncEnabled || this.isNativePlatform())
-            ? this.t('localOnly')
+        const native = this.isNativePlatform();
+        this.offlineBadge.textContent = (!this.settings.cloudSyncEnabled || native)
+            ? this.t(native ? 'localOnly' : 'localLibrary')
             : (online ? (pending ? `${this.t('online')} · ${this.t('syncPending')}` : this.t('online')) : this.t('offline'));
         this.offlineBadge.classList.toggle('offline', !online);
         this.updateStorageStatus();

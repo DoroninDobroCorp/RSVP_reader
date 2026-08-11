@@ -11,6 +11,7 @@ const { Readability } = require('@mozilla/readability');
 
 const PORT = Number(process.env.PORT || 8081);
 const ROOT = __dirname;
+const TEST_MARKER = String(process.env.HUMMINGREAD_TEST_MARKER || '');
 const MAX_ARTICLE_REQUEST_BYTES = 16 * 1024;
 const MAX_ARTICLE_SOURCE_BYTES = 5 * 1024 * 1024;
 const MAX_ARTICLE_TEXT_CHARACTERS = 2 * 1024 * 1024;
@@ -24,7 +25,6 @@ const ARTICLE_NATIVE_ENDPOINT_ORIGINS = new Set([
   'http://localhost',
   'https://localhost'
 ]);
-const articleRateBuckets = new Map();
 const PUBLIC_FILES = new Set([
   'index.html',
   'privacy.html',
@@ -76,6 +76,68 @@ class ArticleImportError extends Error {
     this.statusCode = statusCode;
   }
 }
+
+class ArticleRateLimiter {
+  constructor(options = {}) {
+    this.windowMs = options.windowMs ?? ARTICLE_RATE_WINDOW_MS;
+    this.limit = options.limit ?? ARTICLE_RATE_LIMIT;
+    this.maxBuckets = options.maxBuckets ?? ARTICLE_RATE_BUCKET_LIMIT;
+    this.now = options.now ?? Date.now;
+    this.setTimer = options.setTimer ?? setTimeout;
+    this.clearTimer = options.clearTimer ?? clearTimeout;
+    this.buckets = new Map();
+    this.expiryTimer = null;
+  }
+
+  sweep(now = this.now()) {
+    for (const [address, bucket] of this.buckets) {
+      if (bucket.expiresAt <= now) this.buckets.delete(address);
+    }
+    this.scheduleExpiry();
+  }
+
+  scheduleExpiry() {
+    if (this.expiryTimer !== null) {
+      this.clearTimer(this.expiryTimer);
+      this.expiryTimer = null;
+    }
+    if (this.buckets.size === 0) return;
+    const nextExpiry = Math.min(...Array.from(this.buckets.values(), (bucket) => bucket.expiresAt));
+    this.expiryTimer = this.setTimer(() => {
+      this.expiryTimer = null;
+      this.sweep(this.now());
+    }, Math.max(0, nextExpiry - this.now()));
+    this.expiryTimer?.unref?.();
+  }
+
+  consume(address) {
+    const now = this.now();
+    this.sweep(now);
+    const current = this.buckets.get(address);
+    if (current) {
+      current.count += 1;
+      return current.count <= this.limit;
+    }
+    while (this.buckets.size >= this.maxBuckets) {
+      this.buckets.delete(this.buckets.keys().next().value);
+    }
+    this.buckets.set(address, {
+      count: 1,
+      expiresAt: now + this.windowMs,
+      startedAt: now
+    });
+    this.scheduleExpiry();
+    return true;
+  }
+
+  close() {
+    if (this.expiryTimer !== null) this.clearTimer(this.expiryTimer);
+    this.expiryTimer = null;
+    this.buckets.clear();
+  }
+}
+
+const articleRateLimiter = new ArticleRateLimiter();
 
 function sendJson(response, statusCode, payload, extraHeaders = {}) {
   response.writeHead(statusCode, {
@@ -363,23 +425,8 @@ function articleClientAddress(request) {
 }
 
 function consumeArticleRateLimit(request) {
-  const now = Date.now();
   const client = articleClientAddress(request) || 'unknown';
-  const current = articleRateBuckets.get(client);
-  if (!current || now - current.startedAt >= ARTICLE_RATE_WINDOW_MS) {
-    if (articleRateBuckets.size >= ARTICLE_RATE_BUCKET_LIMIT) {
-      for (const [address, bucket] of articleRateBuckets) {
-        if (now - bucket.startedAt >= ARTICLE_RATE_WINDOW_MS) articleRateBuckets.delete(address);
-      }
-      while (articleRateBuckets.size >= ARTICLE_RATE_BUCKET_LIMIT) {
-        articleRateBuckets.delete(articleRateBuckets.keys().next().value);
-      }
-    }
-    articleRateBuckets.set(client, { startedAt: now, count: 1 });
-    return true;
-  }
-  current.count += 1;
-  return current.count <= ARTICLE_RATE_LIMIT;
+  return articleRateLimiter.consume(client);
 }
 
 async function handleArticleImport(request, response) {
@@ -481,6 +528,11 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url.pathname === '/__hummingread_test__/marker' && TEST_MARKER) {
+    sendJson(response, 200, { marker: TEST_MARKER });
+    return;
+  }
+
   if (url.pathname === '/api/article' || url.pathname === '/rsvp/api/article') {
     await handleArticleImport(request, response);
     return;
@@ -494,10 +546,17 @@ if (require.main === module) {
   server.listen(PORT, host, () => {
     console.log(`RSVP Reader listening on http://${host}:${PORT}`);
   });
+  const shutdown = () => {
+    articleRateLimiter.close();
+    server.close(() => process.exit(0));
+  };
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }
 
 module.exports = {
   ArticleImportError,
+  ArticleRateLimiter,
   downloadArticleSource,
   extractReadableArticle,
   isPublicRemoteAddress,

@@ -1,36 +1,78 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ ${EUID} -ne 0 || $# -ne 1 ]]; then
+fixture_root=${HUMMINGREAD_DEPLOY_FIXTURE_ROOT:-}
+if [[ -n ${fixture_root} ]]; then
+  case "${fixture_root}" in /tmp/hummingread-rollback-fixture.*) ;; *) echo "Unsafe fixture root." >&2; exit 1;; esac
+elif [[ ${EUID} -ne 0 ]]; then
+  echo "Production rollback must run as root." >&2
+  exit 1
+fi
+if [[ $# -ne 1 ]]; then
   echo "Usage: sudo $0 /var/backups/hummingread/YYYYMMDDTHHMMSSZ" >&2
   exit 1
 fi
 
 backup_root=$1
-case "${backup_root}" in
-  /var/backups/hummingread/*) ;;
-  *) echo "Refusing rollback from an unexpected path." >&2; exit 1 ;;
-esac
+if [[ -n ${fixture_root} ]]; then
+  case "${backup_root}" in "${fixture_root}"/var/backups/hummingread/20??????T??????Z) ;; *) echo "Unsafe fixture backup path." >&2; exit 1;; esac
+else
+  case "${backup_root}" in /var/backups/hummingread/20??????T??????Z) ;; *) echo "Refusing rollback from an unexpected path." >&2; exit 1;; esac
+fi
 
-[[ -f ${backup_root}/dist.tgz && -f ${backup_root}/commit.txt ]]
-sha256sum --check "${backup_root}/SHA256SUMS"
+repo_root="${fixture_root}/srv/RSVP_reader"
+runtime_root="${fixture_root}/srv/hummingread"
+systemd_unit="${fixture_root}/etc/systemd/system/rsvp-reader.service"
+ip_config="${fixture_root}/etc/nginx/conf.d/00-ip-access.conf"
+tls_config="${fixture_root}/etc/nginx/sites-enabled/spanish-sslip"
+limits_config="${fixture_root}/etc/nginx/conf.d/hummingread-limits.conf"
 
-restore_stage=$(mktemp -d /srv/RSVP_reader/.rollback-dist.XXXXXX)
+for required in SHA256SUMS dist.tgz production-commit.txt rsvp-reader.service 00-ip-access.conf spanish-sslip; do
+  [[ -f ${backup_root}/${required} ]] || { echo "Missing backup file: ${required}" >&2; exit 1; }
+done
+(
+  cd "${backup_root}"
+  sha256sum --check SHA256SUMS
+)
+
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+restore_stage=$(mktemp -d "${repo_root}/.rollback-dist.XXXXXX")
 trap 'rm -rf "${restore_stage}"' EXIT
 tar -C "${restore_stage}" -xzf "${backup_root}/dist.tgz"
-mv /srv/RSVP_reader/dist "/srv/RSVP_reader/dist.failed.$(date -u +%Y%m%dT%H%M%SZ)"
-mv "${restore_stage}/dist" /srv/RSVP_reader/dist
+[[ -f ${restore_stage}/dist/index.html ]]
+mv "${repo_root}/dist" "${repo_root}/dist.failed.${stamp}"
+mv "${restore_stage}/dist" "${repo_root}/dist"
 
-if [[ -f ${backup_root}/hummingread.service ]]; then
-  install -m 0644 "${backup_root}/hummingread.service" /etc/systemd/system/hummingread.service
-fi
-if [[ -f ${backup_root}/rsvp.locations.conf ]]; then
-  install -m 0644 "${backup_root}/rsvp.locations.conf" /etc/nginx/snippets/rsvp.locations.conf
+install -m 0644 "${backup_root}/rsvp-reader.service" "${systemd_unit}"
+install -m 0644 "${backup_root}/00-ip-access.conf" "${ip_config}"
+install -m 0644 "${backup_root}/spanish-sslip" "${tls_config}"
+if [[ -f ${backup_root}/hummingread-limits.conf ]]; then
+  install -m 0644 "${backup_root}/hummingread-limits.conf" "${limits_config}"
+elif [[ -f ${limits_config} ]]; then
+  unlink "${limits_config}"
 fi
 
-systemctl daemon-reload
-nginx -t
-systemctl restart hummingread.service
-systemctl reload nginx
-curl --fail --silent --show-error https://127.0.0.1/rsvp/ --resolve "$(hostname):443:127.0.0.1" >/dev/null || true
-echo "Restored public build backed up from commit $(cat "${backup_root}/commit.txt"). The failed build was preserved beside dist."
+if [[ -s ${backup_root}/previous-release-target.txt ]]; then
+  previous_target=$(cat "${backup_root}/previous-release-target.txt")
+  [[ ${previous_target} == "${runtime_root}"/releases/* ]]
+  ln -s "${previous_target}" "${runtime_root}/current.rollback"
+  mv -Tf "${runtime_root}/current.rollback" "${runtime_root}/current"
+fi
+
+if [[ -f ${backup_root}/sync-store.json && ! -e ${repo_root}/data/sync-store.json ]]; then
+  if [[ -n ${fixture_root} ]]; then
+    install -d -m 0700 "${repo_root}/data"
+    install -m 0600 "${backup_root}/sync-store.json" "${repo_root}/data/sync-store.json"
+  else
+    install -d -m 0700 -o root -g root "${repo_root}/data"
+    install -m 0600 -o root -g root "${backup_root}/sync-store.json" "${repo_root}/data/sync-store.json"
+  fi
+fi
+
+if [[ -z ${fixture_root} ]]; then
+  systemctl daemon-reload
+  nginx -t
+  systemctl restart rsvp-reader.service
+  systemctl reload nginx
+fi
+echo "Restored the exact rsvp-reader unit, both nginx files, public dist, and retained data from commit $(cat "${backup_root}/production-commit.txt")."

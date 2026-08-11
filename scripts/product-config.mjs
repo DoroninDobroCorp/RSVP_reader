@@ -59,11 +59,37 @@ export function siteMatchPattern(siteUrl = productConfig.urls.marketingSite) {
     return `${parsed.origin}${pathname}*`;
 }
 
-export function configureWebText(source) {
-    const siteUrl = productConfig.urls.marketingSite.endsWith('/')
-        ? productConfig.urls.marketingSite
-        : `${productConfig.urls.marketingSite}/`;
+function normalizedSiteUrl(value) {
+    const parsed = new URL(value);
+    if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('The site URL must use HTTP or HTTPS.');
+    return value.endsWith('/') ? value : `${value}/`;
+}
+
+export function configureFinalSeoText(source, siteUrl = productConfig.urls.marketingSite) {
+    const normalized = normalizedSiteUrl(siteUrl);
     return source
-        .replaceAll('__HUMMINGREAD_SITE_URL__', siteUrl)
-        .replaceAll('__HUMMINGREAD_OG_IMAGE_URL__', `${siteUrl}assets/brand/hummingread-og.png`);
+        .replaceAll('__HUMMINGREAD_SITE_URL__', normalized)
+        .replaceAll('__HUMMINGREAD_OG_IMAGE_URL__', `${normalized}assets/brand/hummingread-og.png`);
+}
+
+export function configureWebText(source) {
+    if (productConfig.release.channel === 'production') {
+        assertProductionConfiguration();
+        return configureFinalSeoText(source);
+    }
+    if (productConfig.release.channel !== 'tester-preview') {
+        throw new Error(`Unsupported release channel: ${productConfig.release.channel}`);
+    }
+
+    if (/^User-agent:/u.test(source)) return 'User-agent: *\nDisallow: /\n';
+
+    const configured = configureFinalSeoText(source);
+    if (!configured.includes('<!doctype html>')) return configured;
+    return configured
+        .replace(
+            /<meta name="robots" content="[^"]*">/u,
+            '<meta name="robots" content="noindex,nofollow,noarchive">'
+        )
+        .replace(/\s*<link rel="canonical"[^>]*>/u, '')
+        .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/u, '');
 }

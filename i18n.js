@@ -8,6 +8,7 @@
             heroTitle: 'Long reads.',
             heroTitleAccent: 'Zero drag.',
             heroHint: 'Pico turns books, articles and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.',
+            nativeHeroHint: 'Pico turns local books, documents and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.',
             heroPromise: 'No account · books and pasted text stay on this device',
             heroWordBefore: 'keep',
             heroWordFocus: 'your',
@@ -16,6 +17,7 @@
             flowMapLabel: 'How HummingRead works',
             flowBringTitle: 'Bring the text',
             flowBringHint: 'Paste, import, or send it from Chrome.',
+            nativeFlowBringHint: 'Paste text or import a book or document from this device.',
             flowPaceTitle: 'Pick your pace',
             flowPaceHint: 'Pico shapes timing around words and punctuation.',
             flowReadTitle: 'Stay in the flow',
@@ -23,6 +25,7 @@
             dockKicker: "Pico's reading dock",
             dockTitle: 'What are we reading?',
             dockHint: 'Drop text into the main lane, or use a fast lane for a link or Chrome handoff.',
+            nativeDockHint: 'Paste text into the reading lane or import a local book or document.',
             pasteSourceTitle: 'Paste or import',
             pasteSourceHint: 'Your text stays readable, editable, and local.',
             fastLanes: 'Fast reading lanes',
@@ -92,6 +95,8 @@
             benefitContextText: 'The surrounding passage returns with the current word visibly anchored.',
             benefitPrivateTitle: 'Surface-specific privacy',
             benefitPrivateText: 'Books, pasted text and progress stay local. The optional web article importer sends only the URL to the article service.',
+            nativeBenefitPrivateTitle: 'Private on this device',
+            nativeBenefitPrivateText: 'Books, documents, pasted text, bookmarks and reading progress stay in the app’s local storage.',
             appStorePending: 'App Store · pending owner signing and review',
             faqQuestion: 'Does HummingRead promise faster comprehension?',
             faqAnswer: 'No. It controls presentation pace; comprehension varies with the reader, material, language and chosen speed.',
@@ -279,6 +284,7 @@
             online: 'Online',
             offline: 'Offline',
             localOnly: 'Private · local only',
+            localLibrary: 'Library · local on this device',
             epubZipFailed: 'Could not load the bundled EPUB archive reader.',
             epubOpfMissing: 'The EPUB package manifest is missing.',
             epubReadFailed: 'Could not read EPUB: {message}',
@@ -289,6 +295,11 @@
             chapterPosition: '{progress}% · word {word}'
         },
         ru: {
+            nativeHeroHint: 'Пико превращает локальные книги, документы и вставленный текст в спокойный ритм, который ведёт взгляд и не даёт потерять место.',
+            nativeFlowBringHint: 'Вставьте текст или импортируйте книгу либо документ с этого устройства.',
+            nativeDockHint: 'Вставьте текст в полосу чтения или импортируйте локальную книгу либо документ.',
+            nativeBenefitPrivateTitle: 'Приватно на этом устройстве',
+            nativeBenefitPrivateText: 'Книги, документы, вставленный текст, закладки и прогресс остаются в локальном хранилище приложения.',
             appName: 'HummingRead', appTagline: 'Читайте в ритме с Пико', heroKicker: 'Пико · ваш штурман по тексту', heroTitle: 'Длинные тексты.', heroTitleAccent: 'Без пробуксовки.', heroHint: 'Пико превращает книги, статьи и вставленный текст в спокойный ритм, который ведёт взгляд и не даёт потерять место.', heroPromise: 'Без аккаунта · книги и вставленный текст остаются на устройстве', heroWordBefore: 'держи', heroWordFocus: 'свой', heroWordAfter: 'ритм', picoSignature: 'ПИКО · ПИЛОТ ФОКУСА', flowMapLabel: 'Как работает HummingRead', flowBringTitle: 'Добавьте текст', flowBringHint: 'Вставьте, импортируйте или откройте из Chrome.', flowPaceTitle: 'Выберите темп', flowPaceHint: 'Пико подстраивает ритм под слова и пунктуацию.', flowReadTitle: 'Оставайтесь в потоке', flowReadHint: 'Читайте, ставьте на паузу и возвращайтесь точно на место.', dockKicker: 'Читательский док Пико', dockTitle: 'Что будем читать?', dockHint: 'Положите текст в основную полосу или используйте быстрый маршрут для ссылки и Chrome.', pasteSourceTitle: 'Вставить или импортировать', pasteSourceHint: 'Текст остаётся читаемым, редактируемым и локальным.', fastLanes: 'Быстрые маршруты чтения', skipToContent: 'Перейти к содержимому', homeAria: 'На главную HummingRead', bookTitleLabel: 'Название книги', readingControls: 'Управление чтением', checkingCache: 'Подготовка офлайн-режима…',
             settings: 'Настройки', textOrBook: 'Начать чтение', textOrBookHint: 'Вставьте текст или импортируйте книгу без DRM. Всё чтение остаётся на устройстве.',
             textPlaceholder: 'Вставьте текст или импортируйте EPUB, FB2, DOCX, TXT, HTML, Markdown или RTF…', tryDemoTitle: 'Нет книги под рукой?', tryDemoHint: 'Попробуйте чтение на коротком встроенном тексте. Он не добавится в библиотеку.', tryDemo: 'Пролететь демо за 45 секунд', importYourBook: 'Импортировать свою книгу', continueReading: 'Продолжить чтение', continueProgress: 'Прочитано {progress}%', continueProgressWithTime: 'Прочитано {progress}% · осталось примерно {minutes} мин', demoBookTitle: 'Небольшое демо чтения', demoReplaceTitle: 'Открыть демо?', demoReplaceMessage: 'Текущий несохранённый черновик будет заменён. Книги в библиотеке не изменятся.', demoLoadFailed: 'Не удалось открыть встроенное демо.', chromeExtensionTitle: 'Читайте локально, не покидая Chrome', chromeExtensionHint: 'Выделение, страница или вставленный текст открываются в собственной локальной RSVP-читалке расширения. Quick Send в preview необязателен.', chromeExtensionDownload: 'Тестерская сборка · ZIP', chromeStorePending: 'Chrome Web Store · после проверки', chromeExtensionInstall: 'Установить распакованным для тестирования', chromeExtensionStepOne: 'Скачайте ZIP расширения и распакуйте его.', chromeExtensionStepTwo: 'Откройте chrome://extensions и включите режим разработчика.', chromeExtensionStepThree: 'Нажмите «Загрузить распакованное расширение» и выберите папку.', chromeExtensionPrivacy: 'Самостоятельное чтение локально и не требует доступа к буферу, истории или всем сайтам. Quick Send передаёт текст только после явного действия.', extensionReplaceTitle: 'Открыть импорт из Chrome?', extensionReplaceMessage: 'Полученный текст заменит текущий текст на экране. Сохранённые книги не изменятся.', extensionOpen: 'Открыть в HummingRead', extensionSelectionTitle: 'Выделение из Chrome', extensionEmptyText: 'Расширение Chrome не передало читаемый текст.', extensionImportFailed: 'Не удалось безопасно открыть импорт из Chrome.', extensionTextImported: 'Сохранено и открыто «{title}» · {count}', articleImportTitle: 'Прочитать статью по ссылке', articleImportHint: 'HummingRead передаёт эту ссылку сервису статей, убирает элементы страницы и сохраняет возвращённый текст локально.', articleUrlLabel: 'Ссылка на статью', articleUrlPlaceholder: 'https://example.com/article', importArticle: 'Импортировать статью', articleOnlineOnly: 'Нужен интернет. Платные и доступные только внутри приложений страницы могут не открыться.', importingArticle: 'Импортируем…', articleReplaceTitle: 'Импортировать эту статью?', articleReplaceMessage: 'Текущий текст на экране будет заменён. Всё уже сохранённое в библиотеке останется без изменений.', articleImported: 'Сохранено «{title}» · {count}', articleInvalidUrl: 'Введите полную публичную ссылку на статью.', articlePrivateAddress: 'Локальные и приватные сетевые адреса импортировать нельзя.', articleTooLarge: 'Страница слишком велика для безопасного импорта.', articleNotPage: 'По этой ссылке нет читаемой веб-страницы.', articleUnreadable: 'Не удалось найти читаемый текст статьи. Попробуйте вставить текст вручную.', articleTimeout: 'Сайт слишком долго не отвечал.', articleRateLimited: 'Слишком много импортов подряд. Подождите несколько минут и повторите.', articleDraftChanged: 'Пока статья загружалась, текст изменился, поэтому мы его не тронули. Запустите импорт ссылки ещё раз.', articleImportFailed: 'Не удалось импортировать статью. Возможно, сайт блокирует автоматическое чтение — попробуйте вставить текст вручную.', bookNamePlaceholder: 'Название книги (необязательно)',
@@ -309,6 +320,7 @@
             addTextFirst: 'Сначала вставьте текст или импортируйте книгу.', notFound: 'Ничего не найдено', targetOnly: 'Цель {target} слов/мин', targetActual: 'Цель {target} · факт {actual} слов/мин', targetEstimated: 'Цель {target} · эффективно ~{actual} слов/мин', decreaseSpeedTitle: 'Уменьшить скорость на 20 ({speed})', increaseSpeedTitle: 'Увеличить скорость на 20 ({speed})', remaining: '{progress} · осталось {time}', totalTime: '{count} · всего около {time}', rsvpProgress: 'Сеанс {session}% · книга {book}% · осталось {time}', zeroMinutes: '0 мин', minutes: '{count} мин', hours: '{count} ч', hoursMinutes: '{hours} ч {minutes} мин',
             saveTextFirst: 'Сначала импортируйте или вставьте текст.', bookUpdated: 'Книга обновлена.', bookSaved: 'Книга сохранена в библиотеку.', bookNumber: 'Книга {count}', emptyLibrary: 'Библиотека пуста. Импортируйте книгу или сохраните текущий текст.', noLibraryMatches: 'По этому запросу книг не найдено.', bookMeta: '{words} · {progress}% · {bookmarks}', lastRead: 'Последнее чтение: {date}', read: 'Читать', rename: 'Переименовать', delete: 'Удалить', bookCount: '{count} книг', filteredBookCount: '{filtered} из {total} книг', bookNotFound: 'Книга не найдена.', confirmDeleteBook: 'Удалить «{name}» из библиотеки?', bookDeleted: 'Книга удалена.', newTitle: 'Новое название', noTextForBookmark: 'Нет текста для закладки.', bookmarkName: 'Название закладки', bookmarkAdded: 'Закладка добавлена.', noBookmarks: 'Закладок пока нет.', bookmarkMeta: '{progress}% · слово {word} · {date}', goTo: 'Перейти',
             importedBook: 'Книга «{name}» добавлена в библиотеку.', invalidLibraryExport: 'В резервной копии нет списка книг.', importedSuffix: 'импорт', importedBooks: 'Импортировано: {count}.', importFailed: 'Ошибка импорта: {message}', draft: 'Черновик', shortBookmarks: '{count}', libraryButton: 'Библиотека ({count})', storageSummary: '{books} · {words} · {storage} · {sync}', syncDisabled: 'только локально', syncOffline: 'синхронизация офлайн', syncing: 'синхронизация…', syncPending: 'синхронизация ожидает', syncedAt: 'синхронизировано {date}', syncReady: 'синхронизация готова', unknown: 'неизвестно', online: 'Онлайн', offline: 'Офлайн', localOnly: 'Приватно · только локально',
+            localLibrary: 'Библиотека · локально на этом устройстве',
             epubZipFailed: 'Не удалось загрузить встроенный обработчик EPUB.', epubOpfMissing: 'В EPUB отсутствует манифест пакета.', epubReadFailed: 'Не удалось прочитать EPUB: {message}', chapterFallback: 'Глава {count}', hardwareUnavailableIos: 'В сборке для iOS функция недоступна. Пробел работает с аппаратной клавиатурой, а кнопки громкости всегда меняют системную громкость.', hardwareEnabled: 'Внешнее media-управление включено.', hardwareDisabled: 'Внешнее media-управление выключено.', chapterPosition: '{progress}% · слово {word}'
         }
     };

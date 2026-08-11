@@ -8,7 +8,9 @@ import { chromium } from 'playwright';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const sourceExtensionPath = join(root, 'chrome-extension');
-const localUrl = 'http://127.0.0.1:8081/';
+const testPort = Number(process.env.HUMMINGREAD_EXTENSION_TEST_PORT || 43182);
+const testMarker = 'extension-r2';
+const localUrl = `http://127.0.0.1:${testPort}/`;
 const userDataDirectory = await mkdtemp(join(tmpdir(), 'hummingread-chrome-e2e-'));
 const extensionPath = await mkdtemp(join(tmpdir(), 'hummingread-extension-e2e-'));
 let serverProcess = null;
@@ -17,8 +19,17 @@ const artifactDirectory = process.env.HUMMINGREAD_EXTENSION_ARTIFACT_DIR || '';
 
 async function serverIsReady() {
   try {
-    const response = await fetch(localUrl);
-    return response.ok;
+    const response = await fetch(`${localUrl}__hummingread_test__/marker`);
+    return response.ok && (await response.json()).marker === testMarker;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function portIsOccupied() {
+  try {
+    await fetch(localUrl);
+    return true;
   } catch (error) {
     return false;
   }
@@ -65,7 +76,7 @@ try {
   await cp(sourceExtensionPath, extensionPath, { recursive: true });
   const manifestPath = join(extensionPath, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-  const testMatch = 'http://127.0.0.1:8081/*';
+  const testMatch = `${localUrl}*`;
   manifest.host_permissions = [testMatch];
   manifest.content_scripts = [{
     matches: [testMatch],
@@ -74,14 +85,18 @@ try {
   }];
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-  if (!await serverIsReady()) {
-    serverProcess = spawn(process.execPath, ['server.js'], {
-      cwd: root,
-      env: { ...process.env, HOST: '127.0.0.1', PORT: '8081' },
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-    await waitForServer();
-  }
+  if (await portIsOccupied()) throw new Error(`Extension test port ${testPort} is already occupied.`);
+  serverProcess = spawn(process.execPath, ['server.js'], {
+    cwd: root,
+    env: {
+      ...process.env,
+      HOST: '127.0.0.1',
+      PORT: String(testPort),
+      HUMMINGREAD_TEST_MARKER: testMarker
+    },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  await waitForServer();
 
   const launchOptions = {
     headless: true,
