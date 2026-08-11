@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" role="img" aria-labelledby="title desc">
+  <title id="title">HummingRead Chrome small promo tile</title>
+  <desc id="desc">Pico crosses the edge of a compact RSVP reader card.</desc>
+  <rect width="440" height="280" fill="#17233f"/>
+  <circle cx="397" cy="33" r="70" fill="#75d3bd" opacity=".2"/>
+  <rect x="24" y="25" width="279" height="230" rx="23" fill="#fffaf0" stroke="#101529" stroke-width="6"/>
+  <text x="48" y="68" fill="#3156d8" font-family="Arial,sans-serif" font-size="13" font-weight="800" letter-spacing="2">MEET PICO · FOCUS PILOT</text>
+  <text x="46" y="120" fill="#101529" font-family="Impact,Arial Narrow,sans-serif" font-size="45" font-weight="900">HUMMING</text>
+  <text x="46" y="162" fill="#3156d8" font-family="Impact,Arial Narrow,sans-serif" font-size="45" font-weight="900">READ</text>
+  <rect x="47" y="187" width="177" height="40" rx="11" fill="#75d3bd" stroke="#101529" stroke-width="4"/>
+  <text x="67" y="212" fill="#101529" font-family="Arial,sans-serif" font-size="14" font-weight="800">READ LOCALLY</text>
+  <g transform="translate(256 74) scale(.18) rotate(-4 512 512)">
+    <path d="M392 498C218 390 177 222 229 126c139 44 256 157 304 303M430 516C264 557 153 686 149 811c151 5 292-73 372-194" fill="#75d3bd" stroke="#101529" stroke-width="34" stroke-linejoin="round"/>
+    <path d="M459 501c38-158 162-250 301-221 132 27 197 153 147 271-45 107-166 174-302 158-126-14-215-95-221-193" fill="#3156d8" stroke="#101529" stroke-width="34"/>
+    <path d="m706 319 291 40-238 24" fill="#f2ad4c" stroke="#101529" stroke-width="28"/>
+    <path d="M524 690l-34 189 98-64 78 75 15-195" fill="#17233f" stroke="#101529" stroke-width="30"/>
+    <circle cx="745" cy="405" r="43" fill="#fffaf0" stroke="#101529" stroke-width="22"/><circle cx="758" cy="407" r="15" fill="#101529"/>
+    <circle cx="504" cy="512" r="24" fill="#e96d72" stroke="#101529" stroke-width="12"/>
+  </g>
+</svg>

@@ -29,6 +29,7 @@ const PUBLIC_FILES = new Set([
   'index.html',
   'privacy.html',
   'support.html',
+  'acknowledgements.html',
   'style.css',
   'i18n.js',
   'app.js',
@@ -36,7 +37,9 @@ const PUBLIC_FILES = new Set([
   'service-worker.js',
   'manifest.json',
   'sample_text.txt',
-  'sample_text_ru.txt'
+  'sample_text_ru.txt',
+  'robots.txt',
+  'sitemap.xml'
 ]);
 const PUBLIC_DIRECTORIES = ['assets/', 'vendor/'];
 
@@ -50,6 +53,7 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.txt': 'text/plain; charset=utf-8',
+  '.webp': 'image/webp',
   '.webmanifest': 'application/manifest+json; charset=utf-8'
 };
 
@@ -213,7 +217,7 @@ function requestArticleDocument(target, resolvedAddress) {
         Host: target.host,
         Accept: 'text/html,application/xhtml+xml,text/plain;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br',
-        'User-Agent': 'PaceFlow-Article-Importer/1.0 (+private reading tool)'
+        'User-Agent': 'HummingRead-Article-Importer/2.0 (+local-first reading tool)'
       }
     }, (remoteResponse) => {
       const chunks = [];

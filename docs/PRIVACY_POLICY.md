@@ -1,108 +1,39 @@
-# PaceFlow Reader — Privacy Policy Draft
+# HummingRead privacy policy source
 
-Effective date: **August 10, 2026**
+Effective draft: 2026-08-11. Public HTML: `privacy.html`. Final public domain and no-login support email remain owner gates.
 
-This policy describes the current local-only iOS build, web reader, and optional Chrome extension. A copy is bundled inside the app; the public source remains available in this repository until a final product domain is selected.
+## Native iOS
 
-## English
+The iOS build requires no account and includes no advertising, analytics, tracking SDK, cloud sync, or article URL importer. Imported books/documents, extracted text, positions, bookmarks, and settings remain in app storage on the device. Core reading works offline. The user can export a backup or delete all local app data.
 
-PaceFlow Reader is an offline document and ebook reader. The current iOS version does not require an account and does not include advertising, analytics, tracking, or cloud synchronization.
+## Web/PWA
 
-### Data processed on your device
+Imported books, pasted text, library records, positions, bookmarks, and settings stay in the browser’s local storage/IndexedDB. There is no account or enabled cloud sync.
 
-When you import a file or paste text, the app processes that content locally to display it, build supported chapter navigation, search it, and save your reading position. Imported files and pasted text, library metadata, bookmarks, reading progress, and app settings remain in the app's private storage on your device. The developer does not receive this information.
+Optional article import is different: the entered credential-free HTTP(S) URL is sent to the first-party `/api/article` service. The server resolves and validates public global-unicast addresses, pins the approved DNS result, follows only revalidated redirects, fetches the destination transiently, extracts readable text, returns it, and does not write the submitted URL, page text, or a server-side library record to disk/database.
 
-### Network use
+The prepared production nginx policy disables access logging for the article endpoint. The Node service uses the raw source IP only as an in-memory abuse-prevention key; a bucket has a hard ten-minute expiry with no sliding extension and bounded population. Process restart clears it. Destination sites and infrastructure providers may process the server request/IP under their own policies. Do not submit private, authenticated, paywalled, intranet, or unauthorized URLs.
 
-The native iOS app does not upload your books, reading history, bookmarks, or
-settings. It has no article URL import control or article-service endpoint, and
-its complete reading workflow works without an internet connection.
+Ordinary hosting/TLS infrastructure may process connection metadata outside the application. “No analytics SDK” is not the same claim as “no infrastructure processing.”
 
-In the web/PWA surface only, choosing **Import article** sends the URL you submit
-to the PaceFlow server. The server downloads that public page, extracts its
-readable text, and returns the result to your browser. The submitted URL and
-downloaded page are processed in memory for that request and are not stored in a
-server-side PaceFlow library or analytics database. The article endpoint access
-log is disabled; a bounded in-memory abuse-prevention bucket holds the requesting
-IP for at most ten minutes. The source website receives a request from the
-PaceFlow server and handles it under its own policy. Do not use article import
-for private, authenticated, or confidential URLs.
+## Chrome extension
 
-### Optional Chrome extension
+Selected text, locally extracted current-page text, explicitly pasted text, settings, and reading progress remain in Chrome extension storage for standalone reading. The extension requests no clipboard, browsing-history, all-sites, analytics, advertising, or remote-code access and makes no automatic content transmission.
 
-The Chrome extension runs only after an explicit toolbar, context-menu, or keyboard action. Selected and pasted text is transferred directly to the PaceFlow website and stored in that browser's local PaceFlow library. Article actions transfer the public URL to the guarded importer described above. The extension reads the clipboard only when **Read copied text** is pressed. A pending handoff is kept in in-memory `chrome.storage.session` for no more than ten minutes and deleted after delivery. It does not request browsing-history, all-sites, analytics, advertising, or remote-code access.
+Optional **Quick Send** is a separate explicit action. It stores the selected payload behind a random scoped nonce in in-memory `chrome.storage.session`, opens the centrally configured tester website, hands the payload to that same-origin bridge, and removes it after acknowledgement or a hard maximum of ten minutes. Article Quick Send transfers the public URL to the web article flow described above.
 
-Apple may process purchase, download, diagnostic, and support information under Apple's own policies; that processing is controlled by Apple, not by PaceFlow Reader.
+## Retention, deletion, and support
 
-### Export and deletion
+Local content remains until the user removes a book, clears the extension/app, deletes all local data, or browser/OS storage is cleared. The developer cannot remotely delete content it never receives. Article text/URL is transient and not stored by the application server, so there is no retained server article record to retrieve or delete. Abuse buckets expire after at most ten minutes.
 
-You may export a local backup from Settings. An exported file is handled by the destination you choose through the system share or file interface. You may erase the app's locally stored books, progress, bookmarks, and settings with **Settings > Your data > Delete all local data**. Uninstalling the app also removes its private app container, subject to operating-system and device-backup behavior.
+Support must have a no-login public route. The current tester page provides that route and clearly labels the final branded support email as an owner input. GitHub Issues may remain an optional technical channel but is not the sole consumer route.
 
-### Support messages
+## Русская версия
 
-If you contact support, the developer receives the information you choose to include in your message, such as your email address and problem description. Do not attach copyrighted or sensitive book content unless it is necessary and you are authorized to share it. Support information is used only to respond to and resolve your request and is retained only as long as reasonably necessary for that purpose or legal obligations.
+Нативная iOS-версия не требует аккаунта, не содержит рекламы, аналитики, отслеживания, облачной синхронизации и импорта статьи по ссылке. Книги, текст, позиции, закладки и настройки остаются на устройстве; основное чтение работает офлайн.
 
-### Children
+В веб-версии книги, вставленный текст, библиотека и прогресс остаются в браузере. Необязательный импорт статьи передаёт введённый публичный HTTP(S)-адрес сервису `/api/article`: сервис проверяет публичность адреса и каждого редиректа, закрепляет проверанный DNS-результат, временно получает страницу, выделяет текст и не сохраняет ссылку, текст или серверную библиотеку. Для endpoint отключён access log; исходный IP используется только в ограниченном оперативном bucket для защиты от злоупотреблений с жёстким сроком не более десяти минут.
 
-The app is a general-purpose reading utility and is not directed to children under 13. It does not knowingly collect personal information from children.
+Самостоятельная Chrome-читалка хранит выделенный, локально извлечённый или явно вставленный текст и прогресс в хранилище расширения и ничего не передаёт автоматически. Только отдельная команда Quick Send после явного нажатия может передать выбранный payload настроенному тестовому сайту; сессионная запись удаляется после подтверждения или не позднее десяти минут.
 
-### Changes
-
-This policy may change if the app's data practices change. The effective date above will be updated, and material changes will be described in the app or its store listing when appropriate.
-
-### Contact
-
-Developer: **DoroninDobroCorp / PaceFlow Reader project**
-
-Support: **https://github.com/DoroninDobroCorp/RSVP_reader/issues**
-
-Project: **https://github.com/DoroninDobroCorp/RSVP_reader**
-
-## Русский
-
-PaceFlow Reader — офлайн-читалка документов и электронных книг. Текущая версия для iOS не требует учётной записи и не содержит рекламы, аналитики, отслеживания или облачной синхронизации.
-
-### Данные на устройстве
-
-При импорте файла или вставке текста приложение обрабатывает содержимое локально: показывает текст, создаёт доступное оглавление, выполняет поиск и сохраняет позицию чтения. Импортированные файлы и вставленный текст, сведения библиотеки, закладки, прогресс и настройки остаются в приватном хранилище приложения на вашем устройстве. Разработчик не получает эти данные.
-
-### Сеть
-
-Нативное приложение iOS не загружает книги, историю чтения, закладки или
-настройки. В нём нет элемента импорта статьи или адреса сервиса статей, а весь
-сценарий чтения работает без интернета.
-
-Только в web/PWA при выборе **Импортировать статью** введённая ссылка передаётся
-серверу PaceFlow. Сервер загружает публичную страницу, выделяет читаемый текст и
-возвращает результат браузеру. Ссылка и страница обрабатываются в памяти только
-для этого запроса и не сохраняются в серверной библиотеке или базе аналитики.
-Журнал доступа для article endpoint отключён; ограниченный in-memory bucket для
-защиты от злоупотреблений хранит IP не более десяти минут. Исходный сайт получает
-запрос от сервера PaceFlow и применяет собственные правила. Не используйте импорт
-для приватных, авторизованных или конфиденциальных ссылок.
-
-### Необязательное расширение Chrome
-
-Расширение работает только после явного действия в popup, контекстном меню или с клавиатуры. Выделенный и вставленный текст передаётся прямо на сайт PaceFlow и сохраняется в локальной библиотеке этого браузера. Для статьи защищённому импортёру передаётся публичная ссылка. Буфер читается только по кнопке **Читать скопированный текст**. Незавершённая передача остаётся в оперативной `chrome.storage.session` не более десяти минут и удаляется после доставки. Расширение не запрашивает доступ к истории, всем сайтам, аналитике, рекламе или удалённому коду.
-
-Apple может обрабатывать сведения о покупке, загрузке, диагностике и обращениях по собственным правилам; PaceFlow Reader не управляет этой обработкой.
-
-### Экспорт и удаление
-
-В Настройках можно экспортировать локальную резервную копию. Дальнейшая обработка файла зависит от выбранного вами системного приложения или места сохранения. Команда **Настройки > Ваши данные > Удалить все локальные данные** стирает локальные книги, прогресс, закладки и настройки. Удаление приложения также удаляет его приватный контейнер с учётом поведения операционной системы и резервных копий устройства.
-
-### Обращения в поддержку
-
-При обращении разработчик получает только те сведения, которые вы сами включили в сообщение, например адрес электронной почты и описание проблемы. Не прикладывайте защищённые авторским правом или конфиденциальные тексты без необходимости и права на их передачу. Эти сведения используются для ответа и решения вопроса и хранятся только разумно необходимое время либо в пределах требований закона.
-
-### Дети и изменения политики
-
-Приложение является универсальным инструментом чтения, не предназначено специально для детей младше 13 лет и сознательно не собирает их персональные данные. При изменении практик обработки данных обновятся дата вступления политики в силу и, при необходимости, описание существенных изменений в приложении или магазине.
-
-### Контакты
-
-Разработчик: **DoroninDobroCorp / проект PaceFlow Reader**
-
-Поддержка: **https://github.com/DoroninDobroCorp/RSVP_reader/issues**
-
-Проект: **https://github.com/DoroninDobroCorp/RSVP_reader**
+Финальные домен, публичные URL и адрес поддержки утверждает владелец перед публикацией. Бренд остаётся **provisional pending owner/legal confirmation**.

@@ -1,10 +1,11 @@
-const CACHE_NAME = 'paceflow-reader-v48';
-const ASSET_VERSION = 'v=48';
+const CACHE_NAME = 'hummingread-reader-v49';
+const ASSET_VERSION = 'v=49';
 const APP_SHELL = [
   './',
   './index.html',
   './privacy.html',
   './support.html',
+  './acknowledgements.html',
   `./style.css?${ASSET_VERSION}`,
   `./i18n.js?${ASSET_VERSION}`,
   `./app.js?${ASSET_VERSION}`,
@@ -16,8 +17,8 @@ const APP_SHELL = [
   './assets/icons/app-icon-180.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
-  './assets/brand/pico-hero.png',
-  './assets/brand/pico-quick-send.png',
+  './assets/brand/pico-hero-640.webp',
+  './assets/brand/pico-quick-send-640.webp',
   './assets/brand/pico-mark-1024.png',
   './sample_text.txt',
   './sample_text_ru.txt'
@@ -36,7 +37,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((cacheNames) => Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName.startsWith('paceflow-reader-') && cacheName !== CACHE_NAME)
+          .filter((cacheName) => /^(?:paceflow|hummingread)-reader-/u.test(cacheName) && cacheName !== CACHE_NAME)
           .map((cacheName) => caches.delete(cacheName))
       ))
       .then(() => self.clients.claim())

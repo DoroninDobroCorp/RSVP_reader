@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HummingRead · Local Reader</title>
+  <link rel="stylesheet" href="reader.css">
+</head>
+<body>
+  <a class="skip-link" href="#readerStage" data-i18n="skipToReader">Skip to reader</a>
+  <header class="app-header">
+    <a class="brand-lockup" href="popup.html" aria-label="HummingRead">
+      <img src="icons/icon-48.png" width="48" height="48" alt="">
+      <span><strong>HummingRead</strong><small data-i18n="localReaderLabel">LOCAL RSVP READER</small></span>
+    </a>
+    <label class="theme-control">
+      <span data-i18n="themeLabel">Theme</span>
+      <select id="themeSelect">
+        <option value="system" data-i18n="themeSystem">System</option>
+        <option value="light" data-i18n="themeLight">Light</option>
+        <option value="dark" data-i18n="themeDark">Dark</option>
+      </select>
+    </label>
+  </header>
+
+  <main>
+    <section id="loadingState" class="state-card" aria-live="polite">
+      <span class="loading-wing" aria-hidden="true">◇</span>
+      <h1 data-i18n="preparingReader">Pico is arranging the words…</h1>
+      <p data-i18n="preparingReaderHint">Large passages are prepared in small cancellable batches.</p>
+    </section>
+
+    <section id="errorState" class="state-card error-card" hidden role="alert">
+      <img src="assets/pico-quick-send.png" width="420" height="280" alt="">
+      <div>
+        <p class="eyebrow" data-i18n="gentleError">GENTLE DETOUR</p>
+        <h1 data-i18n="couldNotRead">This page could not be read locally</h1>
+        <p id="errorMessage"></p>
+        <a class="primary-link" href="popup.html" data-i18n="backToPopup">Choose another text</a>
+      </div>
+    </section>
+
+    <section id="readerShell" class="reader-shell" hidden>
+      <div class="flight-ribbon" aria-hidden="true"><span></span><span></span><span></span></div>
+      <img class="pico-overlap" src="assets/pico-quick-send.png" width="420" height="280" alt="">
+
+      <header class="document-header">
+        <div>
+          <p class="eyebrow" data-i18n="readingWithPico">READING WITH PICO</p>
+          <h1 id="documentTitle">Pasted text</h1>
+          <p id="sourceMeta" class="source-meta"></p>
+        </div>
+        <div class="local-badge"><span aria-hidden="true">●</span><span data-i18n="localBadge">LOCAL · ON THIS DEVICE</span></div>
+      </header>
+
+      <article id="readerStage" class="reader-stage" tabindex="-1" aria-labelledby="documentTitle">
+        <div class="focus-rail" aria-hidden="true"><span></span></div>
+        <p id="wordFrame" class="word-frame" aria-live="off" aria-atomic="true">
+          <span id="wordBefore"></span><mark id="wordFocus"></mark><span id="wordAfter"></span>
+        </p>
+        <div id="pauseContext" class="pause-context" aria-live="polite"></div>
+      </article>
+
+      <section class="control-deck" aria-label="Reading controls" data-i18n-aria="readingControls">
+        <div class="primary-controls">
+          <button id="rewindBtn" class="control-button rewind-button" type="button">
+            <span aria-hidden="true">↶</span><span data-i18n="rewindTen">Rewind 10 words</span>
+          </button>
+          <button id="playBtn" class="play-button" type="button" aria-pressed="false">
+            <span id="playIcon" aria-hidden="true">▶</span><span id="playLabel" data-i18n="play">Play</span>
+          </button>
+          <div class="speed-group" aria-label="Reading speed" data-i18n-aria="readingSpeed">
+            <button id="slowerBtn" type="button" aria-label="Decrease speed by 20 WPM" data-i18n-aria="slower">−20</button>
+            <output id="wpmOutput" for="slowerBtn fasterBtn">320 WPM</output>
+            <button id="fasterBtn" type="button" aria-label="Increase speed by 20 WPM" data-i18n-aria="faster">+20</button>
+          </div>
+        </div>
+
+        <div class="progress-control">
+          <label for="progressRange">
+            <span data-i18n="progress">Progress</span>
+            <output id="progressOutput">1 / 1 · 0%</output>
+          </label>
+          <input id="progressRange" type="range" min="0" max="0" value="0" step="1">
+        </div>
+      </section>
+
+      <footer class="reader-footer">
+        <div class="shortcut-list" aria-label="Keyboard shortcuts" data-i18n-aria="keyboardShortcuts">
+          <span><kbd>Space</kbd> <span data-i18n="shortcutPlay">play / pause</span></span>
+          <span><kbd>←</kbd> <span data-i18n="shortcutRewind">rewind 10</span></span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> <span data-i18n="shortcutSpeed">speed</span></span>
+        </div>
+        <div class="web-preview-action">
+          <button id="quickSendReaderBtn" type="button" data-i18n="quickSendReader">Quick Send this text to web preview ↗</button>
+          <p id="readerStatus" role="status" aria-live="polite" data-i18n="readerPrivateStatus">Text and progress stay in extension storage.</p>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script src="core.js"></script>
+  <script src="reader.js"></script>
+</body>
+</html>

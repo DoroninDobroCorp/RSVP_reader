@@ -1,7 +1,7 @@
 {
-  "name": "PaceFlow Reader",
-  "short_name": "PaceFlow",
-  "description": "Read long books and articles in rhythm with Pico, your private focus pilot.",
+  "name": "HummingRead: Speed Reader",
+  "short_name": "HummingRead",
+  "description": "Read long books and articles in rhythm with Pico, your local-first focus pilot.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

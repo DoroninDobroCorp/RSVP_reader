@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: __HUMMINGREAD_SITE_URL__sitemap.xml

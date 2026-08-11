@@ -235,7 +235,6 @@ button:disabled { cursor: wait; opacity: .58; }
 
 .action-selection { background: var(--mint); }
 .action-article .action-glyph { background: var(--amber); }
-.action-clipboard .action-glyph { color: var(--paper-light); background: var(--cobalt); }
 
 .action-glyph {
   display: grid;
@@ -290,6 +289,36 @@ textarea::placeholder { color: #667085; }
   font-weight: 950;
   letter-spacing: .12em;
 }
+
+.preview-card {
+  margin-top: 9px;
+  padding: 8px 10px;
+  color: #d5dfdc;
+  background: #17233f;
+  border: 1px solid rgba(117, 211, 189, .42);
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.preview-card summary {
+  cursor: pointer;
+  color: var(--mint);
+  font-weight: 850;
+}
+
+.preview-card p { margin-top: 7px; }
+
+.preview-button {
+  min-height: 34px;
+  margin-top: 7px;
+  padding: 6px 9px;
+  color: var(--paper-light);
+  background: transparent;
+  border-color: var(--mint);
+}
+
+.preview-button:hover { background: rgba(117, 211, 189, .13); }
 
 .status {
   min-height: 32px;

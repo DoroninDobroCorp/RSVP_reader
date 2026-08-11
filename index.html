@@ -4,24 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#101529">
-    <meta name="description" content="Pico guides books, articles and pasted text into a calm, private reading rhythm.">
+    <meta name="description" content="HummingRead is a calm RSVP speed reader for books, pasted text and focused one-word-at-a-time reading with Pico.">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="__HUMMINGREAD_SITE_URL__">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HummingRead: Speed Reader">
+    <meta property="og:description" content="Read books and long text in a calm, adjustable one-word-at-a-time rhythm.">
+    <meta property="og:url" content="__HUMMINGREAD_SITE_URL__">
+    <meta property="og:image" content="__HUMMINGREAD_OG_IMAGE_URL__">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HummingRead: Speed Reader">
+    <meta name="twitter:description" content="RSVP, one word at a time — guided by Pico.">
+    <meta name="twitter:image" content="__HUMMINGREAD_OG_IMAGE_URL__">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PaceFlow">
-    <title>PaceFlow Reader</title>
-    <link rel="manifest" href="manifest.json?v=48">
-    <link rel="stylesheet" href="style.css?v=48">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png?v=48">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=48">
+    <meta name="apple-mobile-web-app-title" content="HummingRead">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "HummingRead",
+      "url": "__HUMMINGREAD_SITE_URL__",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any modern web browser",
+      "browserRequirements": "Requires JavaScript and IndexedDB",
+      "isAccessibleForFree": true,
+      "description": "A local-first RSVP speed reader for books, pasted text and focused one-word-at-a-time reading."
+    }
+    </script>
+    <title>HummingRead: Speed Reader</title>
+    <link rel="manifest" href="manifest.json?v=49">
+    <link rel="stylesheet" href="style.css?v=49">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png?v=49">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=49">
 </head>
 <body>
     <a class="skip-link" href="#mainContainer" data-i18n="skipToContent">Skip to content</a>
 
     <header class="app-header">
-        <button id="homeBtn" class="brand-button" type="button" aria-label="PaceFlow Reader home" data-i18n-aria="homeAria">
-            <img src="assets/icons/app-icon-64.png?v=48" width="36" height="36" alt="" aria-hidden="true">
+        <button id="homeBtn" class="brand-button" type="button" aria-label="HummingRead home" data-i18n-aria="homeAria">
+            <img src="assets/icons/app-icon-64.png?v=49" width="36" height="36" alt="" aria-hidden="true">
             <span class="brand-copy">
-                <strong data-i18n="appName">PaceFlow Reader</strong>
+                <strong data-i18n="appName">HummingRead</strong>
                 <small data-i18n="appTagline">Focused reading, at your rhythm</small>
             </span>
         </button>
@@ -40,6 +64,12 @@
         <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
         <section id="textInputSection" class="app-panel composer-panel">
+            <button id="continueReadingCard" class="continue-reading-card" type="button" hidden>
+                <span class="continue-kicker" data-i18n="continueReading">Continue reading</span>
+                <strong id="continueBookTitle"></strong>
+                <span id="continueBookProgress"></span>
+                <span class="continue-arrow" aria-hidden="true">→</span>
+            </button>
             <div class="pico-hero">
                 <div class="pico-hero-copy">
                     <span class="hero-kicker"><span aria-hidden="true">◆</span><span data-i18n="heroKicker">Meet Pico · your reading wingmate</span></span>
@@ -50,7 +80,11 @@
                             <span aria-hidden="true">▶</span>
                             <span data-i18n="tryDemo">Fly through the 45-second demo</span>
                         </button>
-                        <span class="hero-promise" data-i18n="heroPromise">No account · no upload · no tracking</span>
+                        <button id="heroImportBtn" class="primary-btn hero-import-btn" type="button">
+                            <span aria-hidden="true">↓</span>
+                            <span data-i18n="importYourBook">Import your book</span>
+                        </button>
+                        <span class="hero-promise" data-i18n="heroPromise">No account · books and pasted text stay on this device</span>
                     </div>
                     <div class="privacy-card" aria-live="polite">
                         <span class="privacy-dot" aria-hidden="true"></span>
@@ -60,7 +94,7 @@
                 <div class="pico-hero-visual" aria-hidden="true">
                     <span class="hero-orbit hero-orbit-one"></span>
                     <span class="hero-orbit hero-orbit-two"></span>
-                    <img class="pico-hero-image" src="assets/brand/pico-hero.png" width="873" height="960" alt="" fetchpriority="high" decoding="async">
+                    <img class="pico-hero-image" src="assets/brand/pico-hero-640.webp" width="640" height="704" alt="" fetchpriority="high" decoding="async">
                     <div class="focus-bubble">
                         <span data-i18n="heroWordBefore">keep</span>
                         <strong data-i18n="heroWordFocus">your</strong>
@@ -70,7 +104,7 @@
                 </div>
             </div>
 
-            <ol class="flow-map" data-i18n-aria="flowMapLabel" aria-label="How PaceFlow works">
+            <ol class="flow-map" data-i18n-aria="flowMapLabel" aria-label="How HummingRead works">
                 <li>
                     <span class="flow-number">01</span>
                     <div><strong data-i18n="flowBringTitle">Bring the text</strong><span data-i18n="flowBringHint">Paste, import, or send it from Chrome.</span></div>
@@ -124,7 +158,7 @@
                                 <span class="source-number">02</span>
                                 <div class="article-import-copy">
                                     <strong data-i18n="articleImportTitle">Read an article from a link</strong>
-                                    <span data-i18n="articleImportHint">PaceFlow removes menus and distractions, then saves the readable text to your library.</span>
+                                    <span data-i18n="articleImportHint">HummingRead sends this URL to its article service, removes page chrome, then stores the returned text locally.</span>
                                 </div>
                             </div>
                             <div class="article-import-controls">
@@ -136,24 +170,25 @@
                         </form>
 
                         <div id="chromeExtensionPanel" class="extension-action source-card">
-                            <img class="pico-quick-send" src="assets/brand/pico-quick-send.png" width="1100" height="733" alt="" decoding="async">
+                            <img class="pico-quick-send" src="assets/brand/pico-quick-send-640.webp" width="640" height="427" alt="" loading="lazy" decoding="async">
                             <div class="extension-action-copy">
                                 <span class="source-number">03</span>
                                 <div>
                                     <span class="extension-badge" aria-hidden="true">Chrome</span>
-                                    <strong data-i18n="chromeExtensionTitle">Send from Chrome in one click</strong>
-                                    <span data-i18n="chromeExtensionHint">Select text, copy a passage, or right-click an article and open it directly in PaceFlow.</span>
+                                    <strong data-i18n="chromeExtensionTitle">Read locally without leaving Chrome</strong>
+                                    <span data-i18n="chromeExtensionHint">Selections, pages and pasted text open in the extension's own local RSVP reader. Quick Send to this preview is optional.</span>
                                 </div>
                             </div>
-                            <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/paceflow-quick-send.zip" download data-i18n="chromeExtensionDownload">Download Chrome extension</a>
+                            <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/hummingread-tester.zip" download data-i18n="chromeExtensionDownload">Tester build · ZIP</a>
+                            <span class="store-review-state" data-i18n="chromeStorePending">Chrome Web Store · coming after review</span>
                             <details class="extension-install">
-                                <summary data-i18n="chromeExtensionInstall">Install in Chrome</summary>
+                                <summary data-i18n="chromeExtensionInstall">Install unpacked for testing</summary>
                                 <ol>
                                     <li data-i18n="chromeExtensionStepOne">Download and extract the extension ZIP.</li>
                                     <li data-i18n="chromeExtensionStepTwo">Open chrome://extensions and enable Developer mode.</li>
                                     <li data-i18n="chromeExtensionStepThree">Choose Load unpacked and select the extracted folder.</li>
                                 </ol>
-                                <p data-i18n="chromeExtensionPrivacy">It reads a selection or clipboard only when you explicitly press a PaceFlow action. No browsing-history permission or analytics.</p>
+                                <p data-i18n="chromeExtensionPrivacy">Standalone reading is local and needs no clipboard, browsing-history or all-sites permission. Quick Send transfers text only after an explicit action.</p>
                             </details>
                         </div>
                     </aside>
@@ -164,6 +199,29 @@
                     <button id="libraryBtn" class="secondary-btn" type="button" data-i18n="myLibrary">Library</button>
                 </div>
             </div>
+
+            <section class="product-story" aria-labelledby="productStoryTitle">
+                <div class="story-heading">
+                    <p class="eyebrow" data-i18n="productStoryKicker">ONE STILL POINT · A QUICKER RHYTHM</p>
+                    <h2 id="productStoryTitle" data-i18n="productStoryTitle">A reader that gets out of your way</h2>
+                    <p data-i18n="productStoryHint">Choose a comfortable pace, pause to recover the sentence around you, and return to the exact saved word.</p>
+                </div>
+                <div class="benefit-grid">
+                    <article><span aria-hidden="true">01</span><h3 data-i18n="benefitBooksTitle">Real books</h3><p data-i18n="benefitBooksText">EPUB, FB2, DOCX, TXT, HTML, Markdown and RTF—without an account.</p></article>
+                    <article><span aria-hidden="true">02</span><h3 data-i18n="benefitContextTitle">Context on pause</h3><p data-i18n="benefitContextText">The surrounding passage returns with the current word visibly anchored.</p></article>
+                    <article><span aria-hidden="true">03</span><h3 data-i18n="benefitPrivateTitle">Surface-specific privacy</h3><p data-i18n="benefitPrivateText">Books, pasted text and progress stay local. The optional web article importer sends only the URL to the article service.</p></article>
+                </div>
+                <div class="product-links">
+                    <a href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a>
+                    <a href="support.html" data-i18n="support">Support</a>
+                    <a href="acknowledgements.html" data-i18n="acknowledgements">Acknowledgements</a>
+                    <span data-i18n="appStorePending">App Store · pending owner signing and review</span>
+                </div>
+                <details class="product-faq">
+                    <summary data-i18n="faqQuestion">Does HummingRead promise faster comprehension?</summary>
+                    <p data-i18n="faqAnswer">No. It controls presentation pace; comprehension varies with the reader, material, language and chosen speed.</p>
+                </details>
+            </section>
             <input type="file" id="fileInput" class="visually-hidden-file" tabindex="-1" aria-hidden="true" accept=".fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*">
         </section>
 
@@ -250,10 +308,23 @@
                     <div id="orpNotchBottom" class="orp-notch bottom-notch" hidden></div>
                 </div>
                 <div id="rsvpPauseContext" class="rsvp-pause-context" aria-live="polite" aria-hidden="true"></div>
+                <aside id="demoCoach" class="demo-coach" hidden aria-live="polite">
+                    <span id="demoCoachStep">1 / 4</span>
+                    <strong id="demoCoachTitle"></strong>
+                    <p id="demoCoachHint"></p>
+                    <div>
+                        <button id="demoCoachActionBtn" class="primary-btn compact-btn" type="button"></button>
+                        <button id="demoCoachSkipBtn" class="secondary-btn compact-btn" type="button" data-i18n="skipDemo">Skip guide</button>
+                    </div>
+                </aside>
                 <div class="rsvp-controls" aria-label="Reading controls" data-i18n-aria="readingControls">
                     <button id="playPauseBtn" class="control-btn play-control" type="button" data-i18n-aria="pause">⏸</button>
-                    <button id="prevWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="decreaseSpeed" data-i18n-aria="decreaseSpeed">−20</button>
-                    <button id="nextWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="increaseSpeed" data-i18n-aria="increaseSpeed">+20</button>
+                    <button id="rewindWordsBtn" class="control-btn rewind-control" type="button" data-i18n-title="rewindTenWords" data-i18n-aria="rewindTenWords">↶ 10</button>
+                    <div class="rsvp-speed-group" data-i18n-aria="readingSpeed" aria-label="Reading speed">
+                        <button id="prevWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="decreaseSpeed" data-i18n-aria="decreaseSpeed">−20</button>
+                        <output id="rsvpWpmLabel">350 WPM</output>
+                        <button id="nextWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="increaseSpeed" data-i18n-aria="increaseSpeed">+20</button>
+                    </div>
                     <button id="rsvpBookmarkBtn" class="control-btn" type="button" data-i18n-title="addBookmark" data-i18n-aria="addBookmark">☆</button>
                     <button id="stopRSVPBtn" class="control-btn" type="button" data-i18n-title="stopFocusMode" data-i18n-aria="stopFocusMode">×</button>
                 </div>
@@ -281,7 +352,7 @@
     <div id="settingsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
         <div class="modal-content settings-sheet">
             <div class="modal-header">
-                <div><span class="eyebrow">PaceFlow</span><h2 id="settingsTitle" data-i18n="settings">Settings</h2></div>
+                <div><span class="eyebrow">HummingRead</span><h2 id="settingsTitle" data-i18n="settings">Settings</h2></div>
                 <button id="closeSettingsBtn" class="close-btn" type="button" data-i18n-aria="close">×</button>
             </div>
             <div class="modal-body">
@@ -411,9 +482,9 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=48"></script>
-    <script src="vendor/jszip.min.js?v=48"></script>
-    <script src="epub-parser.js?v=48"></script>
-    <script src="app.js?v=48"></script>
+    <script src="i18n.js?v=49"></script>
+    <script src="vendor/jszip.min.js?v=49"></script>
+    <script src="epub-parser.js?v=49"></script>
+    <script src="app.js?v=49"></script>
 </body>
 </html>

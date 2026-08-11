@@ -1,6 +1,6 @@
 'use strict';
 
-const Core = globalThis.PaceFlowExtensionCore;
+const Core = globalThis.HummingReadExtensionCore;
 const statusElement = document.getElementById('status');
 const textInput = document.getElementById('textInput');
 const actionButtons = Array.from(document.querySelectorAll('button'));
@@ -28,78 +28,60 @@ function showStatus(text, type = '') {
   statusElement.className = `status ${type}`.trim();
 }
 
-async function getActiveTab() {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  if (!tab?.id) throw new Error(message('normalPageRequired'));
-  return tab;
-}
-
-async function selectedText(tab) {
-  const [{ result = '' } = {}] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => String(window.getSelection?.() || '').trim()
-  });
-  return result;
-}
-
-async function send(payload) {
+async function request(type, payload = {}) {
   setBusy(true);
-  showStatus(message('openingStatus'));
+  showStatus(message('preparingStatus'));
   try {
-    const response = await chrome.runtime.sendMessage({ type: 'paceflow:send-payload', payload });
-    if (!response?.ok) throw new Error(response?.error || message('sendFailed'));
-    showStatus(message('sentStatus'), 'success');
-    setTimeout(() => window.close(), 650);
+    const response = await chrome.runtime.sendMessage({ type, ...payload });
+    if (!response?.ok) throw new Error(response?.error || message('readFailed'));
+    showStatus(message('openedStatus'), 'success');
+    setTimeout(() => window.close(), 350);
   } catch (error) {
-    showStatus(error.message || message('sendFailed'), 'error');
+    showStatus(error.message || message('readFailed'), 'error');
     setBusy(false);
   }
 }
 
-document.getElementById('selectionBtn').addEventListener('click', async () => {
-  try {
-    const tab = await getActiveTab();
-    const text = await selectedText(tab);
-    if (!text) throw new Error(message('noSelection'));
-    await send({ type: 'text', text, title: tab.title, sourceUrl: tab.url });
-  } catch (error) {
-    showStatus(error.message || message('sendFailed'), 'error');
-  }
+document.getElementById('selectionBtn').addEventListener('click', () => {
+  request('hummingread:read-selection');
 });
 
-document.getElementById('articleBtn').addEventListener('click', async () => {
-  try {
-    const tab = await getActiveTab();
-    await send({ type: 'url', url: tab.url, title: tab.title });
-  } catch (error) {
-    showStatus(error.message || message('sendFailed'), 'error');
-  }
+document.getElementById('pageBtn').addEventListener('click', () => {
+  request('hummingread:extract-page');
 });
 
-document.getElementById('clipboardBtn').addEventListener('click', async () => {
+document.getElementById('readTextBtn').addEventListener('click', () => {
+  let payload;
   try {
-    const text = String(await navigator.clipboard.readText()).trim();
-    if (!text) throw new Error(message('clipboardEmpty'));
-    textInput.value = text;
-    const tab = await getActiveTab().catch(() => null);
-    await send({ type: 'text', text, title: tab?.title || message('copiedTextTitle'), sourceUrl: tab?.url });
-  } catch (error) {
-    showStatus(error.message || message('clipboardFailed'), 'error');
-  }
-});
-
-document.getElementById('sendTextBtn').addEventListener('click', async () => {
-  try {
-    const tab = await getActiveTab().catch(() => null);
-    await send({
+    payload = Core.normalizePayload({
       type: 'text',
       text: textInput.value,
-      title: tab?.title || message('copiedTextTitle'),
-      sourceUrl: tab?.url
+      title: message('pastedTextTitle')
     });
   } catch (error) {
-    showStatus(error.message || message('sendFailed'), 'error');
+    showStatus(error.message || message('readFailed'), 'error');
+    return;
   }
+  request('hummingread:open-local', { payload });
+});
+
+document.getElementById('quickSendBtn').addEventListener('click', () => {
+  let payload;
+  try {
+    payload = Core.normalizePayload({
+      type: 'text',
+      text: textInput.value,
+      title: message('pastedTextTitle')
+    });
+  } catch (error) {
+    showStatus(message('quickSendNeedsText'), 'error');
+    return;
+  }
+  request('hummingread:quick-send', { payload });
+});
+
+textInput.addEventListener('paste', () => {
+  showStatus(message('pasteDetectedStatus'));
 });
 
 localize();

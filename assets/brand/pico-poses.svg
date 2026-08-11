@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 360" role="img" aria-labelledby="title desc">
+  <title id="title">Pico state and pose sheet</title>
+  <desc id="desc">Six editable hummingbird states: idle, focused, pause, import success, empty library, and gentle error.</desc>
+  <defs>
+    <g id="pico">
+      <path d="M82 147C30 111 23 54 45 20c51 20 86 58 102 104M93 154c-56 7-91 44-96 84 53 5 103-18 135-55" fill="#75d3bd" stroke="#101529" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M113 140c14-50 58-76 104-63 45 12 66 56 48 96-18 42-67 64-114 51-42-12-61-46-38-84Z" fill="#3156d8" stroke="#101529" stroke-width="9"/>
+      <path d="m211 91 94-11-82 35" fill="#f2ad4c" stroke="#101529" stroke-width="7"/>
+      <path d="m146 213-7 63 33-24 29 25 2-64" fill="#17233f" stroke="#101529" stroke-width="8"/>
+      <circle cx="216" cy="117" r="13" fill="#fffaf0" stroke="#101529" stroke-width="6"/><circle cx="220" cy="118" r="5" fill="#101529"/>
+      <circle cx="118" cy="149" r="7" fill="#e96d72" stroke="#101529" stroke-width="3"/>
+    </g>
+  </defs>
+  <rect width="1800" height="360" fill="#f5eedf"/>
+  <g transform="translate(15 35)"><use href="#pico"/><text x="98" y="312" font-family="Arial" font-weight="700">CALM IDLE</text></g>
+  <g transform="translate(310 35)"><use href="#pico"/><path d="M108 149h30" stroke="#f2ad4c" stroke-width="7"/><text x="84" y="312" font-family="Arial" font-weight="700">FOCUSED</text></g>
+  <g transform="translate(605 35)"><use href="#pico"/><path d="M15 130v48m24-48v48" stroke="#e96d72" stroke-width="11"/><text x="78" y="312" font-family="Arial" font-weight="700">PAUSE / CONTEXT</text></g>
+  <g transform="translate(900 35)"><use href="#pico"/><path d="m18 151 18 19 39-48" fill="none" stroke="#42bda2" stroke-width="12"/><text x="69" y="312" font-family="Arial" font-weight="700">IMPORT SUCCESS</text></g>
+  <g transform="translate(1195 35)"><use href="#pico"/><path d="M18 169h65v48H18z" fill="#fffaf0" stroke="#101529" stroke-width="7"/><text x="72" y="312" font-family="Arial" font-weight="700">EMPTY LIBRARY</text></g>
+  <g transform="translate(1490 35)"><use href="#pico"/><path d="M35 115c-18 15-18 41 0 55" fill="none" stroke="#e96d72" stroke-width="9"/><text x="76" y="312" font-family="Arial" font-weight="700">GENTLE ERROR</text></g>
+</svg>

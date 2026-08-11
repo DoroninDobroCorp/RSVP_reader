@@ -12,7 +12,7 @@
 			<string>ru</string>
 		</array>
 		<key>CFBundleDisplayName</key>
-        <string>PaceFlow Reader</string>
+        <string>HummingRead</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" role="img" aria-labelledby="title desc">
+  <title id="title">HummingRead Chrome marquee</title>
+  <desc id="desc">A bold HummingRead RSVP stage with Pico flying through the card boundary.</desc>
+  <rect width="1400" height="560" fill="#17233f"/>
+  <path d="M0 470C233 371 381 486 610 417s441 26 790-150v293H0Z" fill="#75d3bd" opacity=".22"/>
+  <circle cx="1270" cy="85" r="190" fill="#3156d8" opacity=".25"/>
+  <text x="75" y="93" fill="#75d3bd" font-family="Arial,sans-serif" font-size="24" font-weight="800" letter-spacing="5">YOUR LOCAL FOCUS PILOT</text>
+  <text x="70" y="205" fill="#fffaf0" font-family="Impact,Arial Narrow,sans-serif" font-size="105" font-weight="900">HUMMING</text>
+  <text x="70" y="306" fill="#75d3bd" font-family="Impact,Arial Narrow,sans-serif" font-size="105" font-weight="900">READ</text>
+  <text x="78" y="357" fill="#fffaf0" font-family="Arial,sans-serif" font-size="27" font-weight="600">Selections, pages &amp; paste.</text>
+  <text x="78" y="393" fill="#fffaf0" font-family="Arial,sans-serif" font-size="27" font-weight="600">One word at a time.</text>
+  <rect x="76" y="430" width="311" height="73" rx="18" fill="#f2ad4c" stroke="#101529" stroke-width="6"/>
+  <text x="115" y="476" fill="#101529" font-family="Arial,sans-serif" font-size="24" font-weight="900">READ LOCALLY</text>
+  <g transform="translate(714 79)">
+    <rect x="0" y="0" width="492" height="402" rx="32" fill="#fffaf0" stroke="#101529" stroke-width="9"/>
+    <circle cx="41" cy="40" r="8" fill="#e96d72"/><circle cx="67" cy="40" r="8" fill="#f2ad4c"/><circle cx="93" cy="40" r="8" fill="#75d3bd"/>
+    <text x="56" y="113" fill="#39445c" font-family="Arial,sans-serif" font-size="19" font-weight="800" letter-spacing="3">320 WPM</text>
+    <rect x="54" y="143" width="382" height="141" rx="22" fill="#f4eedf" stroke="#101529" stroke-width="5"/>
+    <text x="131" y="235" fill="#101529" font-family="Arial,sans-serif" font-size="62" font-weight="800">fo</text>
+    <text x="196" y="235" fill="#e96d72" font-family="Arial,sans-serif" font-size="62" font-weight="900">c</text>
+    <text x="231" y="235" fill="#101529" font-family="Arial,sans-serif" font-size="62" font-weight="800">us</text>
+    <rect x="55" y="311" width="165" height="55" rx="15" fill="#75d3bd" stroke="#101529" stroke-width="5"/>
+    <text x="84" y="346" fill="#101529" font-family="Arial,sans-serif" font-size="18" font-weight="900">▶ PLAY</text>
+    <rect x="238" y="311" width="198" height="55" rx="15" fill="#fffaf0" stroke="#101529" stroke-width="5"/>
+    <text x="270" y="346" fill="#101529" font-family="Arial,sans-serif" font-size="18" font-weight="900">↶ 10 WORDS</text>
+  </g>
+  <g transform="translate(1084 -1) scale(.30) rotate(5 512 512)">
+    <path d="M392 498C218 390 177 222 229 126c139 44 256 157 304 303M430 516C264 557 153 686 149 811c151 5 292-73 372-194" fill="#75d3bd" stroke="#101529" stroke-width="34" stroke-linejoin="round"/>
+    <path d="M459 501c38-158 162-250 301-221 132 27 197 153 147 271-45 107-166 174-302 158-126-14-215-95-221-193" fill="#3156d8" stroke="#101529" stroke-width="34"/>
+    <path d="m706 319 291 40-238 24" fill="#f2ad4c" stroke="#101529" stroke-width="28"/>
+    <path d="M524 690l-34 189 98-64 78 75 15-195" fill="#17233f" stroke="#101529" stroke-width="30"/>
+    <circle cx="745" cy="405" r="43" fill="#fffaf0" stroke="#101529" stroke-width="22"/><circle cx="758" cy="407" r="15" fill="#101529"/>
+    <circle cx="504" cy="512" r="24" fill="#e96d72" stroke="#101529" stroke-width="12"/>
+  </g>
+</svg>

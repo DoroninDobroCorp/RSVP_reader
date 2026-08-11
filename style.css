@@ -2170,6 +2170,35 @@ input:focus {
         font-size: 0.85rem;
     }
 
+    .rsvp-controls {
+        flex-wrap: nowrap;
+        gap: 4px;
+    }
+
+    .rewind-control { width: 58px; }
+
+    .rsvp-speed-group {
+        min-height: 44px;
+        grid-template-columns: 40px 72px 40px;
+    }
+
+    .rsvp-speed-group .control-btn {
+        width: 40px;
+        height: 42px;
+    }
+
+    .rsvp-speed-group output {
+        min-width: 72px;
+        font-size: .68rem;
+    }
+
+    .demo-coach {
+        right: 8px;
+        bottom: 56px;
+        width: 320px;
+        padding: 10px;
+    }
+
     .rsvp-progress .progress-bars-container {
         display: none;
     }
@@ -2577,6 +2606,24 @@ body::before {
     box-shadow: 3px 3px 0 var(--brand-line);
 }
 
+.composer-panel .hero-import-btn {
+    min-height: 52px;
+    padding: 13px 19px;
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+    border: 2px solid var(--brand-line);
+    border-radius: 13px;
+    box-shadow: 5px 5px 0 var(--brand-line);
+    font-weight: 850;
+}
+
+.composer-panel .hero-import-btn:hover {
+    color: var(--brand-ink);
+    background: var(--brand-amber);
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0 var(--brand-line);
+}
+
 .hero-promise {
     max-width: 25ch;
     color: #4b566d;
@@ -2619,7 +2666,6 @@ body::before {
     bottom: -13%;
     pointer-events: none;
     filter: drop-shadow(9px 13px 0 rgba(16, 21, 41, 0.18));
-    animation: pico-hover 4.8s ease-in-out infinite;
     transform-origin: 58% 76%;
 }
 
@@ -2908,6 +2954,14 @@ body::before {
     color: var(--brand-amber);
 }
 
+.dock-editor .source-number {
+    color: var(--brand-cobalt);
+}
+
+.article-import.source-card .source-card-heading > div > span {
+    color: rgba(245, 238, 223, .82);
+}
+
 .article-import-controls input {
     min-height: 47px;
     border: 2px solid var(--brand-line);
@@ -3006,6 +3060,248 @@ body::before {
     white-space: normal;
 }
 
+.store-review-state {
+    position: relative;
+    z-index: 4;
+    width: min(62%, 310px);
+    color: rgba(245, 238, 223, 0.72);
+    font-size: 0.72rem;
+    font-weight: 750;
+}
+
+.continue-reading-card {
+    position: relative;
+    z-index: 12;
+    width: calc(100% - 36px);
+    min-height: 108px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 18px;
+    margin: 0 18px 18px;
+    padding: 18px 120px 18px 22px;
+    overflow: visible;
+    color: var(--brand-paper-light);
+    text-align: left;
+    background:
+        radial-gradient(circle at 91% 20%, rgba(117, 211, 189, .35), transparent 9rem),
+        var(--brand-navy);
+    border: 3px solid var(--brand-line);
+    border-radius: 18px 7px 18px 7px;
+    box-shadow: 7px 7px 0 var(--brand-amber);
+}
+
+.continue-reading-card::after {
+    position: absolute;
+    z-index: 1;
+    right: -22px;
+    bottom: -20px;
+    width: 170px;
+    height: 113px;
+    content: "";
+    background: url("assets/brand/pico-quick-send-640.webp") center / contain no-repeat;
+    filter: drop-shadow(4px 5px 0 rgba(0, 0, 0, .22));
+    transform: rotate(-9deg);
+    pointer-events: none;
+}
+
+.continue-reading-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.continue-reading-card:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 5px 5px 0 var(--brand-amber);
+}
+
+.continue-kicker {
+    grid-column: 1;
+    color: var(--brand-mint);
+    font-size: .7rem;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.continue-reading-card strong {
+    grid-column: 1;
+    overflow: hidden;
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.continue-reading-card > span:nth-of-type(2) {
+    grid-column: 1;
+    color: rgba(245, 238, 223, .78);
+    font-size: .82rem;
+}
+
+.continue-arrow {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    color: var(--brand-amber);
+    font-size: 2rem;
+    transform: translateY(-50%);
+}
+
+.product-story {
+    position: relative;
+    isolation: isolate;
+    overflow: visible;
+    margin-top: 30px;
+    padding: clamp(24px, 5vw, 54px);
+    color: var(--brand-ink);
+    background: var(--brand-paper-light);
+    border: 3px solid var(--brand-line);
+    border-radius: 12px 30px 12px 30px;
+    box-shadow: 9px 9px 0 var(--brand-mint);
+}
+
+.product-story::before {
+    position: absolute;
+    z-index: 2;
+    width: 230px;
+    height: 153px;
+    right: 34px;
+    top: -105px;
+    content: "";
+    background: url("assets/brand/pico-quick-send-640.webp") center / contain no-repeat;
+    filter: drop-shadow(5px 7px 0 rgba(16, 21, 41, .16));
+    pointer-events: none;
+    transform: rotate(-3deg);
+}
+
+.product-story > * {
+    position: relative;
+    z-index: 3;
+}
+
+.story-heading { max-width: 760px; }
+
+.story-heading h2 {
+    margin: 4px 0 12px;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5.4rem);
+    line-height: .92;
+    letter-spacing: -.025em;
+    text-transform: uppercase;
+}
+
+.story-heading > p:last-child { margin: 0; color: #4b566d; line-height: 1.65; }
+
+.benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.benefit-grid article {
+    min-height: 190px;
+    padding: 18px;
+    background: var(--brand-paper);
+    border: 2px solid var(--brand-line);
+    border-radius: 8px 18px 8px 18px;
+    box-shadow: 4px 4px 0 var(--brand-line);
+}
+
+.benefit-grid article > span {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+    border: 2px solid var(--brand-line);
+    border-radius: 50%;
+    font-size: .68rem;
+    font-weight: 900;
+}
+
+.benefit-grid h3 { margin: 16px 0 8px; font-size: 1.05rem; }
+.benefit-grid p { margin: 0; color: #4b566d; font-size: .88rem; line-height: 1.6; }
+
+.product-links {
+    display: flex;
+    align-items: center;
+    gap: 12px 22px;
+    flex-wrap: wrap;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 2px solid var(--brand-line);
+    font-size: .82rem;
+    font-weight: 750;
+}
+
+.product-links a { color: var(--brand-cobalt); }
+.product-links span { color: #667085; }
+
+.product-faq { margin-top: 18px; color: #39445c; }
+.product-faq summary { cursor: pointer; color: var(--brand-ink); font-weight: 850; }
+.product-faq p { max-width: 72ch; line-height: 1.6; }
+
+.rsvp-controls { flex-wrap: wrap; }
+
+.rsvp-speed-group {
+    min-height: 52px;
+    display: grid;
+    grid-template-columns: 52px minmax(88px, auto) 52px;
+    align-items: center;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+}
+
+.rsvp-speed-group .control-btn {
+    border: 0;
+    border-radius: 0;
+}
+
+.rsvp-speed-group output {
+    min-width: 88px;
+    color: var(--accent);
+    font-size: .82rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.rewind-control {
+    width: 64px;
+    border-radius: 16px;
+    font-size: .82rem;
+}
+
+.demo-coach {
+    position: absolute;
+    z-index: 95;
+    right: max(18px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--rsvp-bottom-zone-height) + 138px);
+    width: min(390px, calc(100% - 36px));
+    padding: 16px;
+    color: var(--brand-ink);
+    background: var(--brand-paper-light);
+    border: 3px solid var(--brand-line);
+    border-radius: 18px 7px 18px 7px;
+    box-shadow: 7px 7px 0 var(--brand-mint);
+}
+
+.demo-coach > span {
+    color: var(--brand-cobalt);
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .1em;
+}
+
+.demo-coach strong { display: block; margin-top: 5px; font-size: 1.08rem; }
+.demo-coach p { margin: 6px 0 12px; color: #4b566d; font-size: .84rem; line-height: 1.45; }
+.demo-coach > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.demo-coach .secondary-btn { color: var(--brand-ink); background: var(--brand-paper); border-color: var(--brand-line); }
+
 .extension-action.source-card .extension-install {
     width: min(62%, 310px);
     grid-column: auto;
@@ -3085,6 +3381,10 @@ body::before {
     }
 
     .composer-panel .hero-demo-btn {
+        width: 100%;
+    }
+
+    .composer-panel .hero-import-btn {
         width: 100%;
     }
 
@@ -3178,19 +3478,21 @@ body::before {
     }
 
     .extension-action.source-card {
-        min-height: 410px;
+        min-height: 440px;
+        padding-bottom: 94px;
     }
 
     .extension-action-copy,
     .extension-action.source-card > a,
+    .store-review-state,
     .extension-action.source-card .extension-install {
         width: 70%;
     }
 
     .pico-quick-send {
-        width: 79%;
-        right: -9%;
-        bottom: -8%;
+        width: 74%;
+        right: -12%;
+        bottom: -18%;
     }
 
     .dock-footer-actions {
@@ -3202,6 +3504,25 @@ body::before {
         flex: 0 0 auto;
         min-height: 50px;
         width: 100%;
+    }
+
+    .benefit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .product-story::before {
+        width: 178px;
+        height: 119px;
+        right: -18px;
+        top: -78px;
+    }
+
+    .benefit-grid article {
+        min-height: 0;
+    }
+
+    .demo-coach {
+        bottom: calc(var(--rsvp-bottom-zone-height) + 146px);
     }
 }
 
@@ -3240,14 +3561,108 @@ body::before {
 
     .extension-action-copy,
     .extension-action.source-card > a,
+    .store-review-state,
     .extension-action.source-card .extension-install {
-        width: 78%;
+        width: 72%;
     }
 
     .pico-quick-send {
-        width: 86%;
-        right: -8%;
-        bottom: -7%;
+        width: 78%;
+        right: -12%;
+        bottom: -15%;
+    }
+
+    .continue-reading-card {
+        width: calc(100% - 12px);
+        margin-inline: 6px;
+        padding-left: 16px;
+    }
+
+    .rsvp-speed-group {
+        grid-template-columns: 44px minmax(76px, auto) 44px;
+        min-height: 45px;
+    }
+
+    .rsvp-speed-group .control-btn {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (max-width: 760px) and (max-height: 650px) {
+    .pico-hero-copy {
+        padding: 18px 18px 6px;
+    }
+
+    .pico-hero h1 {
+        margin: 12px 0 10px;
+        font-size: clamp(2.75rem, 14vw, 3.6rem);
+    }
+
+    .pico-hero-copy > p {
+        font-size: .86rem;
+        line-height: 1.4;
+    }
+
+    .hero-actions {
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .composer-panel .hero-demo-btn,
+    .composer-panel .hero-import-btn {
+        min-height: 46px;
+        padding-block: 9px;
+    }
+
+    .pico-hero .privacy-card {
+        margin-top: 12px;
+    }
+}
+
+/* The complete focus control set intentionally remains available on the
+   smallest supported phone. Give its two compact rows real space instead of
+   allowing the final pause target to fall below the viewport. */
+@media (max-width: 390px) and (max-height: 620px) {
+    :root,
+    [data-theme="night"],
+    [data-theme="day"] {
+        --rsvp-bottom-zone-height: 48px;
+    }
+
+    .rsvp-container {
+        grid-template-rows: auto minmax(68px, 1fr) 0 auto auto var(--rsvp-bottom-zone-height);
+        gap: 4px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .rsvp-word-wrapper,
+    .rsvp-word {
+        min-height: 68px;
+    }
+
+    .rsvp-controls {
+        gap: 4px;
+    }
+
+    .rsvp-progress .rsvp-scrubber {
+        height: 24px;
+        margin-bottom: 0;
+    }
+
+    .rsvp-progress .progress-bars-container {
+        display: none;
+    }
+
+    .progress-stats {
+        margin-top: 1px;
+    }
+
+    .rsvp-bottom-tap {
+        min-height: 44px;
+        border-radius: 12px;
+        font-size: .86rem;
     }
 }
 

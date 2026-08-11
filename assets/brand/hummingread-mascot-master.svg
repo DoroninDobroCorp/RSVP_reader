@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pico, the HummingRead focus pilot</title>
+  <desc id="desc">Original geometric hummingbird with a steady eye, fast wings, coral focus point, and bookmark tail.</desc>
+  <defs>
+    <linearGradient id="wing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#75d3bd"/><stop offset="1" stop-color="#3156d8"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#101529" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M392 498C218 390 177 222 229 126c139 44 256 157 304 303" fill="url(#wing)" stroke-width="28"/>
+    <path d="M430 516C264 557 153 686 149 811c151 5 292-73 372-194" fill="#75d3bd" stroke-width="28"/>
+    <path d="M459 501c38-158 162-250 301-221 132 27 197 153 147 271-45 107-166 174-302 158-126-14-215-95-221-193" fill="#3156d8" stroke-width="30"/>
+    <path d="M706 319c58-52 123-70 191-55-47 46-91 88-138 119" fill="#f2ad4c" stroke-width="24"/>
+    <path d="M885 387l112-28-105 70" fill="#f2ad4c" stroke-width="22"/>
+    <path d="M524 690l-34 189 98-64 78 75 15-195" fill="#17233f" stroke-width="28"/>
+    <path d="M357 541c72 22 128 74 159 142" stroke="#e96d72" stroke-width="20"/>
+    <circle cx="745" cy="405" r="43" fill="#fffaf0" stroke-width="22"/>
+    <circle cx="758" cy="407" r="15" fill="#101529" stroke="none"/>
+    <circle cx="763" cy="401" r="5" fill="#fffaf0" stroke="none"/>
+    <circle cx="504" cy="512" r="24" fill="#e96d72" stroke-width="12"/>
+    <path d="M104 445h149M72 501h205M124 560h106" stroke="#75d3bd" stroke-width="20"/>
+  </g>
+</svg>

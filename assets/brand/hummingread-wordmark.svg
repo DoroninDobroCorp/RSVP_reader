@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">HummingRead wordmark</title>
+  <desc id="desc">Horizontal Pico and HummingRead lockup.</desc>
+  <rect width="1200" height="300" rx="42" fill="#fffaf0"/>
+  <g transform="translate(26 24) scale(.245)">
+    <path d="M392 498C218 390 177 222 229 126c139 44 256 157 304 303M430 516C264 557 153 686 149 811c151 5 292-73 372-194" fill="#75d3bd" stroke="#101529" stroke-width="34" stroke-linejoin="round"/>
+    <path d="M459 501c38-158 162-250 301-221 132 27 197 153 147 271-45 107-166 174-302 158-126-14-215-95-221-193" fill="#3156d8" stroke="#101529" stroke-width="34"/>
+    <path d="M706 319l291 40-238 24" fill="#f2ad4c" stroke="#101529" stroke-width="28"/>
+    <circle cx="745" cy="405" r="43" fill="#fffaf0" stroke="#101529" stroke-width="22"/><circle cx="758" cy="407" r="15" fill="#101529"/>
+  </g>
+  <text x="300" y="145" fill="#101529" font-family="Inter,Arial,sans-serif" font-size="94" font-weight="900" letter-spacing="-5">HummingRead</text>
+  <text x="306" y="205" fill="#3156d8" font-family="Inter,Arial,sans-serif" font-size="27" font-weight="800" letter-spacing="6">RSVP · ONE WORD AT A TIME</text>
+  <circle cx="1090" cy="150" r="25" fill="#e96d72" stroke="#101529" stroke-width="8"/>
+</svg>

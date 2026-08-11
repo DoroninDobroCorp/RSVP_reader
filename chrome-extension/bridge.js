@@ -1,7 +1,7 @@
 'use strict';
 
 (function deliverPendingImport() {
-  const Core = globalThis.PaceFlowExtensionCore;
+  const Core = globalThis.HummingReadExtensionCore;
   const pageUrl = new URL(window.location.href);
   const nonce = pageUrl.searchParams.get(Core.HANDOFF_PARAM);
   if (!Core.isValidNonce(nonce)) return;
@@ -22,14 +22,14 @@
     finished = true;
     clearTimeout(retryTimer);
     window.removeEventListener('message', handleResult);
-    await chrome.runtime.sendMessage({ type: 'paceflow:clear-pending', nonce }).catch(() => undefined);
+    await chrome.runtime.sendMessage({ type: 'hummingread:clear-pending', nonce }).catch(() => undefined);
     cleanHandoffUrl();
   }
 
   function handleResult(event) {
     const message = event.data;
     if (event.source !== window || event.origin !== window.location.origin) return;
-    if (message?.channel !== 'paceflow-extension' || message?.type !== 'paceflow-import-result') return;
+    if (message?.channel !== 'hummingread-extension' || message?.type !== 'hummingread-import-result') return;
     if (message.nonce !== nonce) return;
     finish();
   }
@@ -38,7 +38,7 @@
     if (finished) return;
     attempt += 1;
     if (!payload) {
-      const response = await chrome.runtime.sendMessage({ type: 'paceflow:get-pending', nonce }).catch(() => null);
+      const response = await chrome.runtime.sendMessage({ type: 'hummingread:get-pending', nonce }).catch(() => null);
       if (!response?.ok) {
         if (attempt >= 40) await finish();
         else retryTimer = setTimeout(deliver, 350);
@@ -48,8 +48,8 @@
     }
 
     window.postMessage({
-      channel: 'paceflow-extension',
-      type: 'paceflow-extension-import',
+      channel: 'hummingread-extension',
+      type: 'hummingread-extension-import',
       version: 1,
       nonce,
       payload

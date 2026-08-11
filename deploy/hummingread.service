@@ -1,0 +1,37 @@
+[Unit]
+Description=HummingRead article extraction service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=paceflow
+Group=paceflow
+WorkingDirectory=/srv/RSVP_reader
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=8081
+ExecStart=/usr/bin/node /srv/RSVP_reader/server.js
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ReadOnlyPaths=/srv/RSVP_reader
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

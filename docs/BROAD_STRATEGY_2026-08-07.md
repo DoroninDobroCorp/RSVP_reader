@@ -1,5 +1,7 @@
 # PaceFlow Reader — широкий продуктовый и рыночный пересмотр
 
+> **Historical strategy snapshot (2026-08-07).** It predates the HummingRead provisional brand decision and standalone extension. Names and implementation statements below are preserved only as dated research, not current release copy.
+
 Дата: 7 августа 2026 года.
 
 ## Новое решение

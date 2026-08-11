@@ -1,28 +1,24 @@
-# PaceFlow Quick Send for Chrome
+# HummingRead local speed reader for Chrome
 
-Manifest V3 extension for sending a selection, copied text, a link, or the current article to PaceFlow Reader.
+Manifest V3 extension for reading selected, locally extracted, or explicitly
+pasted text in a standalone RSVP reader. It works without the website or an
+account and persists its reader settings and position in extension-local
+storage.
 
-## Install from the website package
+The tracked manifest has no host permission. The deterministic tester build
+injects the one preview origin from `product.config.json` so the separate
+**Quick Send to web preview** action can complete an explicit handoff. A
+production package cannot be built until the final domain and store URLs are
+owner-approved.
 
-1. Download `paceflow-quick-send.zip` from the PaceFlow website and extract it.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked** and select the extracted folder.
-5. Pin PaceFlow Quick Send to the toolbar.
+Permissions:
 
-## Use
+- `activeTab` and `scripting` read the selected/current page only after a user
+  action;
+- `contextMenus` exposes the two local reading commands;
+- `storage` persists local text, progress, settings, and short-lived handoffs;
+- `alarms` expires pending Quick Send and reader handoff records after ten
+  minutes.
 
-- Select text and choose **Read selection in PaceFlow** from the context menu.
-- Right-click a page or link and send the article.
-- Open the toolbar popup to send the current selection, clipboard text, pasted text, or the current page.
-- Press `Alt+Shift+R` to send the selection; when no text is selected, the current page is sent as an article URL.
-
-## Privacy and permissions
-
-- `activeTab` and `scripting` are used only after a click or shortcut to read the current selection.
-- `clipboardRead` is used only when **Read copied text** is pressed.
-- `contextMenus` adds the three explicit PaceFlow actions.
-- `alarms` removes an undelivered in-memory handoff when its ten-minute lifetime ends.
-- `storage.session` holds one-time handoffs in memory for at most ten minutes; successful and expired handoffs are deleted.
-- Host access is limited to the production PaceFlow website path.
-- The extension contains no analytics, remote code, account, or browsing-history permission.
+There is no clipboard, history, tabs, all-sites, analytics, advertising, or
+remote-code permission. Paste is handled by the ordinary explicit paste event.

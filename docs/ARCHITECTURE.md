@@ -1,32 +1,25 @@
-# Architecture
+# HummingRead architecture
 
-## Reader engine
+## Surfaces and trust boundaries
 
-- Framework-free reader in `app.js`: token safety, word chunking, punctuation timing, ORP focus, WPM, progress, search, TOC, bookmarks, and accessible controls.
-- Format parsing in `epub-parser.js` and the import helpers in `app.js`.
-- Local-first IndexedDB/localStorage persistence with a Capacitor Filesystem/Preferences mirror for iOS.
+- `index.html`, `app.js`, `i18n.js`, `style.css`, parsers, and `service-worker.js` form the web/PWA reader. Books, pasted text, progress, bookmarks, and settings are local.
+- Capacitor copies the deterministic web build into `ios/App/App/public/`. Native iOS removes web article import and cloud sync, mirrors durable books to native app storage, and uses pinned Keep Awake APIs.
+- `server.js` exposes only health/static development behavior and guarded `/api/article`; `/api/sync` is permanently 404. Production binds loopback behind the prepared nginx policy.
+- `chrome-extension/` is a Manifest V3 standalone reader. Selection/page/paste input is processed locally. Quick Send is a secondary nonce-scoped handoff to one configured preview origin.
+- `scripts/build-web.mjs` creates only public `dist/` assets plus `dist/downloads/hummingread-tester.zip`. Native and nginx publish/copy this public tree, never the repository root.
 
-## Delivery surfaces
+## Persistence
 
-- Web/PWA source is built reproducibly into `dist/` and served under `/rsvp/`.
-- Capacitor copies the same built assets into `ios/App/App/public`.
-- The optional Manifest V3 Chrome extension is sourced from `chrome-extension/` and packaged into `dist/downloads/paceflow-quick-send.zip`.
+The web app uses IndexedDB as primary storage with compatibility mirrors for older installations. Native storage uses generation/version markers, atomic draft/index writes, content signatures, tombstones, and serialized per-book mutations. Existing `paceflow_*` storage keys and the current iOS bundle identifier remain internal compatibility identifiers; they are not customer-facing brand claims and must not be renamed without a tested migration and owner bundle approval.
+
+Legacy unauthenticated cloud sync is inert at the client and server layers. Old local books are preserved. Any ignored historical sync store is backed up, checksum-verified, and moved—not deleted—to root-owned quarantine only during an authorized deployment.
 
 ## Article import
 
-The web/PWA-only `server.js` endpoint accepts a public HTTP(S) URL, validates
-every DNS result and redirect, blocks private/reserved addresses and non-standard
-ports, limits time and size, and extracts readable content in memory. Books
-remain in the browser's local library. The native iOS surface hides the article
-control, resolves no endpoint, and rejects direct programmatic import calls.
+Web/PWA sends only an explicit user-entered credential-free HTTP(S) URL. The server rejects nonstandard ports/protocols/credentials, validates every DNS answer with pinned `ipaddr.js`, allows only public global-unicast destinations, connects to the validated snapshot, revalidates redirects, and enforces type/size/timeout/redirect limits. It stores no article/library record. Production nginx disables article access logging; the bounded raw-IP rate bucket expires after a hard maximum of ten minutes.
 
-## Chrome handoff
+## Builds and upgrade safety
 
-The extension stores a normalized payload behind a random 128-bit nonce in `chrome.storage.session`, opens the PaceFlow site with only that nonce, and uses a host-restricted content script to bridge the payload to the page. The page requires the matching nonce, saves text locally or invokes the guarded article importer, starts focus mode, acknowledges delivery, and causes the extension to remove the payload. See `docs/CHROME_EXTENSION.md`.
+`product.config.json` is the name/version/URL source of truth. Preview artifacts allow the documented temporary origin; production-mode verification fails until owner-approved final URLs exist. Cache generation `v49` precaches the app shell, acknowledgements, and required artwork while removing old/current branded cache prefixes. The separately downloadable tester ZIP and article/sync API responses are never cached.
 
-## UI layer
-
-- Pico is the product character: an indigo hummingbird with a mint rhythm trail, amber focus point, and bookmark-shaped tail. The canonical rules and source assets are documented in `docs/BRAND_SYSTEM.md`.
-- Responsive EN/RU interface with day/night themes, an editorial cream/navy/cobalt/mint system, and accessible dialogs.
-- Keyboard, touch, Media Session, focus scrubber, and compact mobile layouts.
-- Built-in demo, manual URL import, file import, and the Chrome Quick Send installation card.
+Web and extension builds are deterministic. Package, brand, notices, service-worker, extension, deployment, and determinism verifiers enforce allowlists, transforms, permissions, placeholders, licenses, native bundle gates, private-root isolation, and byte-stable release outputs.

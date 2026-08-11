@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PaceFlow</title>
+  <title>HummingRead</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -13,37 +13,32 @@
         <img class="brand-mark" src="icons/icon-48.png" width="48" height="48" alt="">
         <div class="brand-copy">
           <span class="pilot-label" aria-hidden="true">PICO · FOCUS PILOT</span>
-          <h1>PaceFlow</h1>
+          <h1>HummingRead</h1>
         </div>
       </div>
-      <p data-i18n="popupTagline">Pico flies what you are reading straight into focus mode.</p>
+      <p data-i18n="popupTagline">Pico holds your gaze still while the words take flight.</p>
       <div class="flight-stage" aria-hidden="true">
         <span class="flight-line flight-line-one"></span>
         <span class="flight-line flight-line-two"></span>
         <img src="assets/pico-quick-send.png" width="420" height="280" alt="">
-        <span class="focus-chip">COPY → FOCUS</span>
+        <span class="focus-chip">LOCAL · PRIVATE</span>
       </div>
     </header>
 
     <section class="action-card quick-actions" aria-labelledby="quickTitle">
       <div class="section-heading">
         <span aria-hidden="true">01</span>
-        <h2 id="quickTitle" data-i18n="quickActions">Quick send</h2>
+        <h2 id="quickTitle" data-i18n="readHere">Read here</h2>
       </div>
       <button id="selectionBtn" class="flight-action action-selection" type="button">
         <span class="action-glyph" aria-hidden="true">Aa</span>
-        <span data-i18n="sendSelection">Read selected text</span>
-        <span class="action-arrow" aria-hidden="true">↗</span>
+        <span data-i18n="readSelection">Read selected text locally</span>
+        <span class="action-arrow" aria-hidden="true">→</span>
       </button>
-      <button id="articleBtn" class="flight-action action-article" type="button">
+      <button id="pageBtn" class="flight-action action-article" type="button">
         <span class="action-glyph" aria-hidden="true">▤</span>
-        <span data-i18n="sendArticle">Read this article</span>
-        <span class="action-arrow" aria-hidden="true">↗</span>
-      </button>
-      <button id="clipboardBtn" class="flight-action action-clipboard" type="button">
-        <span class="action-glyph" aria-hidden="true">⌘</span>
-        <span data-i18n="sendClipboard">Read copied text</span>
-        <span class="action-arrow" aria-hidden="true">↗</span>
+        <span data-i18n="readPage">Extract this page locally</span>
+        <span class="action-arrow" aria-hidden="true">→</span>
       </button>
     </section>
 
@@ -53,16 +48,22 @@
         <h2 id="pasteTitle" data-i18n="pasteTitle">Or paste text</h2>
       </div>
       <textarea id="textInput" maxlength="1500000" data-i18n-placeholder="pastePlaceholder" placeholder="Paste or edit text…"></textarea>
-      <button id="sendTextBtn" class="send-button" type="button">
-        <span data-i18n="sendText">Send text to PaceFlow</span>
-        <span aria-hidden="true">FLY ↗</span>
+      <button id="readTextBtn" class="send-button" type="button">
+        <span data-i18n="readText">Read pasted text locally</span>
+        <span aria-hidden="true">READ →</span>
       </button>
     </section>
 
-    <p id="status" class="status" role="status" aria-live="polite" data-i18n="readyStatus">Ready. Nothing is sent until you choose an action.</p>
+    <details class="preview-card">
+      <summary data-i18n="quickSendSummary">Optional Quick Send to web preview</summary>
+      <p data-i18n="quickSendHint">This leaves the extension and opens the configured tester website. Pasted text is transferred only when you press the button.</p>
+      <button id="quickSendBtn" class="preview-button" type="button" data-i18n="quickSendButton">Quick Send pasted text</button>
+    </details>
+
+    <p id="status" class="status" role="status" aria-live="polite" data-i18n="readyStatus">Standalone reading stays inside this extension.</p>
     <footer>
       <span class="shortcut-key" aria-hidden="true">⌥ ⇧ R</span>
-      <span data-i18n="shortcutHint">Shortcut: Alt+Shift+R sends the selection, or the page when nothing is selected.</span>
+      <span data-i18n="shortcutHint">Alt+Shift+R reads the selection—or the page—locally.</span>
     </footer>
   </main>
   <script src="core.js"></script>

@@ -2,14 +2,13 @@
 
 importScripts('core.js');
 
-const Core = self.PaceFlowExtensionCore;
-const MENU_SELECTION = 'paceflow-read-selection';
-const MENU_PAGE = 'paceflow-read-page';
-const MENU_LINK = 'paceflow-read-link';
-const EXPIRATION_ALARM_PREFIX = 'paceflow-expire:';
+const Core = self.HummingReadExtensionCore;
+const MENU_SELECTION = 'hummingread-read-selection';
+const MENU_PAGE = 'hummingread-read-page';
+const EXPIRATION_ALARM_PREFIX = 'hummingread-expire:';
 
-function expirationAlarm(nonce) {
-  return `${EXPIRATION_ALARM_PREFIX}${nonce}`;
+function expirationAlarm(scope, nonce) {
+  return `${EXPIRATION_ALARM_PREFIX}${scope}:${nonce}`;
 }
 
 async function installContextMenus() {
@@ -24,11 +23,6 @@ async function installContextMenus() {
     title: chrome.i18n.getMessage('contextPage'),
     contexts: ['page']
   });
-  chrome.contextMenus.create({
-    id: MENU_LINK,
-    title: chrome.i18n.getMessage('contextLink'),
-    contexts: ['link']
-  });
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -39,36 +33,47 @@ chrome.runtime.onStartup.addListener(() => {
   installContextMenus().catch(console.error);
 });
 
-function isPaceFlowSender(sender) {
+function setTransientBadge(text, color) {
+  chrome.action.setBadgeBackgroundColor({ color }).catch(() => undefined);
+  chrome.action.setBadgeText({ text }).catch(() => undefined);
+  setTimeout(() => chrome.action.setBadgeText({ text: '' }).catch(() => undefined), 1800);
+}
+
+async function resolvePreviewUrl() {
+  const configured = await chrome.storage.local.get('hummingreadPreviewUrl');
+  const defaultUrl = Core.configuredPreviewUrl();
+  const candidate = Core.configuredPreviewUrl(configured.hummingreadPreviewUrl || defaultUrl);
+  if (!candidate) throw new Error('Quick Send is unavailable because this tester build has no configured web preview.');
+  const parsed = new URL(candidate);
+  const configuredDefault = defaultUrl ? new URL(defaultUrl) : null;
+  const isConfiguredPreview = configuredDefault
+    && parsed.origin === configuredDefault.origin
+    && parsed.pathname.startsWith(configuredDefault.pathname);
+  const isLocalTest = ['localhost', '127.0.0.1'].includes(parsed.hostname)
+    && parsed.protocol === 'http:';
+  if (!isConfiguredPreview && !isLocalTest) {
+    throw new Error('Quick Send rejected an untrusted preview address.');
+  }
+  return parsed.href;
+}
+
+async function isHummingReadSender(sender) {
   try {
-    const url = new URL(sender?.url || sender?.tab?.url || '');
-    return (url.origin === 'https://145.239.82.124.sslip.io' && url.pathname.startsWith('/rsvp/'))
-      || ((url.hostname === 'localhost' || url.hostname === '127.0.0.1') && url.port === '8081');
+    const senderUrl = new URL(sender?.url || sender?.tab?.url || '');
+    const previewUrl = new URL(await resolvePreviewUrl());
+    return senderUrl.origin === previewUrl.origin
+      && senderUrl.pathname.startsWith(previewUrl.pathname);
   } catch (error) {
     return false;
   }
 }
 
-async function openPaceFlowHandoff(nonce) {
-  const configured = await chrome.storage.local.get('paceflowBaseUrl');
-  let baseUrl = Core.PACEFLOW_URL;
-  try {
-    const candidate = new URL(configured.paceflowBaseUrl || Core.PACEFLOW_URL);
-    const isProduction = candidate.origin === 'https://145.239.82.124.sslip.io'
-      && candidate.pathname.startsWith('/rsvp/');
-    const isLocal = ['localhost', '127.0.0.1'].includes(candidate.hostname)
-      && candidate.protocol === 'http:'
-      && candidate.port === '8081';
-    if (isProduction || isLocal) baseUrl = candidate.href;
-  } catch (error) {
-    baseUrl = Core.PACEFLOW_URL;
-  }
+async function openQuickSendHandoff(nonce) {
+  const baseUrl = await resolvePreviewUrl();
   const url = Core.buildHandoffUrl(nonce, baseUrl);
   const base = new URL(baseUrl);
-  const tabPattern = `${base.origin}${base.pathname.endsWith('/') ? base.pathname : `${base.pathname}/`}*`;
-  const matchingTabs = await chrome.tabs.query({
-    url: [tabPattern]
-  });
+  const basePath = base.pathname.endsWith('/') ? base.pathname : `${base.pathname}/`;
+  const matchingTabs = await chrome.tabs.query({ url: [`${base.origin}${basePath}*`] });
   const existing = matchingTabs.find((tab) => tab.active) || matchingTabs[0];
   if (existing?.id) {
     await chrome.tabs.update(existing.id, { active: true, url });
@@ -79,31 +84,59 @@ async function openPaceFlowHandoff(nonce) {
   return created.id;
 }
 
-async function queuePayload(rawPayload) {
+async function queueQuickSend(rawPayload) {
   const payload = Core.normalizePayload(rawPayload);
   const nonce = Core.createNonce();
   const now = Date.now();
+  const key = Core.handoffStorageKey(nonce);
   await chrome.storage.session.set({
-    [Core.storageKey(nonce)]: {
-      payload,
-      createdAt: now,
-      expiresAt: now + Core.PENDING_TTL_MS
-    }
+    [key]: { payload, createdAt: now, expiresAt: now + Core.PENDING_TTL_MS }
   });
-  await chrome.alarms.create(expirationAlarm(nonce), { when: now + Core.PENDING_TTL_MS });
+  await chrome.alarms.create(expirationAlarm('handoff', nonce), { when: now + Core.PENDING_TTL_MS });
   try {
-    const tabId = await openPaceFlowHandoff(nonce);
-    setTransientBadge('✓', '#1f9d72');
+    const tabId = await openQuickSendHandoff(nonce);
+    setTransientBadge('↗', '#3156d8');
     return { ok: true, nonce, tabId };
   } catch (error) {
-    await chrome.storage.session.remove(Core.storageKey(nonce));
-    await chrome.alarms.clear(expirationAlarm(nonce));
+    await chrome.storage.session.remove(key);
+    await chrome.alarms.clear(expirationAlarm('handoff', nonce));
     throw error;
   }
 }
 
+async function openLocalReader(rawPayload) {
+  const payload = Core.normalizePayload(rawPayload);
+  if (payload.type !== 'text') throw new Error('Standalone reading requires locally extracted or pasted text.');
+  const nonce = Core.createNonce();
+  const now = Date.now();
+  const key = Core.readerStorageKey(nonce);
+  await chrome.storage.session.set({
+    [key]: { payload, createdAt: now, expiresAt: now + Core.PENDING_TTL_MS }
+  });
+  await chrome.alarms.create(expirationAlarm('reader', nonce), { when: now + Core.PENDING_TTL_MS });
+  const url = new URL(chrome.runtime.getURL('reader.html'));
+  url.searchParams.set('draft', nonce);
+  try {
+    const tab = await chrome.tabs.create({ active: true, url: url.href });
+    setTransientBadge('✓', '#1f9d72');
+    return { ok: true, nonce, tabId: tab.id };
+  } catch (error) {
+    await chrome.storage.session.remove(key);
+    await chrome.alarms.clear(expirationAlarm('reader', nonce));
+    throw error;
+  }
+}
+
+async function openReaderError(message) {
+  const url = new URL(chrome.runtime.getURL('reader.html'));
+  url.searchParams.set('error', String(message || 'This page could not be read locally.').slice(0, 500));
+  await chrome.tabs.create({ active: true, url: url.href });
+}
+
 async function readSelectionFromTab(tab) {
   if (!tab?.id) throw new Error('Open a normal web page first.');
+  const status = Core.isExtractablePageUrl(tab.url);
+  if (!status.ok) throw new Error(status.reason);
   const [{ result = '' } = {}] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: () => String(window.getSelection?.() || '').trim()
@@ -111,83 +144,113 @@ async function readSelectionFromTab(tab) {
   return result;
 }
 
-async function sendSelectionOrPage(tab) {
-  const selection = await readSelectionFromTab(tab).catch(() => '');
-  if (selection) {
-    return queuePayload({ type: 'text', text: selection, title: tab.title, sourceUrl: tab.url });
+async function extractPageFromTab(tab) {
+  if (!tab?.id) throw new Error('Open a normal web page first.');
+  const status = Core.isExtractablePageUrl(tab.url);
+  if (!status.ok) throw new Error(status.reason);
+  let result;
+  try {
+    [{ result } = {}] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: Core.extractReadablePageFromDocument
+    });
+  } catch (error) {
+    throw new Error('Chrome blocked access to this page. Select text manually or paste it into HummingRead.');
   }
-  return queuePayload({ type: 'url', url: tab.url, title: tab.title });
+  if (!result?.ok) throw new Error(result?.error || 'This page does not expose readable text.');
+  return Core.normalizePayload({ type: 'text', ...result });
 }
 
-function setTransientBadge(text, color) {
-  chrome.action.setBadgeBackgroundColor({ color }).catch(() => undefined);
-  chrome.action.setBadgeText({ text }).catch(() => undefined);
-  setTimeout(() => chrome.action.setBadgeText({ text: '' }).catch(() => undefined), 1800);
+async function readSelectionOrPageLocally(tab) {
+  const selection = await readSelectionFromTab(tab).catch(() => '');
+  if (selection) {
+    return openLocalReader({ type: 'text', text: selection, title: tab.title, sourceUrl: tab.url });
+  }
+  return openLocalReader(await extractPageFromTab(tab));
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   let task;
   if (info.menuItemId === MENU_SELECTION) {
-    task = queuePayload({
+    task = openLocalReader({
       type: 'text',
       text: info.selectionText,
       title: tab?.title,
       sourceUrl: info.pageUrl || tab?.url
     });
-  } else if (info.menuItemId === MENU_LINK) {
-    task = queuePayload({ type: 'url', url: info.linkUrl, title: tab?.title });
   } else if (info.menuItemId === MENU_PAGE) {
-    task = queuePayload({ type: 'url', url: info.pageUrl || tab?.url, title: tab?.title });
+    task = extractPageFromTab(tab).then(openLocalReader);
   }
   task?.catch((error) => {
     console.error(error);
     setTransientBadge('!', '#d94c4c');
+    openReaderError(error.message).catch(console.error);
   });
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command !== 'send-selection') return;
+  if (command !== 'read-selection') return;
   chrome.tabs.query({ active: true, lastFocusedWindow: true })
-    .then(([tab]) => sendSelectionOrPage(tab))
+    .then(([tab]) => readSelectionOrPageLocally(tab))
     .catch((error) => {
       console.error(error);
       setTransientBadge('!', '#d94c4c');
+      openReaderError(error.message).catch(console.error);
     });
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (!alarm.name.startsWith(EXPIRATION_ALARM_PREFIX)) return;
-  const nonce = alarm.name.slice(EXPIRATION_ALARM_PREFIX.length);
-  if (!Core.isValidNonce(nonce)) return;
-  chrome.storage.session.remove(Core.storageKey(nonce)).catch(console.error);
+  const match = alarm.name.match(/^hummingread-expire:(handoff|reader):([a-f0-9]{32})$/u);
+  if (!match) return;
+  const [, scope, nonce] = match;
+  const key = scope === 'handoff' ? Core.handoffStorageKey(nonce) : Core.readerStorageKey(nonce);
+  chrome.storage.session.remove(key).catch(console.error);
 });
 
 async function handleMessage(message, sender) {
-  if (message?.type === 'paceflow:send-payload') {
-    return queuePayload(message.payload);
+  if (message?.type === 'hummingread:open-local') {
+    return openLocalReader(message.payload);
   }
 
-  if (message?.type === 'paceflow:get-pending') {
-    if (!isPaceFlowSender(sender) || !Core.isValidNonce(message.nonce)) {
-      return { ok: false, error: 'Invalid PaceFlow handoff.' };
+  if (message?.type === 'hummingread:extract-page') {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const payload = await extractPageFromTab(tab);
+    return message.open === false ? { ok: true, payload } : openLocalReader(payload);
+  }
+
+  if (message?.type === 'hummingread:read-selection') {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const text = await readSelectionFromTab(tab);
+    if (!text) return { ok: false, error: 'Select some text on the page first.' };
+    return openLocalReader({ type: 'text', text, title: tab.title, sourceUrl: tab.url });
+  }
+
+  if (message?.type === 'hummingread:quick-send') {
+    return queueQuickSend(message.payload);
+  }
+
+  if (message?.type === 'hummingread:get-pending') {
+    if (!await isHummingReadSender(sender) || !Core.isValidNonce(message.nonce)) {
+      return { ok: false, error: 'Invalid HummingRead handoff.' };
     }
-    const key = Core.storageKey(message.nonce);
+    const key = Core.handoffStorageKey(message.nonce);
     const result = await chrome.storage.session.get(key);
     const pending = result[key];
     if (!pending || Number(pending.expiresAt) <= Date.now()) {
       await chrome.storage.session.remove(key);
-      await chrome.alarms.clear(expirationAlarm(message.nonce));
+      await chrome.alarms.clear(expirationAlarm('handoff', message.nonce));
       return { ok: false, error: 'The handoff expired.' };
     }
     return { ok: true, payload: pending.payload };
   }
 
-  if (message?.type === 'paceflow:clear-pending') {
-    if (!isPaceFlowSender(sender) || !Core.isValidNonce(message.nonce)) {
-      return { ok: false, error: 'Invalid PaceFlow handoff.' };
+  if (message?.type === 'hummingread:clear-pending') {
+    if (!await isHummingReadSender(sender) || !Core.isValidNonce(message.nonce)) {
+      return { ok: false, error: 'Invalid HummingRead handoff.' };
     }
-    await chrome.storage.session.remove(Core.storageKey(message.nonce));
-    await chrome.alarms.clear(expirationAlarm(message.nonce));
+    await chrome.storage.session.remove(Core.handoffStorageKey(message.nonce));
+    await chrome.alarms.clear(expirationAlarm('handoff', message.nonce));
     return { ok: true };
   }
 
@@ -197,6 +260,6 @@ async function handleMessage(message, sender) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
-    .catch((error) => sendResponse({ ok: false, error: error.message || 'PaceFlow could not open.' }));
+    .catch((error) => sendResponse({ ok: false, error: error.message || 'HummingRead could not complete this action.' }));
   return true;
 });

@@ -1,8 +1,8 @@
-# PaceFlow visual system
+# HummingRead visual system
 
 ## The non-negotiable character
 
-Pico is a **hummingbird** and PaceFlow's focus pilot. The species is part of the product idea: Pico is fast, precise, hovers on one point, and moves in rhythm. Do not replace Pico with an otter, capybara, generic bird, or human figure.
+Pico is a **hummingbird** and HummingRead's focus pilot. The species is part of the product idea: Pico is fast, precise, hovers on one point, and moves in rhythm. Do not replace Pico with an otter, capybara, generic bird, or human figure.
 
 Pico's recognisable anchors are:
 
@@ -56,4 +56,4 @@ Russian hero: **Длинные тексты. Без пробуксовки.**
 
 Pico's role label: **PICO · FOCUS PILOT** / **ПИКО · ПИЛОТ ФОКУСА**.
 
-The Chrome extension is “Quick Send”: selected text, copied text, pasted text, the current article, or a link moves into the private local PaceFlow library and immediately opens focus mode.
+The Chrome extension is a standalone local reader first: selected text, current-page text, and explicit paste open in its own RSVP screen without a server. “Quick Send” is a separate secondary action that opens the configured tester website and transfers only after an explicit click.

@@ -1,5 +1,7 @@
 # PaceFlow Reader — план продолжения
 
+> **Historical execution plan.** Superseded by `MASTER_MISSION.md`, `FOLLOWUP_MISSION.md`, and the 2026-08-11 HummingRead integration. Legacy names remain only as historical context.
+
 > Historical execution record. The former native article-import statement below
 > was superseded on 2026-08-11: iOS v1 is local-only and exposes no article
 > control or article-service endpoint. Current requirements live in the owner's

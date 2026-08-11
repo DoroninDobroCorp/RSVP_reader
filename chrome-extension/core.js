@@ -1,14 +1,15 @@
-(function exposePaceFlowExtensionCore(global) {
+(function exposeHummingReadExtensionCore(global) {
   'use strict';
 
-  const PACEFLOW_URL = 'https://145.239.82.124.sslip.io/rsvp/';
-  const HANDOFF_PARAM = 'paceflow-extension-import';
-  const STORAGE_PREFIX = 'paceflow-pending:';
+  const PREVIEW_URL = '__HUMMINGREAD_MARKETING_SITE_URL__';
+  const HANDOFF_PARAM = 'hummingread-extension-import';
+  const HANDOFF_STORAGE_PREFIX = 'hummingread-pending:';
+  const READER_STORAGE_PREFIX = 'hummingread-reader:';
   const MAX_TEXT_CHARACTERS = 1_500_000;
   const MAX_TITLE_CHARACTERS = 300;
   const PENDING_TTL_MS = 10 * 60 * 1000;
 
-  function normalizeTitle(value, fallback = 'Copied text') {
+  function normalizeTitle(value, fallback = 'Pasted text') {
     const title = String(value || '')
       .replace(/[\u0000-\u001f\u007f]+/gu, ' ')
       .replace(/\s+/gu, ' ')
@@ -57,9 +58,9 @@
     }
 
     const text = String(payload.text || '').replace(/\u0000/gu, '').trim();
-    if (!text) throw new Error('Select, copy, or paste some text first.');
+    if (!text) throw new Error('Select or paste some text first.');
     if (text.length > MAX_TEXT_CHARACTERS) {
-      throw new Error('The selected text is too large. Send the article link instead.');
+      throw new Error('This text is too large. Use a shorter selection (up to 1.5 million characters).');
     }
     return {
       type,
@@ -82,33 +83,152 @@
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
   }
 
-  function storageKey(nonce) {
-    if (!isValidNonce(nonce)) throw new Error('Invalid handoff token.');
-    return `${STORAGE_PREFIX}${nonce}`;
+  function scopedStorageKey(prefix, nonce) {
+    if (!isValidNonce(nonce)) throw new Error('Invalid extension token.');
+    return `${prefix}${nonce}`;
   }
 
-  function buildHandoffUrl(nonce, baseUrl = PACEFLOW_URL) {
+  function handoffStorageKey(nonce) {
+    return scopedStorageKey(HANDOFF_STORAGE_PREFIX, nonce);
+  }
+
+  function readerStorageKey(nonce) {
+    return scopedStorageKey(READER_STORAGE_PREFIX, nonce);
+  }
+
+  function configuredPreviewUrl(value = PREVIEW_URL) {
+    if (String(value).startsWith('__HUMMINGREAD_')) return '';
+    try {
+      return normalizeHttpUrl(value, true);
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function buildHandoffUrl(nonce, baseUrl = configuredPreviewUrl()) {
+    if (!baseUrl) throw new Error('The web preview is not configured in this tester build.');
     const target = new URL(baseUrl);
-    target.searchParams.set(HANDOFF_PARAM, isValidNonce(nonce) ? nonce : storageKey(nonce));
+    target.searchParams.set(HANDOFF_PARAM, isValidNonce(nonce) ? nonce : scopedStorageKey('', nonce));
     return target.href;
+  }
+
+  function isExtractablePageUrl(value) {
+    let parsed;
+    try {
+      parsed = new URL(value);
+    } catch (error) {
+      return { ok: false, reason: 'Open a normal HTTP or HTTPS page first.' };
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return { ok: false, reason: 'Chrome protects this page. Open a normal website, or paste text into HummingRead.' };
+    }
+    if (/\.pdf(?:$|[?#])/iu.test(parsed.href)) {
+      return { ok: false, reason: 'Chrome PDF pages cannot be extracted reliably. Select text in the PDF or paste it instead.' };
+    }
+    return { ok: true, url: parsed.href };
+  }
+
+  async function tokenizeTextAsync(value, options = {}) {
+    const text = String(value || '').replace(/\u0000/gu, '').trim();
+    if (!text) return [];
+    if (text.length > MAX_TEXT_CHARACTERS) {
+      throw new Error('This text is too large. Use a shorter selection (up to 1.5 million characters).');
+    }
+    const yieldEvery = Math.max(500, Number(options.yieldEvery) || 4000);
+    const isCancelled = typeof options.isCancelled === 'function' ? options.isCancelled : () => false;
+    const tokens = [];
+    let start = -1;
+    for (let index = 0; index <= text.length; index += 1) {
+      if (isCancelled()) throw new Error('Reading preparation was cancelled.');
+      const character = text[index] || ' ';
+      const whitespace = /\s/u.test(character);
+      if (!whitespace && start < 0) start = index;
+      if (whitespace && start >= 0) {
+        tokens.push(text.slice(start, index));
+        start = -1;
+        if (tokens.length % yieldEvery === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
+    }
+    return tokens;
+  }
+
+  function focusSegments(value) {
+    const characters = Array.from(String(value || ''));
+    if (!characters.length) return { before: '', focus: '', after: '' };
+    const letterIndexes = [];
+    characters.forEach((character, index) => {
+      if (/[\p{L}\p{N}]/u.test(character)) letterIndexes.push(index);
+    });
+    const target = letterIndexes.length <= 1
+      ? (letterIndexes[0] ?? 0)
+      : letterIndexes[Math.min(letterIndexes.length - 1, Math.floor((letterIndexes.length - 1) * 0.35))];
+    return {
+      before: characters.slice(0, target).join(''),
+      focus: characters[target] || '',
+      after: characters.slice(target + 1).join('')
+    };
+  }
+
+  function extractReadablePageFromDocument() {
+    const blocked = 'script,style,noscript,nav,aside,form,footer,svg,canvas,iframe,template,[hidden],[aria-hidden="true"]';
+    const candidates = Array.from(document.querySelectorAll('article,main,[role="main"]'));
+    const body = document.body;
+    if (body) candidates.push(body);
+    const ranked = candidates
+      .map((element) => ({ element, length: String(element.innerText || element.textContent || '').trim().length }))
+      .filter((entry) => entry.length > 0)
+      .sort((left, right) => {
+        const leftBonus = left.element.matches?.('article,main,[role="main"]') && left.length >= 400 ? 2_000_000 : 0;
+        const rightBonus = right.element.matches?.('article,main,[role="main"]') && right.length >= 400 ? 2_000_000 : 0;
+        return (rightBonus + right.length) - (leftBonus + left.length);
+      });
+    const source = ranked[0]?.element;
+    if (!source) return { ok: false, error: 'This page does not expose readable text.' };
+    const clone = source.cloneNode(true);
+    clone.querySelectorAll(blocked).forEach((element) => element.remove());
+    clone.querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,br,section,div').forEach((element) => {
+      element.append(document.createTextNode('\n'));
+    });
+    const text = String(clone.textContent || '')
+      .replace(/[\t\f\v ]+/gu, ' ')
+      .replace(/ *\n */gu, '\n')
+      .replace(/\n{3,}/gu, '\n\n')
+      .trim()
+      .slice(0, 1_500_001);
+    if (text.length < 40) return { ok: false, error: 'This page does not expose enough readable text. Select or paste the passage instead.' };
+    return {
+      ok: true,
+      text,
+      title: String(document.title || location.hostname || 'Web page').trim(),
+      sourceUrl: location.href
+    };
   }
 
   const api = Object.freeze({
     HANDOFF_PARAM,
+    HANDOFF_STORAGE_PREFIX,
     MAX_TEXT_CHARACTERS,
     MAX_TITLE_CHARACTERS,
-    PACEFLOW_URL,
     PENDING_TTL_MS,
-    STORAGE_PREFIX,
+    PREVIEW_URL,
+    READER_STORAGE_PREFIX,
     buildHandoffUrl,
+    configuredPreviewUrl,
     createNonce,
+    extractReadablePageFromDocument,
+    focusSegments,
+    handoffStorageKey,
+    isExtractablePageUrl,
     isValidNonce,
     normalizeHttpUrl,
     normalizePayload,
     normalizeTitle,
-    storageKey
+    readerStorageKey,
+    tokenizeTextAsync
   });
 
-  global.PaceFlowExtensionCore = api;
+  global.HummingReadExtensionCore = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
 })(typeof globalThis === 'object' ? globalThis : self);

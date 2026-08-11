@@ -1,0 +1,33 @@
+{
+  "productName": "HummingRead: Speed Reader",
+  "shortName": "HummingRead",
+  "mascotName": "Pico",
+  "taglines": {
+    "en": "RSVP, one word at a time",
+    "ru": "Читайте в своём ритме — слово за словом"
+  },
+  "urls": {
+    "support": "https://145.239.82.124.sslip.io/rsvp/support.html",
+    "privacy": "https://145.239.82.124.sslip.io/rsvp/privacy.html",
+    "marketingSite": "https://145.239.82.124.sslip.io/rsvp/",
+    "chromeWebStore": "https://example.invalid/hummingread-chrome-store-pending",
+    "appStore": "https://example.invalid/hummingread-app-store-pending",
+    "publicArticleApiBase": "https://145.239.82.124.sslip.io/rsvp/"
+  },
+  "versions": {
+    "web": "2.0.0",
+    "ios": "1.0",
+    "iosBuild": "1",
+    "extension": "1.1.0"
+  },
+  "release": {
+    "channel": "tester-preview",
+    "finalDomainApproved": false,
+    "storeUrlsApproved": false
+  },
+  "ios": {
+    "currentBundleIdentifier": "team.ibet.paceflow",
+    "proposedBundleIdentifier": "team.ibet.hummingread",
+    "changeApproved": false
+  }
+}

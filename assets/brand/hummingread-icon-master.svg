@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">HummingRead app icon master</title>
+  <rect width="1024" height="1024" rx="224" fill="#17233f"/>
+  <circle cx="512" cy="512" r="390" fill="#f5eedf" stroke="#75d3bd" stroke-width="28"/>
+  <path d="M432 504C277 424 236 279 277 207c116 39 215 135 259 254M458 527c-142 44-223 147-224 248 123 0 238-57 306-153" fill="#75d3bd" stroke="#101529" stroke-width="26" stroke-linejoin="round"/>
+  <path d="M469 503c43-119 141-176 243-150 101 27 145 127 98 214-45 82-148 121-247 92-90-26-137-91-94-156Z" fill="#3156d8" stroke="#101529" stroke-width="28"/>
+  <path d="M696 387l197-68-167 125" fill="#f2ad4c" stroke="#101529" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M534 653l-19 139 67-45 54 50 9-137" fill="#17233f" stroke="#101529" stroke-width="24"/>
+  <circle cx="691" cy="430" r="34" fill="#fffaf0" stroke="#101529" stroke-width="19"/>
+  <circle cx="700" cy="432" r="12" fill="#101529"/>
+  <circle cx="478" cy="526" r="18" fill="#e96d72" stroke="#101529" stroke-width="9"/>
+</svg>

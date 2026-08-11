@@ -195,6 +195,23 @@ test.describe('production reader regressions', () => {
     }));
     expect(overflow.content - overflow.viewport).toBeLessThanOrEqual(1);
 
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 375, height: 667 },
+      { width: 390, height: 844 },
+      { width: 430, height: 932 }
+    ]) {
+      await page.setViewportSize(viewport);
+      const firstViewport = await page.evaluate(() => ({
+        demoBottom: document.querySelector('#tryDemoBtn').getBoundingClientRect().bottom,
+        importBottom: document.querySelector('#heroImportBtn').getBoundingClientRect().bottom,
+        horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }));
+      expect(firstViewport.demoBottom, `demo CTA at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(viewport.height);
+      expect(firstViewport.importBottom, `import CTA at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(viewport.height);
+      expect(firstViewport.horizontalOverflow, `overflow at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(1);
+    }
+
     await page.evaluate(() => window.rsvpReader.setLanguage('ru'));
     await expect(page.locator('.pico-hero h1')).toContainText('Длинные тексты.');
     await expect(page.locator('.pico-signature')).toHaveText('ПИКО · ПИЛОТ ФОКУСА');
@@ -234,6 +251,8 @@ test.describe('production reader regressions', () => {
     await page.locator('#importArticleBtn').click();
     await expect(page.locator('#actionDialog')).toBeVisible();
     await page.locator('#actionDialogCancelBtn').click();
+    await expect(page.locator('#actionDialog')).toBeHidden();
+    await page.waitForFunction(() => window.rsvpReader.pendingActionDialog === null);
     await expect(page.locator('#textInput')).toHaveValue('Keep this unfinished draft exactly as it is.');
     expect(articleRequests).toBe(0);
 
@@ -281,8 +300,7 @@ test.describe('production reader regressions', () => {
     expect(articleRequests).toBe(0);
   });
 
-  test('article endpoint rejects loopback targets before downloading them', async ({ request }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium');
+  test('article endpoint rejects loopback targets before downloading them', async ({ request }) => {
     const response = await request.post('/api/article', {
       // Keep the default HTTP port so this assertion exercises the private
       // address guard rather than the separate non-standard-port guard.
@@ -1947,7 +1965,15 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('#rsvpReadingSection')).toBeVisible();
     await expect(page.locator('#rsvpBookTitle')).toHaveText('A quiet reading demo');
     await expect(page.locator('#textInput')).toHaveValue(/The first light reached the kitchen table/);
+    await expect(page.locator('#playPauseBtn')).toHaveAttribute('aria-label', 'Pause');
+    await expect(page.locator('#demoCoach')).toBeVisible();
+    await expect(page.locator('#demoCoachStep')).toHaveText('1 / 4');
+    await page.waitForTimeout(3800);
     await expect(page.locator('#playPauseBtn')).toHaveAttribute('aria-label', 'Continue');
+    await expect(page.locator('#rsvpPauseContext')).toHaveAttribute('aria-hidden', 'false');
+    await expect(page.locator('#demoCoachStep')).toHaveText('2 / 4');
+    await page.locator('#demoCoachActionBtn').click();
+    await expect(page.locator('#demoCoachStep')).toHaveText('3 / 4');
 
     const before = await page.evaluate(() => window.rsvpReader.wordOrdinalAtIndex(window.rsvpReader.currentIndex));
     await page.locator('#rsvpScrubber').fill('750');
@@ -1978,18 +2004,18 @@ test.describe('production reader regressions', () => {
 
   test('Chrome extension text handoff is nonce-scoped, saved locally and opened in focus mode', async ({ page }) => {
     const nonce = '0123456789abcdef0123456789abcdef';
-    await page.goto(`/?paceflow-extension-import=${nonce}`);
+    await page.goto(`/?hummingread-extension-import=${nonce}`);
     await page.evaluate(() => window.rsvpReader.ready);
     await expect(page.locator('#chromeExtensionDownload')).toHaveAttribute(
       'href',
-      'downloads/paceflow-quick-send.zip'
+      'downloads/hummingread-tester.zip'
     );
 
-    const ignoredText = 'This payload has the wrong nonce and must remain ignored by the PaceFlow import bridge.';
+    const ignoredText = 'This payload has the wrong nonce and must remain ignored by the HummingRead import bridge.';
     await page.evaluate(({ ignoredText }) => {
       window.postMessage({
-        channel: 'paceflow-extension',
-        type: 'paceflow-extension-import',
+        channel: 'hummingread-extension',
+        type: 'hummingread-extension-import',
         version: 1,
         nonce: 'ffffffffffffffffffffffffffffffff',
         payload: { type: 'text', text: ignoredText, title: 'Ignored' }
@@ -2000,21 +2026,21 @@ test.describe('production reader regressions', () => {
 
     const text = [
       'A selected passage arrives from Chrome without being placed in a URL or uploaded as a book.',
-      'PaceFlow stores the handoff locally, opens the reader, and starts focus mode at the first word.',
+      'HummingRead stores the handoff locally, opens the reader, and starts focus mode at the first word.',
       'The original page address remains useful as source metadata inside the private local library.'
     ].join('\n\n');
     const result = await page.evaluate(({ nonce, text }) => new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Chrome handoff acknowledgement timed out')), 5000);
       const receive = (event) => {
-        if (event.data?.type !== 'paceflow-import-result' || event.data?.nonce !== nonce) return;
+        if (event.data?.type !== 'hummingread-import-result' || event.data?.nonce !== nonce) return;
         clearTimeout(timeout);
         window.removeEventListener('message', receive);
         resolve(event.data);
       };
       window.addEventListener('message', receive);
       window.postMessage({
-        channel: 'paceflow-extension',
-        type: 'paceflow-extension-import',
+        channel: 'hummingread-extension',
+        type: 'hummingread-extension-import',
         version: 1,
         nonce,
         payload: {
@@ -2056,21 +2082,21 @@ test.describe('production reader regressions', () => {
         })
       });
     });
-    await page.goto(`/?paceflow-extension-import=${nonce}`);
+    await page.goto(`/?hummingread-extension-import=${nonce}`);
     await page.evaluate(() => window.rsvpReader.ready);
 
     const result = await page.evaluate((nonce) => new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Article handoff acknowledgement timed out')), 5000);
       const receive = (event) => {
-        if (event.data?.type !== 'paceflow-import-result' || event.data?.nonce !== nonce) return;
+        if (event.data?.type !== 'hummingread-import-result' || event.data?.nonce !== nonce) return;
         clearTimeout(timeout);
         window.removeEventListener('message', receive);
         resolve(event.data);
       };
       window.addEventListener('message', receive);
       window.postMessage({
-        channel: 'paceflow-extension',
-        type: 'paceflow-extension-import',
+        channel: 'hummingread-extension',
+        type: 'hummingread-extension-import',
         version: 1,
         nonce,
         payload: { type: 'url', url: 'https://news.example/long-story#comments' }
@@ -2114,8 +2140,8 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('.book-title')).toHaveText('Renamed safely');
 
     await page.locator('#settingsBtn').click();
-    await expect(page.locator('a[href="privacy.html"]')).toHaveText('Privacy policy');
-    await expect(page.locator('a[href="support.html"]')).toHaveText('Support');
+    await expect(page.locator('.settings-link[href="privacy.html"]')).toHaveText('Privacy policy');
+    await expect(page.locator('.settings-link[href="support.html"]')).toHaveText('Support');
     await expect(page.locator('[data-i18n="versionLabel"]')).toHaveText('Version 1.0');
     await page.locator('#deleteAllDataBtn').click();
     await expect(page.locator('#actionDialog')).toHaveClass(/active/);
@@ -2266,5 +2292,14 @@ test.describe('production reader regressions', () => {
 
     const healthResponse = await request.get('/index.html');
     expect(healthResponse.status()).toBe(200);
+
+    for (const publicPath of ['/acknowledgements.html', '/robots.txt', '/sitemap.xml']) {
+      const publicResponse = await request.get(publicPath);
+      expect(publicResponse.status(), publicPath).toBe(200);
+    }
+    const webpResponse = await request.get('/assets/brand/pico-hero-640.webp');
+    expect(webpResponse.status()).toBe(200);
+    expect(webpResponse.headers()['content-type']).toBe('image/webp');
+    expect((await request.get('/package.json')).status()).toBe(404);
   });
 });

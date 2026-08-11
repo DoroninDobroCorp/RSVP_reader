@@ -1,0 +1,21 @@
+{
+  "color": {
+    "ink": "#101529",
+    "navy": "#17233f",
+    "cobalt": "#3156d8",
+    "mint": "#75d3bd",
+    "paper": "#f5eedf",
+    "paperLight": "#fffaf0",
+    "amber": "#f2ad4c",
+    "coral": "#e96d72"
+  },
+  "space": { "1": "4px", "2": "8px", "3": "12px", "4": "16px", "6": "24px", "8": "32px" },
+  "radius": { "small": "7px", "medium": "13px", "large": "24px", "round": "999px" },
+  "shadow": { "cutout": "7px 7px 0 #101529", "mint": "7px 7px 0 #75d3bd" },
+  "type": {
+    "ui": "Inter, ui-sans-serif, system-ui, sans-serif",
+    "editorial": "Georgia, Times New Roman, serif",
+    "display": "Impact, Haettenschweiler, Arial Narrow Bold, sans-serif"
+  },
+  "motion": { "quick": "120ms", "standard": "180ms", "gentle": "4.8s", "reducedMotionDuration": "0.001ms" }
+}

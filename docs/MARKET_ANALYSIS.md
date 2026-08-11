@@ -1,5 +1,7 @@
 # PaceFlow Reader: анализ рынка и план запуска
 
+> **Historical market snapshot.** This memo predates the 2026-08-11 provisional HummingRead decision. Legacy names are retained only to preserve the dated analysis.
+
 Дата документа: 2 августа 2026 года. Срез источников: 1 августа 2026 года.
 
 ## Оговорки
