@@ -51,6 +51,7 @@
     "@capacitor/ios": "^8.5.0",
     "@capacitor/preferences": "^8.0.1",
     "@mozilla/readability": "^0.6.0",
+    "ipaddr.js": "2.5.0",
     "jsdom": "^29.0.1",
     "jszip": "^3.10.1"
   },

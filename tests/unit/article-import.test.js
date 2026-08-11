@@ -27,6 +27,30 @@ test('private, loopback, link-local and documentation addresses are blocked', ()
   assert.equal(isPublicRemoteAddress('2606:2800:220:1:248:1893:25c8:1946', 6), true);
 });
 
+test('special IPv4 and IPv6 transition ranges never pass the global-unicast gate', () => {
+  const blockedIpv4 = [
+    '0.0.0.0', '100.64.0.1', '192.0.0.1', '198.18.0.1', '224.0.0.1', '255.255.255.255'
+  ];
+  const blockedIpv6 = [
+    '::',
+    '::ffff:127.0.0.1',
+    '::ffff:10.0.0.1',
+    '64:ff9b:1::7f00:1',
+    '64:ff9b:1::a00:1',
+    '2002:7f00:1::',
+    '2002:a00:1::',
+    '2001::1',
+    '2001:10::1',
+    '2001:20::1',
+    '::192.0.2.1',
+    'fec0::1'
+  ];
+  blockedIpv4.forEach((address) => assert.equal(isPublicRemoteAddress(address, 4), false, address));
+  blockedIpv6.forEach((address) => assert.equal(isPublicRemoteAddress(address, 6), false, address));
+  assert.equal(isPublicRemoteAddress('8.8.8.8', 4), true);
+  assert.equal(isPublicRemoteAddress('2606:4700:4700::1111', 6), true);
+});
+
 test('DNS answers are rejected if any returned address is private', async () => {
   const target = normalizeArticleUrl('https://mixed.example/story');
   await assert.rejects(
@@ -58,6 +82,23 @@ test('every redirect target is resolved and checked again', async () => {
     (error) => error instanceof ArticleImportError && error.code === 'private_address'
   );
   assert.deepEqual(requestedHosts, ['public.example']);
+});
+
+test('article download connects only to the address returned by the validated DNS snapshot', async () => {
+  const pinned = [];
+  const result = await downloadArticleSource(normalizeArticleUrl('https://pin.example/story'), {
+    lookup: async () => [{ address: '93.184.216.34', family: 4 }],
+    requestDocument: async (target, resolvedAddress) => {
+      pinned.push({ host: target.hostname, ...resolvedAddress });
+      return {
+        statusCode: 200,
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+        body: Buffer.from('This public article has enough words to pass the local readability threshold safely.')
+      };
+    }
+  });
+  assert.equal(result.finalUrl, 'https://pin.example/story');
+  assert.deepEqual(pinned, [{ host: 'pin.example', address: '93.184.216.34', family: 4 }]);
 });
 
 test('readability extraction keeps the article and drops navigation and scripts', () => {

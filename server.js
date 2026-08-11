@@ -5,6 +5,7 @@ const dns = require('dns');
 const net = require('net');
 const path = require('path');
 const zlib = require('zlib');
+const ipaddr = require('ipaddr.js');
 const { JSDOM } = require('jsdom');
 const { Readability } = require('@mozilla/readability');
 
@@ -52,36 +53,16 @@ const MIME_TYPES = {
   '.webmanifest': 'application/manifest+json; charset=utf-8'
 };
 
-const BLOCKED_IPV4_NETWORKS = new net.BlockList();
-[
-  ['0.0.0.0', 8],
-  ['10.0.0.0', 8],
-  ['100.64.0.0', 10],
-  ['127.0.0.0', 8],
-  ['169.254.0.0', 16],
-  ['172.16.0.0', 12],
-  ['192.0.0.0', 24],
-  ['192.0.2.0', 24],
-  ['192.88.99.0', 24],
-  ['192.168.0.0', 16],
-  ['198.18.0.0', 15],
-  ['198.51.100.0', 24],
-  ['203.0.113.0', 24],
-  ['224.0.0.0', 4],
-  ['240.0.0.0', 4]
-].forEach(([network, prefix]) => BLOCKED_IPV4_NETWORKS.addSubnet(network, prefix, 'ipv4'));
-const BLOCKED_IPV6_NETWORKS = new net.BlockList();
-[
-  ['::', 128],
-  ['::1', 128],
-  ['::ffff:0:0', 96],
-  ['64:ff9b::', 96],
-  ['100::', 64],
-  ['2001:db8::', 32],
-  ['fc00::', 7],
-  ['fe80::', 10],
-  ['ff00::', 8]
-].forEach(([network, prefix]) => BLOCKED_IPV6_NETWORKS.addSubnet(network, prefix, 'ipv6'));
+const BLOCKED_IPV6_TRANSITION_RANGES = [
+  '::/96',
+  '64:ff9b::/96',
+  '64:ff9b:1::/48',
+  '2001::/32',
+  '2001:10::/28',
+  '2001:20::/28',
+  '2002::/16',
+  'fec0::/10'
+].map((range) => ipaddr.parseCIDR(range));
 
 class ArticleImportError extends Error {
   constructor(code, message, statusCode = 400) {
@@ -149,11 +130,15 @@ function normalizeArticleUrl(value) {
   return target;
 }
 
-function isPublicRemoteAddress(address, family) {
-  const detectedFamily = Number(family) || net.isIP(address);
-  if (detectedFamily !== 4 && detectedFamily !== 6) return false;
-  const blockList = detectedFamily === 4 ? BLOCKED_IPV4_NETWORKS : BLOCKED_IPV6_NETWORKS;
-  return !blockList.check(address, detectedFamily === 4 ? 'ipv4' : 'ipv6');
+function isPublicRemoteAddress(address) {
+  if (!ipaddr.isValid(String(address || ''))) return false;
+  const original = ipaddr.parse(String(address));
+  const parsed = original.kind() === 'ipv6' && original.isIPv4MappedAddress()
+    ? original.toIPv4Address()
+    : original;
+  if (parsed.kind() === 'ipv4') return parsed.range() === 'unicast';
+  if (parsed.range() !== 'unicast') return false;
+  return !BLOCKED_IPV6_TRANSITION_RANGES.some(([network, prefix]) => parsed.match(network, prefix));
 }
 
 async function resolvePublicRemote(target, lookup = dns.promises.lookup) {

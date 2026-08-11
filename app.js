@@ -103,6 +103,8 @@ class RSVPReader {
 
         this.searchMatches = [];
         this.currentMatchIndex = -1;
+        this.searchGeneration = 0;
+        this.searchYieldInterval = 4000;
         this.library = [];
         this.libraryFilter = '';
 
@@ -412,7 +414,7 @@ class RSVPReader {
             this.saveDraftSoon();
         });
 
-        this.searchInput.addEventListener('input', () => this.handleSearch());
+        this.searchInput.addEventListener('input', () => this.runAsync(() => this.handleSearch()));
         this.searchNextBtn.addEventListener('click', () => this.goToNextMatch());
         this.searchPrevBtn.addEventListener('click', () => this.goToPrevMatch());
         this.searchInput.addEventListener('keydown', (event) => {
@@ -499,6 +501,7 @@ class RSVPReader {
             await this.loadSyncMetadata();
             this.loadLegacyLibrary();
         }
+        await this.migrateStoredBookCounts();
         if (!nativeMirrorRestored) await this.restoreNativeBookMirror();
         await this.loadNativeResumeSnapshot();
         await this.loadNativeDraftSnapshot();
@@ -849,6 +852,74 @@ class RSVPReader {
             .sort((a, b) => {
             return new Date(b.lastRead || b.dateAdded).getTime() - new Date(a.lastRead || a.dateAdded).getTime();
         });
+    }
+
+    async migrateStoredBookCounts() {
+        const hasCurrentCounts = (book) => book?.textModelVersion === 2
+            && Number.isInteger(Number(book.wordCount)) && Number(book.wordCount) >= 0
+            && Number.isInteger(Number(book.tokenCount)) && Number(book.tokenCount) >= 0;
+        const countFields = (book) => {
+            const tokens = this.parseText(String(book?.text || ''));
+            return {
+                wordCount: this.countReadableWords(tokens),
+                tokenCount: tokens.length,
+                textModelVersion: 2
+            };
+        };
+
+        if (this.storageMode === 'localstorage' || !this.db) {
+            const raw = localStorage.getItem('rsvp_library');
+            if (!raw) return 0;
+            let records;
+            try {
+                records = JSON.parse(raw);
+            } catch (error) {
+                return 0;
+            }
+            if (!Array.isArray(records)) return 0;
+            let migrated = 0;
+            const next = records.map((book) => {
+                if (hasCurrentCounts(book)) return book;
+                try {
+                    migrated += 1;
+                    return { ...book, ...countFields(book) };
+                } catch (error) {
+                    console.warn(`Skipped unsafe count migration for ${book?.id || '(unknown)'}.`, error);
+                    return book;
+                }
+            });
+            if (migrated > 0) localStorage.setItem('rsvp_library', JSON.stringify(next));
+            return migrated;
+        }
+
+        let migrated = 0;
+        await new Promise((resolve, reject) => {
+            const transaction = this.db.transaction('books', 'readwrite');
+            const store = transaction.objectStore('books');
+            const cursorRequest = store.openCursor();
+            cursorRequest.onsuccess = () => {
+                const cursor = cursorRequest.result;
+                if (!cursor) return;
+                const latest = cursor.value;
+                if (!hasCurrentCounts(latest)) {
+                    try {
+                        // Only the derived count fields are changed. Name,
+                        // position, timestamps and all other concurrently-owned
+                        // fields come from the record locked by this transaction.
+                        cursor.update({ ...latest, ...countFields(latest) });
+                        migrated += 1;
+                    } catch (error) {
+                        console.warn(`Skipped unsafe count migration for ${latest?.id || '(unknown)'}.`, error);
+                    }
+                }
+                cursor.continue();
+            };
+            cursorRequest.onerror = () => reject(cursorRequest.error || new Error(this.t('actionFailed')));
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () => reject(transaction.error || new Error(this.t('actionFailed')));
+            transaction.onabort = () => reject(transaction.error || new Error(this.t('actionFailed')));
+        });
+        return migrated;
     }
 
     async getBook(bookId) {
@@ -3771,7 +3842,8 @@ class RSVPReader {
         });
     }
 
-    handleSearch() {
+    async handleSearch() {
+        const generation = ++this.searchGeneration;
         const query = this.searchInput.value.trim().toLowerCase();
 
         this.clearSearchHighlights();
@@ -3782,21 +3854,30 @@ class RSVPReader {
             this.searchResults.textContent = '';
             this.searchPrevBtn.disabled = true;
             this.searchNextBtn.disabled = true;
-            return;
+            return true;
         }
 
         const locale = this.i18n.language === 'ru' ? 'ru-RU' : 'en-US';
         const normalizedQuery = query.toLocaleLowerCase(locale).replace(/\s+/g, ' ');
         const queryParts = normalizedQuery.split(' ');
+        const matches = [];
+        const yieldIfNeeded = async (index) => {
+            if (index === 0 || index % this.searchYieldInterval !== 0) return true;
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            return generation === this.searchGeneration;
+        };
 
         if (queryParts.length === 1) {
-            this.words.forEach((word, index) => {
+            for (let index = 0; index < this.words.length; index++) {
+                if (!await yieldIfNeeded(index)) return false;
+                const word = this.words[index];
                 if (this.isReadableToken(word) && word.toLocaleLowerCase(locale).includes(normalizedQuery)) {
-                    this.searchMatches.push(index);
+                    matches.push(index);
                 }
-            });
+            }
         } else {
             for (let index = 0; index < this.words.length; index++) {
+                if (!await yieldIfNeeded(index)) return false;
                 if (!this.isReadableToken(this.words[index])) continue;
                 const candidate = [];
                 let cursor = index;
@@ -3804,9 +3885,12 @@ class RSVPReader {
                     if (this.isReadableToken(this.words[cursor])) candidate.push(this.words[cursor].toLocaleLowerCase(locale));
                     cursor++;
                 }
-                if (candidate.join(' ').includes(normalizedQuery)) this.searchMatches.push(index);
+                if (candidate.join(' ').includes(normalizedQuery)) matches.push(index);
             }
         }
+
+        if (generation !== this.searchGeneration) return false;
+        this.searchMatches = matches;
 
         if (this.searchMatches.length > 0) {
             this.currentMatchIndex = 0;
@@ -3819,6 +3903,7 @@ class RSVPReader {
             this.searchPrevBtn.disabled = true;
             this.searchNextBtn.disabled = true;
         }
+        return true;
     }
 
     clearSearchHighlights() {

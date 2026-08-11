@@ -787,6 +787,45 @@ test.describe('production reader regressions', () => {
     expect(state.readerScroll).toBeGreaterThan(0);
   });
 
+  test('large-book search yields, cancels stale work, and highlights only the rendered window', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.words = Array.from({ length: 120_000 }, (_, index) => {
+        if (index === 118_000) return 'obsolete-needle';
+        if (index === 119_000) return 'current-needle';
+        return `search-token-${index}`;
+      });
+      reader.currentIndex = 0;
+      reader.renderWindowSize = 600;
+      reader.renderNormalText();
+
+      let yieldedBeforeFirstCompleted = false;
+      setTimeout(() => { yieldedBeforeFirstCompleted = true; }, 0);
+      reader.searchInput.value = 'obsolete-needle';
+      const firstSearch = reader.handleSearch();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      reader.searchInput.value = 'current-needle';
+      const secondSearch = reader.handleSearch();
+      const [firstCompleted, secondCompleted] = await Promise.all([firstSearch, secondSearch]);
+      return {
+        yieldedBeforeFirstCompleted,
+        firstCompleted,
+        secondCompleted,
+        matches: reader.searchMatches,
+        highlighted: reader.normalTextDisplay.querySelectorAll('.search-match, .search-current').length,
+        rendered: reader.normalTextDisplay.querySelectorAll('[data-index]').length
+      };
+    });
+
+    expect(result.yieldedBeforeFirstCompleted).toBe(true);
+    expect(result.firstCompleted).toBe(false);
+    expect(result.secondCompleted).toBe(true);
+    expect(result.matches).toEqual([119000]);
+    expect(result.highlighted).toBeLessThanOrEqual(result.rendered);
+    expect(result.rendered).toBeLessThanOrEqual(600);
+  });
+
   test('strict and flexible two-word modes enforce their documented thresholds', async ({ page }) => {
     await openReader(page);
     const frames = await page.evaluate(() => {
@@ -1572,6 +1611,48 @@ test.describe('production reader regressions', () => {
       skipped: ['legacy-invalid'],
       preservedText: 'newer primary content must win',
       retriedText: 'valid legacy text'
+    });
+  });
+
+  test('legacy count migration updates only count fields and preserves concurrent book edits', async ({ page }) => {
+    await openReader(page);
+    const result = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      const originalUpdatedAt = '2026-08-01T10:00:00.000Z';
+      const renamedUpdatedAt = '2026-08-11T10:00:00.000Z';
+      await reader.requestToPromise(reader.getStore('books', 'readwrite').put({
+        id: 'legacy-count-book',
+        name: 'Original legacy title',
+        text: 'one two three four five',
+        wordCount: 999,
+        tokenCount: 999,
+        textModelVersion: 1,
+        currentIndex: 1,
+        bookmarks: [],
+        chapters: [],
+        dateAdded: originalUpdatedAt,
+        lastRead: originalUpdatedAt,
+        updatedAt: originalUpdatedAt
+      }));
+
+      const countMigration = reader.migrateStoredBookCounts();
+      const rename = reader.mutateBook('legacy-count-book', (latest) => ({
+        ...latest,
+        name: 'Renamed while counts migrate',
+        currentIndex: 3,
+        updatedAt: renamedUpdatedAt
+      }), { skipNative: true, skipSync: true });
+      await Promise.all([countMigration, rename]);
+      return reader.requestToPromise(reader.getStore('books').get('legacy-count-book'));
+    });
+
+    expect(result).toMatchObject({
+      name: 'Renamed while counts migrate',
+      currentIndex: 3,
+      updatedAt: '2026-08-11T10:00:00.000Z',
+      wordCount: 5,
+      tokenCount: 5,
+      textModelVersion: 2
     });
   });
 
