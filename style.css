@@ -2422,15 +2422,18 @@ body::before {
 #mainContainer {
     width: min(1280px, 100%);
     padding-top: 26px;
+    overflow-x: clip;
 }
 
 .composer-panel {
+    position: relative;
     padding: 0;
     overflow: visible;
     background: transparent;
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    isolation: isolate;
 }
 
 .pico-hero {
@@ -2438,7 +2441,7 @@ body::before {
     min-height: 520px;
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(390px, 0.92fr);
-    overflow: hidden;
+    overflow: visible;
     color: var(--brand-ink);
     background:
         radial-gradient(circle at 87% 16%, rgba(117, 211, 189, 0.42), transparent 17rem),
@@ -2446,25 +2449,26 @@ body::before {
     border: 3px solid var(--brand-line);
     border-radius: 34px;
     box-shadow: 9px 9px 0 var(--brand-line);
-    isolation: isolate;
 }
 
 .pico-hero::before,
 .pico-hero::after {
     position: absolute;
-    z-index: -1;
+    z-index: 0;
     content: "";
     pointer-events: none;
 }
 
 .pico-hero::before {
-    width: 310px;
-    height: 310px;
-    right: -76px;
-    top: -92px;
+    width: 270px;
+    height: 220px;
+    right: 0;
+    top: 0;
     background: var(--brand-cobalt);
-    border: 3px solid var(--brand-line);
-    border-radius: 50%;
+    border: 0;
+    border-bottom: 3px solid var(--brand-line);
+    border-left: 3px solid var(--brand-line);
+    border-radius: 0 31px 0 100%;
 }
 
 .pico-hero::after {
@@ -2601,11 +2605,12 @@ body::before {
 
 .pico-hero-image {
     position: absolute;
-    z-index: 2;
+    z-index: 7;
     width: min(92%, 455px);
     height: auto;
-    right: 4%;
-    bottom: -8%;
+    right: 0;
+    bottom: -13%;
+    pointer-events: none;
     filter: drop-shadow(9px 13px 0 rgba(16, 21, 41, 0.18));
     animation: pico-hover 4.8s ease-in-out infinite;
     transform-origin: 58% 76%;
@@ -2637,9 +2642,9 @@ body::before {
 
 .focus-bubble {
     position: absolute;
-    z-index: 4;
+    z-index: 8;
     top: 17%;
-    right: 3%;
+    right: -2%;
     display: flex;
     align-items: center;
     gap: 7px;
@@ -2676,9 +2681,9 @@ body::before {
 
 .pico-signature {
     position: absolute;
-    z-index: 4;
-    right: 5%;
-    bottom: 5%;
+    z-index: 8;
+    right: 2%;
+    bottom: 2%;
     padding: 6px 9px;
     color: var(--brand-paper-light);
     background: var(--brand-ink);
@@ -2696,10 +2701,10 @@ body::before {
 
 .flow-map {
     position: relative;
-    z-index: 5;
+    z-index: auto;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 22px 0 28px;
+    margin: 8px 18px 32px;
     padding: 0;
     overflow: hidden;
     color: var(--brand-paper-light);
@@ -2710,7 +2715,13 @@ body::before {
     list-style: none;
 }
 
+.flow-map li:last-child {
+    padding-right: 118px;
+}
+
 .flow-map li {
+    position: relative;
+    z-index: 9;
     min-width: 0;
     display: flex;
     align-items: center;
@@ -2910,7 +2921,7 @@ body::before {
     gap: 13px;
     margin: 0;
     padding: 18px;
-    overflow: hidden;
+    overflow: visible;
     color: var(--brand-paper-light);
     background:
         radial-gradient(circle at 92% 92%, rgba(49, 86, 216, 0.65), transparent 14rem),
@@ -2926,25 +2937,32 @@ body::before {
     opacity: 0.14;
     background-image: radial-gradient(var(--brand-mint) 1px, transparent 1px);
     background-size: 14px 14px;
+    border-radius: inherit;
     -webkit-mask-image: linear-gradient(90deg, black, transparent 72%);
     mask-image: linear-gradient(90deg, black, transparent 72%);
 }
 
 .pico-quick-send {
     position: absolute;
-    z-index: 1;
-    width: 67%;
+    z-index: 3;
+    width: 74%;
     height: auto;
-    right: -12%;
-    bottom: -1%;
+    right: -14%;
+    bottom: -13%;
+    pointer-events: none;
     filter: drop-shadow(5px 7px 0 rgba(0, 0, 0, 0.18));
+    transition: transform 260ms ease;
+}
+
+.extension-action.source-card:hover .pico-quick-send {
+    transform: translate3d(9px, -7px, 0) rotate(-1.5deg);
 }
 
 .extension-action-copy,
 .extension-action > a,
 .extension-install {
     position: relative;
-    z-index: 2;
+    z-index: 4;
 }
 
 .extension-action-copy {
@@ -2993,7 +3011,7 @@ body::before {
 
 .dock-footer-actions {
     justify-content: flex-end;
-    margin-top: 18px;
+    margin-top: 36px;
     padding-top: 18px;
     border-top: 1px dashed var(--border-strong);
 }
@@ -3079,8 +3097,8 @@ body::before {
 
     .pico-hero-image {
         width: min(82%, 330px);
-        right: 7%;
-        bottom: -11%;
+        right: 3%;
+        bottom: -13%;
     }
 
     .hero-orbit-one {
@@ -3095,17 +3113,23 @@ body::before {
 
     .focus-bubble {
         top: 15%;
-        right: 5%;
+        right: 2%;
     }
 
     .pico-signature {
-        right: 4%;
-        bottom: 4%;
+        right: 2%;
+        bottom: -3%;
     }
 
     .flow-map {
+        z-index: 9;
         grid-template-columns: 1fr;
+        margin: 14px 6px 30px;
         box-shadow: 5px 5px 0 var(--brand-mint);
+    }
+
+    .flow-map li:last-child {
+        padding-right: 20px;
     }
 
     .flow-map li + li {
@@ -3157,9 +3181,9 @@ body::before {
     }
 
     .pico-quick-send {
-        width: 76%;
-        right: -20%;
-        bottom: 0;
+        width: 79%;
+        right: -9%;
+        bottom: -8%;
     }
 
     .dock-footer-actions {
@@ -3189,7 +3213,8 @@ body::before {
 
     .pico-hero-image {
         width: 82%;
-        right: 5%;
+        right: 2%;
+        bottom: -12%;
     }
 
     .focus-bubble {
@@ -3213,8 +3238,9 @@ body::before {
     }
 
     .pico-quick-send {
-        width: 84%;
-        right: -28%;
+        width: 86%;
+        right: -8%;
+        bottom: -7%;
     }
 }
 

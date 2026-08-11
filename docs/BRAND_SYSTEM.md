@@ -28,6 +28,12 @@ The voice is quick, dry, supportive, and a little cocky. Pico helps the reader k
 
 Use two-pixel ink borders and small hard offset shadows to keep the interface graphic and tactile. Rounded shapes are welcome, but avoid turning every area into an unrelated floating pastel card. The home page should read as one path: promise → three-step rhythm → source dock → focus mode.
 
+### Controlled overlap
+
+Pico is allowed to break the grid. The hero tail crosses the hero border and rhythm strip; the Quick Send pose crosses its Chrome card on the right and bottom. These intersections create depth and tie adjacent sections together instead of leaving the character inside an isolated illustration box.
+
+Overlap is compositional, never obstructive: interactive copy and controls stay in the higher readable layer, character images use `pointer-events: none`, mobile rhythm copy sits above the tail, and every supported viewport must retain zero horizontal overflow. Do not add overlap to every card—one strong boundary break per major scene is enough.
+
 ## Character usage
 
 - `assets/brand/pico-hero.png` is the main home-page character.

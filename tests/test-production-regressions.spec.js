@@ -149,6 +149,26 @@ test.describe('production reader regressions', () => {
     ));
     expect(imageState.every((image) => image.complete && image.width > 0 && image.height > 0)).toBe(true);
 
+    const overlapState = await page.evaluate(() => {
+      const hero = document.querySelector('.pico-hero').getBoundingClientRect();
+      const heroImage = document.querySelector('.pico-hero-image').getBoundingClientRect();
+      const chromeCard = document.querySelector('#chromeExtensionPanel').getBoundingClientRect();
+      const quickSendImage = document.querySelector('.pico-quick-send').getBoundingClientRect();
+      return {
+        heroCrossesBoundary: heroImage.bottom - hero.bottom,
+        quickSendCrossesRightBoundary: quickSendImage.right - chromeCard.right,
+        quickSendCrossesBottomBoundary: quickSendImage.bottom - chromeCard.bottom,
+        imagesIgnorePointerInput: [
+          document.querySelector('.pico-hero-image'),
+          document.querySelector('.pico-quick-send')
+        ].every((image) => getComputedStyle(image).pointerEvents === 'none')
+      };
+    });
+    expect(overlapState.heroCrossesBoundary).toBeGreaterThan(12);
+    expect(overlapState.quickSendCrossesRightBoundary).toBeGreaterThan(8);
+    expect(overlapState.quickSendCrossesBottomBoundary).toBeGreaterThan(8);
+    expect(overlapState.imagesIgnorePointerInput).toBe(true);
+
     const overflow = await page.evaluate(() => ({
       viewport: document.documentElement.clientWidth,
       content: document.documentElement.scrollWidth
