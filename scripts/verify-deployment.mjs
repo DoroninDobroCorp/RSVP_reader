@@ -96,6 +96,9 @@ for (const token of [
         throw new Error(`Atomic activation/runbook is missing ${token}.`);
     }
 }
+for (const token of ['health_ready=0', '{1..50}', 'sleep 0.2', 'systemctl is-active --quiet']) {
+    if (!activate.includes(token)) throw new Error(`Activation health wait is missing ${token}.`);
+}
 if (!rollback.includes('sha256sum --check')
     || !rollback.includes('dist.failed.')
     || !rollback.includes('rsvp-reader.service')) {

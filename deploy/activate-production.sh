@@ -56,7 +56,19 @@ ln -s "${release_root}" /srv/hummingread/current.next
 mv -Tf /srv/hummingread/current.next /srv/hummingread/current
 systemctl daemon-reload
 systemctl restart rsvp-reader.service
-curl --fail --silent --show-error http://127.0.0.1:8081/ >/dev/null
+health_ready=0
+for _attempt in {1..50}; do
+  if systemctl is-active --quiet rsvp-reader.service \
+    && curl --fail --silent --show-error http://127.0.0.1:8081/ >/dev/null 2>&1; then
+    health_ready=1
+    break
+  fi
+  sleep 0.2
+done
+if [[ ${health_ready} -ne 1 ]]; then
+  systemctl status rsvp-reader.service --no-pager >&2 || true
+  exit 1
+fi
 systemctl reload nginx
 
 legacy_store=/srv/RSVP_reader/data/sync-store.json
