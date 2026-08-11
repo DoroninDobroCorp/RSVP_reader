@@ -14,9 +14,19 @@ When you import a file or paste text, the app processes that content locally to 
 
 ### Network use
 
-The current app does not upload your books, reading history, bookmarks, or settings. Its core reading features work without an internet connection.
+The native iOS app does not upload your books, reading history, bookmarks, or
+settings. It has no article URL import control or article-service endpoint, and
+its complete reading workflow works without an internet connection.
 
-If you choose **Import article**, the URL you submit is sent to the PaceFlow server. The server downloads that public page, extracts its readable text, and returns the result to your device. The submitted URL and downloaded page are processed in memory for that request and are not stored in a server-side PaceFlow library or analytics database. Standard hosting security logs may retain your IP address, request time, and API path; the POST body containing the submitted URL and the extracted article text are not included in those logs. The source website receives a request from the PaceFlow server and handles it under its own policy. Do not use article import for private, authenticated, or confidential URLs.
+In the web/PWA surface only, choosing **Import article** sends the URL you submit
+to the PaceFlow server. The server downloads that public page, extracts its
+readable text, and returns the result to your browser. The submitted URL and
+downloaded page are processed in memory for that request and are not stored in a
+server-side PaceFlow library or analytics database. The article endpoint access
+log is disabled; a bounded in-memory abuse-prevention bucket holds the requesting
+IP for at most ten minutes. The source website receives a request from the
+PaceFlow server and handles it under its own policy. Do not use article import
+for private, authenticated, or confidential URLs.
 
 ### Optional Chrome extension
 
@@ -58,9 +68,18 @@ PaceFlow Reader — офлайн-читалка документов и элек
 
 ### Сеть
 
-Текущая версия не загружает книги, историю чтения, закладки или настройки. Основные функции чтения работают без интернета.
+Нативное приложение iOS не загружает книги, историю чтения, закладки или
+настройки. В нём нет элемента импорта статьи или адреса сервиса статей, а весь
+сценарий чтения работает без интернета.
 
-Если вы выбираете **Импортировать статью**, введённая ссылка передаётся серверу PaceFlow. Сервер загружает публичную страницу, выделяет читаемый текст и возвращает результат на устройство. Ссылка и загруженная страница обрабатываются в памяти только для этого запроса и не сохраняются в серверной библиотеке PaceFlow или базе аналитики. Стандартные защитные журналы хостинга могут хранить IP-адрес, время запроса и путь API; POST-тело с введённой ссылкой и извлечённый текст статьи в эти журналы не входят. Исходный сайт получает запрос от сервера PaceFlow и обрабатывает его по собственным правилам. Не используйте импорт для приватных, авторизованных или конфиденциальных ссылок.
+Только в web/PWA при выборе **Импортировать статью** введённая ссылка передаётся
+серверу PaceFlow. Сервер загружает публичную страницу, выделяет читаемый текст и
+возвращает результат браузеру. Ссылка и страница обрабатываются в памяти только
+для этого запроса и не сохраняются в серверной библиотеке или базе аналитики.
+Журнал доступа для article endpoint отключён; ограниченный in-memory bucket для
+защиты от злоупотреблений хранит IP не более десяти минут. Исходный сайт получает
+запрос от сервера PaceFlow и применяет собственные правила. Не используйте импорт
+для приватных, авторизованных или конфиденциальных ссылок.
 
 ### Необязательное расширение Chrome
 

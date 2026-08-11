@@ -29,12 +29,16 @@ async function installNativeMock(page, options = {}) {
     let indexWriteCount = 0;
     const events = [];
     const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+    let resolveKeepAwake = null;
+    let resolveAllowSleep = null;
     window.__nativeMock = {
       files,
       preferences,
       events,
       options: mockOptions,
-      getIndexWriteCount: () => indexWriteCount
+      getIndexWriteCount: () => indexWriteCount,
+      resolveKeepAwake: () => resolveKeepAwake?.(),
+      resolveAllowSleep: () => resolveAllowSleep?.()
     };
     window.Capacitor = {
       isNativePlatform: () => true,
@@ -84,6 +88,22 @@ async function installNativeMock(page, options = {}) {
           selectionStart: async () => {},
           selectionChanged: async () => {},
           selectionEnd: async () => {}
+        },
+        KeepAwake: {
+          keepAwake: async () => {
+            events.push('keepAwake:start');
+            if (mockOptions.delayKeepAwake) {
+              await new Promise((resolve) => { resolveKeepAwake = resolve; });
+            }
+            events.push('keepAwake:end');
+          },
+          allowSleep: async () => {
+            events.push('allowSleep:start');
+            if (mockOptions.delayAllowSleep) {
+              await new Promise((resolve) => { resolveAllowSleep = resolve; });
+            }
+            events.push('allowSleep:end');
+          }
         }
       }
     };
@@ -239,6 +259,28 @@ test.describe('production reader regressions', () => {
     });
   });
 
+  test('native iOS hides article import and cannot resolve or call its endpoint', async ({ page }) => {
+    let articleRequests = 0;
+    await page.route('**/api/article', async (route) => {
+      articleRequests += 1;
+      await route.fulfill({ status: 500, body: 'native request must not happen' });
+    });
+    await installNativeMock(page);
+    await openReader(page);
+
+    await expect(page.locator('#articleImportForm')).toBeHidden();
+    const result = await page.evaluate(async () => ({
+      endpoint: window.rsvpReader.resolveArticleImportEndpoint(),
+      imported: await window.rsvpReader.importArticleFromUrl({
+        sourceUrl: 'https://news.example/private-native-regression',
+        confirmReplacement: false
+      })
+    }));
+
+    expect(result).toEqual({ endpoint: null, imported: null });
+    expect(articleRequests).toBe(0);
+  });
+
   test('article endpoint rejects loopback targets before downloading them', async ({ request }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium');
     const response = await request.post('/api/article', {
@@ -288,6 +330,183 @@ test.describe('production reader regressions', () => {
       reader.updateSpeedControls();
     });
     await expect(page.locator('#rsvpSpeedText')).toHaveText('350 target · 600 actual WPM');
+  });
+
+  test('native keepAwake completion after pause is reconciled back to sleep', async ({ page }) => {
+    await installNativeMock(page, { delayKeepAwake: true });
+    await openReader(page);
+
+    const state = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.mode = 'rsvp';
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      reader.isPlaying = false;
+      reader.releaseWakeLock();
+      window.__nativeMock.resolveKeepAwake();
+      await reader.waitForWakeLockReconciliation();
+      return { events: window.__nativeMock.events, nativeAwake: reader.nativeWakeLockActive };
+    });
+
+    expect(state.events).toEqual([
+      'keepAwake:start', 'keepAwake:end', 'allowSleep:start', 'allowSleep:end'
+    ]);
+    expect(state.nativeAwake).toBe(false);
+  });
+
+  test('native play while allowSleep is unresolved reacquires Keep Awake', async ({ page }) => {
+    await installNativeMock(page, { delayAllowSleep: true });
+    await openReader(page);
+
+    const state = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.mode = 'rsvp';
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      await reader.waitForWakeLockReconciliation();
+      reader.isPlaying = false;
+      reader.releaseWakeLock();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      window.__nativeMock.resolveAllowSleep();
+      await reader.waitForWakeLockReconciliation();
+      return { events: window.__nativeMock.events, nativeAwake: reader.nativeWakeLockActive };
+    });
+
+    expect(state.events).toEqual([
+      'keepAwake:start', 'keepAwake:end',
+      'allowSleep:start', 'allowSleep:end',
+      'keepAwake:start', 'keepAwake:end'
+    ]);
+    expect(state.nativeAwake).toBe(true);
+  });
+
+  test('web Wake Lock request resolving after pause releases the stale sentinel', async ({ page }) => {
+    await page.addInitScript(() => {
+      let resolveRequest = null;
+      const releaseListeners = [];
+      const sentinel = {
+        addEventListener: (name, listener) => {
+          if (name === 'release') releaseListeners.push(listener);
+        },
+        release: async () => {
+          window.__wakeMock.releaseCalls += 1;
+          releaseListeners.forEach((listener) => listener());
+        }
+      };
+      window.__wakeMock = {
+        requestCalls: 0,
+        releaseCalls: 0,
+        resolveRequest: () => resolveRequest?.(sentinel)
+      };
+      Object.defineProperty(navigator, 'wakeLock', {
+        configurable: true,
+        value: {
+          request: async () => {
+            window.__wakeMock.requestCalls += 1;
+            return new Promise((resolve) => { resolveRequest = resolve; });
+          }
+        }
+      });
+    });
+    await openReader(page);
+
+    const state = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.mode = 'rsvp';
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      reader.isPlaying = false;
+      reader.releaseWakeLock();
+      window.__wakeMock.resolveRequest();
+      await reader.waitForWakeLockReconciliation();
+      return {
+        requestCalls: window.__wakeMock.requestCalls,
+        releaseCalls: window.__wakeMock.releaseCalls,
+        hasSentinel: Boolean(reader.wakeLock)
+      };
+    });
+
+    expect(state).toEqual({ requestCalls: 1, releaseCalls: 1, hasSentinel: false });
+  });
+
+  test('web sentinel release finishing after resume requests a fresh lock', async ({ page }) => {
+    await page.addInitScript(() => {
+      let resolveRelease = null;
+      let nextId = 0;
+      window.__wakeMock = {
+        requestCalls: 0,
+        releaseCalls: 0,
+        resolveRelease: () => resolveRelease?.()
+      };
+      Object.defineProperty(navigator, 'wakeLock', {
+        configurable: true,
+        value: {
+          request: async () => {
+            window.__wakeMock.requestCalls += 1;
+            const listeners = [];
+            const id = ++nextId;
+            return {
+              addEventListener: (name, listener) => {
+                if (name === 'release') listeners.push(listener);
+              },
+              release: async () => {
+                window.__wakeMock.releaseCalls += 1;
+                if (id === 1) await new Promise((resolve) => { resolveRelease = resolve; });
+                listeners.forEach((listener) => listener());
+              }
+            };
+          }
+        }
+      });
+    });
+    await openReader(page);
+
+    const state = await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.mode = 'rsvp';
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      await reader.waitForWakeLockReconciliation();
+      reader.isPlaying = false;
+      reader.releaseWakeLock();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      reader.isPlaying = true;
+      reader.requestWakeLock();
+      window.__wakeMock.resolveRelease();
+      await reader.waitForWakeLockReconciliation();
+      return {
+        requestCalls: window.__wakeMock.requestCalls,
+        releaseCalls: window.__wakeMock.releaseCalls,
+        hasSentinel: Boolean(reader.wakeLock)
+      };
+    });
+
+    expect(state).toEqual({ requestCalls: 2, releaseCalls: 1, hasSentinel: true });
+  });
+
+  test('unsupported Wake Lock APIs do not interrupt playback', async ({ page }) => {
+    await page.addInitScript(() => {
+      try { delete navigator.wakeLock; } catch (error) { /* unavailable by design */ }
+    });
+    await openReader(page);
+    await loadPlainText(page, 'one two three four five six seven eight nine ten');
+    await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.startRSVP();
+      reader.play();
+      await reader.waitForWakeLockReconciliation();
+    });
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    await expect(page.locator('#playPauseBtn')).toHaveAttribute('aria-label', 'Pause');
+    await page.evaluate(async () => {
+      window.rsvpReader.pause();
+      await window.rsvpReader.waitForWakeLockReconciliation();
+    });
+    await expect(page.locator('#playPauseBtn')).toHaveAttribute('aria-label', 'Continue');
   });
 
   test('speed feedback restarts on every press and returns to rest after two seconds', async ({ page }) => {
@@ -1875,12 +2094,64 @@ test.describe('production reader regressions', () => {
     expect(state).toEqual({ library: 0, text: '', bookId: null, storedSettings: null, storedResume: null });
   });
 
-  test('legacy unauthenticated cloud sync is disabled by default', async ({ request }) => {
+  test('legacy unauthenticated cloud sync is unavailable at the application layer', async ({ request }) => {
     const response = await request.post('/api/sync', {
       data: { clientId: 'public-regression-client', books: [] }
     });
-    expect(response.status()).toBe(410);
-    expect(await response.json()).toMatchObject({ error: expect.stringMatching(/stores books locally/i) });
+    expect(response.status()).toBe(404);
+  });
+
+  test('legacy sync upgrade clears pending state without transmitting or losing books', async ({ page }) => {
+    const secretSentinel = 'SYNC-UPGRADE-SECRET-SENTINEL-9f8e7d6c';
+    let syncRequests = 0;
+    await page.route('**/api/sync', async (route) => {
+      syncRequests += 1;
+      await route.fulfill({ status: 500, body: secretSentinel });
+    });
+    await page.addInitScript((sentinel) => {
+      const now = '2026-08-10T12:00:00.000Z';
+      const settings = { settingsVersion: 8, wpm: 350, cloudSyncEnabled: true };
+      localStorage.setItem('rsvp_settings', JSON.stringify(settings));
+      localStorage.setItem('rsvp_settings_updated_at', now);
+      localStorage.setItem('paceflow_settings_envelope', JSON.stringify({ settings, updatedAt: now }));
+      localStorage.setItem('rsvp_sync_pending', '1');
+      localStorage.setItem('rsvp_library', JSON.stringify([{
+        id: 'legacy-sync-book',
+        name: 'Private legacy book',
+        text: `Keep ${sentinel} inside local storage only.`,
+        currentIndex: 1,
+        dateAdded: now,
+        lastRead: now,
+        updatedAt: now
+      }]));
+    }, secretSentinel);
+
+    await openReader(page);
+    await page.evaluate(() => {
+      window.rsvpReader.settings.cloudSyncEnabled = true;
+      window.rsvpReader.syncSoon(0);
+    });
+    await page.waitForTimeout(900);
+
+    const state = await page.evaluate(async () => ({
+      cloudSyncEnabled: window.rsvpReader.settings.cloudSyncEnabled,
+      persistedSettings: JSON.parse(localStorage.getItem('rsvp_settings') || '{}'),
+      pending: localStorage.getItem('rsvp_sync_pending'),
+      books: (await window.rsvpReader.getAllBooks()).map((book) => ({
+        id: book.id,
+        text: book.text,
+        currentIndex: book.currentIndex
+      }))
+    }));
+    expect(syncRequests).toBe(0);
+    expect(state.cloudSyncEnabled).toBe(false);
+    expect(state.persistedSettings.cloudSyncEnabled).toBe(false);
+    expect(state.pending).toBe('0');
+    expect(state.books).toContainEqual({
+      id: 'legacy-sync-book',
+      text: `Keep ${secretSentinel} inside local storage only.`,
+      currentIndex: 1
+    });
   });
 
   test('the web server never exposes private storage and survives malformed URLs', async ({ request }) => {

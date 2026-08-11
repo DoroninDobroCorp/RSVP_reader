@@ -93,6 +93,12 @@ body {
     transition: color 220ms ease, background 220ms ease;
 }
 
+html.reader-view,
+body.reader-view {
+    height: 100%;
+    overflow: hidden;
+}
+
 button,
 input,
 textarea,
@@ -899,6 +905,7 @@ input:focus {
     min-height: 360px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    overflow-anchor: none;
     padding: clamp(24px, 5vw, 62px) clamp(20px, 8vw, 100px) clamp(80px, 10vw, 120px);
     color: var(--text-soft);
     background: var(--surface-solid);

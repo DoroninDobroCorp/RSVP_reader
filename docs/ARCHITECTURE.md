@@ -14,7 +14,11 @@
 
 ## Article import
 
-`server.js` accepts a public HTTP(S) URL, validates every DNS result and redirect, blocks private/reserved addresses and non-standard ports, limits time and size, and extracts readable content in memory. Books remain in the browser's local library.
+The web/PWA-only `server.js` endpoint accepts a public HTTP(S) URL, validates
+every DNS result and redirect, blocks private/reserved addresses and non-standard
+ports, limits time and size, and extracts readable content in memory. Books
+remain in the browser's local library. The native iOS surface hides the article
+control, resolves no endpoint, and rejects direct programmatic import calls.
 
 ## Chrome handoff
 

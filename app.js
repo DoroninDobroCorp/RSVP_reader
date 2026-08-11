@@ -33,6 +33,10 @@ class RSVPReader {
         this.lastBottomTapType = '';
         this.wordPaintToken = 0;
         this.wakeLock = null;
+        this.wakeLockDesired = false;
+        this.wakeLockReconcileRequested = false;
+        this.wakeLockReconcilePromise = null;
+        this.nativeWakeLockActive = false;
         this.renderWindowStart = 0;
         this.renderWindowEnd = 0;
         this.renderWindowSize = 4200;
@@ -84,6 +88,7 @@ class RSVPReader {
         this.isSyncing = false;
         this.isApplyingRemote = false;
         this.syncRetryDelay = 5000;
+        this.legacyCloudSyncRetired = true;
         this.deletedBooks = {};
         this.settingsUpdatedAt = localStorage.getItem('rsvp_settings_updated_at') || new Date().toISOString();
         this.settingsWritePromise = Promise.resolve();
@@ -121,6 +126,7 @@ class RSVPReader {
 
         this.initElements();
         this.loadSettings();
+        this.retireLegacyCloudSync({ persistLocal: true });
         this.updateSpeedControls();
         this.attachEventListeners();
         this.updateOnlineStatus();
@@ -153,7 +159,13 @@ class RSVPReader {
         this.importArticleBtn = document.getElementById('importArticleBtn');
         this.articleImportStatus = document.getElementById('articleImportStatus');
         this.chromeExtensionPanel = document.getElementById('chromeExtensionPanel');
-        if (this.chromeExtensionPanel && this.isNativePlatform()) this.chromeExtensionPanel.hidden = true;
+        if (this.isNativePlatform()) {
+            if (this.chromeExtensionPanel) this.chromeExtensionPanel.hidden = true;
+            if (this.articleImportForm) {
+                this.articleImportForm.hidden = true;
+                this.articleImportForm.setAttribute('aria-hidden', 'true');
+            }
+        }
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -284,10 +296,12 @@ class RSVPReader {
 
         this.startReadingBtn.addEventListener('click', () => this.runAsync(() => this.startNormalReading()));
         this.tryDemoBtn.addEventListener('click', () => this.runAsync(() => this.openBuiltInDemo()));
-        this.articleImportForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            this.runAsync(() => this.importArticleFromUrl());
-        });
+        if (!this.isNativePlatform()) {
+            this.articleImportForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                this.runAsync(() => this.importArticleFromUrl());
+            });
+        }
         this.backToInputBtn.addEventListener('click', () => this.backToInput());
         this.homeBtn.addEventListener('click', () => this.backToInput());
         this.globalSearchBtn.addEventListener('click', () => this.openReaderSearch());
@@ -786,6 +800,12 @@ class RSVPReader {
             } catch (error) {
                 console.warn('Could not mirror the settings timestamp:', error);
             }
+        }
+
+        this.retireLegacyCloudSync({ persistLocal: true });
+        if (databaseSettings?.cloudSyncEnabled !== false
+            && this.storageMode !== 'localstorage' && this.db) {
+            await this.persistSettingsToDatabase(this.settings, this.settingsUpdatedAt);
         }
 
         if (this.storageMode !== 'localstorage' && this.db) {
@@ -2570,9 +2590,7 @@ class RSVPReader {
     }
 
     resolveArticleImportEndpoint() {
-        if (this.isNativePlatform()) {
-            return 'https://145.239.82.124.sslip.io/rsvp/api/article';
-        }
+        if (this.isNativePlatform()) return null;
         return new URL('api/article', window.location.href).href;
     }
 
@@ -2591,6 +2609,7 @@ class RSVPReader {
     }
 
     setArticleImportBusy(isBusy, statusMessage = '') {
+        if (!this.articleImportForm || this.isNativePlatform()) return;
         this.articleImportForm.setAttribute('aria-busy', isBusy ? 'true' : 'false');
         this.articleUrlInput.disabled = isBusy;
         this.importArticleBtn.disabled = isBusy;
@@ -2600,6 +2619,7 @@ class RSVPReader {
 
     async importArticleFromUrl(options = {}) {
         await this.ready;
+        if (this.isNativePlatform()) return null;
 
         const suppliedUrl = typeof options.sourceUrl === 'string' ? options.sourceUrl : this.articleUrlInput.value;
         const sourceUrl = this.normalizeArticleUrlInput(suppliedUrl);
@@ -4714,6 +4734,10 @@ class RSVPReader {
             element.hidden = name !== section;
             element.style.display = '';
         });
+        const isReaderView = section === 'normal' || section === 'rsvp';
+        document.documentElement.classList.toggle('reader-view', isReaderView);
+        document.body.classList.toggle('reader-view', isReaderView);
+        if (isReaderView && window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'auto' });
         this.globalSearchBtn.hidden = !['normal', 'rsvp'].includes(section);
     }
 
@@ -4866,6 +4890,27 @@ class RSVPReader {
         return null;
     }
 
+    retireLegacyCloudSync(options = {}) {
+        this.settings.cloudSyncEnabled = false;
+        clearTimeout(this.syncTimer);
+        this.syncTimer = null;
+        try {
+            localStorage.setItem('rsvp_sync_pending', '0');
+            localStorage.removeItem('rsvp_last_sync_at');
+            if (options.persistLocal) {
+                const settingsSnapshot = { ...this.settings, cloudSyncEnabled: false };
+                localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+                    settings: settingsSnapshot,
+                    updatedAt: this.settingsUpdatedAt
+                }));
+                localStorage.setItem('rsvp_settings', JSON.stringify(settingsSnapshot));
+                localStorage.setItem('rsvp_settings_updated_at', this.settingsUpdatedAt);
+            }
+        } catch (error) {
+            console.warn('Could not retire legacy sync state:', error);
+        }
+    }
+
     loadSettings() {
         let saved = localStorage.getItem('rsvp_settings');
         let savedUpdatedAt = localStorage.getItem('rsvp_settings_updated_at');
@@ -4899,6 +4944,7 @@ class RSVPReader {
             this.settingsUpdatedAt = savedUpdatedAt;
         }
 
+        this.retireLegacyCloudSync({ persistLocal: true });
         this.loadSettingsToForm();
     }
 
@@ -4959,40 +5005,28 @@ class RSVPReader {
             changed = true;
         }
 
+        if (migrated.cloudSyncEnabled !== false) {
+            migrated.cloudSyncEnabled = false;
+            changed = true;
+        }
+
         return { settings: migrated, changed };
     }
 
     markSyncPending() {
-        if (!this.settings.cloudSyncEnabled || this.isNativePlatform()) {
-            try {
-                localStorage.setItem('rsvp_sync_pending', '0');
-            } catch (error) {
-                console.warn('Could not mirror sync state:', error);
-            }
-            this.updateOnlineStatus();
-            return;
-        }
-        try {
-            localStorage.setItem('rsvp_sync_pending', '1');
-        } catch (error) {
-            console.warn('Could not mirror sync state:', error);
-        }
+        this.retireLegacyCloudSync();
         this.updateOnlineStatus();
-        this.syncSoon();
     }
 
-    syncSoon(delay = 1200) {
-        if (!this.settings.cloudSyncEnabled || this.isNativePlatform()) return;
-        clearTimeout(this.syncTimer);
-        this.syncTimer = setTimeout(() => {
-            this.runAsync(() => this.syncNow());
-        }, delay);
+    syncSoon() {
+        this.retireLegacyCloudSync();
     }
 
     async syncNow() {
-        await this.ready;
-        if (!this.settings.cloudSyncEnabled || this.isNativePlatform() || this.isSyncing || !navigator.onLine) return;
+        this.retireLegacyCloudSync();
+        return;
 
+        /* istanbul ignore next -- retained only as inert migration reference. */
         this.isSyncing = true;
         this.updateOnlineStatus();
 
@@ -5158,25 +5192,94 @@ class RSVPReader {
         return new Date(candidate || 0).getTime() >= new Date(current || 0).getTime();
     }
 
-    async requestWakeLock() {
-        if (!('wakeLock' in navigator) || document.visibilityState !== 'visible' || this.wakeLock) return;
-
-        try {
-            this.wakeLock = await navigator.wakeLock.request('screen');
-            this.wakeLock.addEventListener('release', () => {
-                this.wakeLock = null;
-            });
-        } catch (error) {
-            console.warn('Screen Wake Lock unavailable:', error);
-        }
+    requestWakeLock() {
+        this.wakeLockDesired = Boolean(
+            this.isPlaying && this.mode === 'rsvp' && document.visibilityState === 'visible'
+        );
+        return this.reconcileWakeLock();
     }
 
     releaseWakeLock() {
-        if (!this.wakeLock) return;
+        this.wakeLockDesired = false;
+        return this.reconcileWakeLock();
+    }
 
-        const lock = this.wakeLock;
-        this.wakeLock = null;
-        lock.release().catch((error) => console.warn('Failed to release wake lock:', error));
+    nativeKeepAwakePlugin() {
+        if (!this.isNativePlatform()) return null;
+        const plugin = window.Capacitor?.Plugins?.KeepAwake;
+        return plugin?.keepAwake && plugin?.allowSleep ? plugin : null;
+    }
+
+    reconcileWakeLock() {
+        this.wakeLockReconcileRequested = true;
+        if (this.wakeLockReconcilePromise) return this.wakeLockReconcilePromise;
+
+        this.wakeLockReconcilePromise = (async () => {
+            while (this.wakeLockReconcileRequested) {
+                this.wakeLockReconcileRequested = false;
+                await this.reconcileWakeLockOnce();
+            }
+        })().finally(() => {
+            this.wakeLockReconcilePromise = null;
+            if (this.wakeLockReconcileRequested) this.reconcileWakeLock();
+        });
+        return this.wakeLockReconcilePromise;
+    }
+
+    async waitForWakeLockReconciliation() {
+        while (this.wakeLockReconcilePromise || this.wakeLockReconcileRequested) {
+            if (!this.wakeLockReconcilePromise) this.reconcileWakeLock();
+            await this.wakeLockReconcilePromise;
+        }
+    }
+
+    async reconcileWakeLockOnce() {
+        const desired = Boolean(
+            this.wakeLockDesired
+            && this.isPlaying
+            && this.mode === 'rsvp'
+            && document.visibilityState === 'visible'
+        );
+        const nativePlugin = this.nativeKeepAwakePlugin();
+        if (nativePlugin) {
+            try {
+                if (desired && !this.nativeWakeLockActive) {
+                    await nativePlugin.keepAwake();
+                    this.nativeWakeLockActive = true;
+                    this.wakeLockReconcileRequested = true;
+                } else if (!desired && this.nativeWakeLockActive) {
+                    await nativePlugin.allowSleep();
+                    this.nativeWakeLockActive = false;
+                    this.wakeLockReconcileRequested = true;
+                }
+            } catch (error) {
+                console.warn('Native Keep Awake unavailable:', error);
+                this.nativeWakeLockActive = false;
+            }
+            return;
+        }
+
+        if (!('wakeLock' in navigator)) return;
+        try {
+            if (desired && !this.wakeLock) {
+                const sentinel = await navigator.wakeLock.request('screen');
+                this.wakeLock = sentinel;
+                sentinel.addEventListener('release', () => {
+                    if (this.wakeLock === sentinel) this.wakeLock = null;
+                    this.wakeLockReconcileRequested = true;
+                    this.reconcileWakeLock();
+                });
+                this.wakeLockReconcileRequested = true;
+            } else if (!desired && this.wakeLock) {
+                const sentinel = this.wakeLock;
+                this.wakeLock = null;
+                await Promise.resolve(sentinel.release());
+                this.wakeLockReconcileRequested = true;
+            }
+        } catch (error) {
+            console.warn('Screen Wake Lock unavailable:', error);
+            this.wakeLock = null;
+        }
     }
 
     async saveCurrentTextAsBook(options = {}) {

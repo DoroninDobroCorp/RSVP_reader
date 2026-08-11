@@ -25,6 +25,7 @@ The app currently includes these native plugins:
 | `@capacitor/preferences` | `NSPrivacyAccessedAPICategoryUserDefaults` | `CA92.1` | Persist the app's own lightweight settings. |
 | `@capacitor/app` | None currently declared by the plugin | — | Foreground/background lifecycle integration. |
 | `@capacitor/haptics` | None currently declared by the plugin | — | User-triggered haptic feedback. |
+| `@capacitor-community/keep-awake` | None declared by version `8.0.1` | — | Keep the display awake only during active RSVP playback; reconcile back to sleep on pause/background. |
 
 Before every submission:
 
@@ -66,6 +67,7 @@ Verified on August 7, 2026: after a clean `npm ci` and `npm run cap:sync`, the c
 - [ ] Test very long words and all supported languages on the smallest supported viewport.
 - [ ] Confirm iOS volume buttons always retain their system volume behavior.
 - [ ] Confirm the app makes no sync request in the native build.
+- [ ] Confirm article URL import is absent and the native build makes no article-service request.
 - [ ] Exercise export and **Delete All Data**, then confirm no library files remain in the app container.
 
 `UIFileSharingEnabled` and `LSSupportsOpeningDocumentsInPlace` are intentionally not enabled: the app stores private internal library files in its Data container and imports user-selected files through the system picker. Add document-sharing keys only together with a reviewed user-facing file-sharing design.
@@ -84,9 +86,14 @@ Verified on August 7, 2026: after a clean `npm ci` and `npm run cap:sync`, the c
 
 ## App privacy answers
 
-For the current native build, books and reading state are processed locally, native cloud sync is disabled, and no analytics or advertising SDK is installed. Optional article import sends a user-submitted URL to the PaceFlow extraction endpoint; hosting security logs can contain IP address, request time and API path. Do **not** select **Data Not Collected** from the older draft without re-evaluating Apple's current definitions, the production log-retention policy and the exact archived Release traffic.
+For the current native build, books and reading state are processed locally,
+cloud sync and article URL import are unavailable, and no analytics or
+advertising SDK is installed. The native code has no first-party content
+endpoint to contact. Re-evaluate Apple's current definitions and the exact
+archived Release traffic before selecting **Data Not Collected**; do not infer
+that answer from documentation alone.
 
-- [ ] Publish a privacy policy that explicitly covers local book processing, optional server-assisted URL import, security logs, exports, deletion, support contact, and future policy changes.
+- [ ] Publish a privacy policy that explicitly distinguishes local-only native processing from the optional web-only article service, and covers exports, deletion, support contact, and future policy changes.
 - [ ] Verify Release traffic on a physical device before selecting **Data Not Collected**.
 - [ ] Re-answer App Privacy if crash reporting, analytics, accounts, cloud sync, ads, or support uploads are added.
 - [ ] Keep `NSPrivacyTracking = false`; do not add ATT unless the product genuinely introduces cross-app tracking.

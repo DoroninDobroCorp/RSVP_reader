@@ -10,9 +10,6 @@ const { Readability } = require('@mozilla/readability');
 
 const PORT = Number(process.env.PORT || 8081);
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, 'data');
-const STORE_FILE = path.join(DATA_DIR, 'sync-store.json');
-const MAX_BODY_BYTES = 50 * 1024 * 1024;
 const MAX_ARTICLE_REQUEST_BYTES = 16 * 1024;
 const MAX_ARTICLE_SOURCE_BYTES = 5 * 1024 * 1024;
 const MAX_ARTICLE_TEXT_CHARACTERS = 2 * 1024 * 1024;
@@ -27,11 +24,6 @@ const ARTICLE_NATIVE_ENDPOINT_ORIGINS = new Set([
   'https://localhost'
 ]);
 const articleRateBuckets = new Map();
-let storeWriteSequence = 0;
-let storeMutationQueue = Promise.resolve();
-// The historical endpoint is intentionally off for public/native releases: it
-// was designed for one trusted owner and has no multi-user authentication.
-const LEGACY_SINGLE_USER_SYNC = process.env.PACEFLOW_ENABLE_LEGACY_SYNC === '1';
 const PUBLIC_FILES = new Set([
   'index.html',
   'privacy.html',
@@ -100,118 +92,6 @@ class ArticleImportError extends Error {
   }
 }
 
-function emptyStore() {
-  return {
-    version: 1,
-    updatedAt: new Date(0).toISOString(),
-    settings: null,
-    settingsUpdatedAt: new Date(0).toISOString(),
-    draft: null,
-    books: {},
-    deletedBooks: {}
-  };
-}
-
-async function readStore() {
-  try {
-    const raw = await fs.promises.readFile(STORE_FILE, 'utf8');
-    return { ...emptyStore(), ...JSON.parse(raw) };
-  } catch (error) {
-    if (error.code === 'ENOENT') return emptyStore();
-    throw error;
-  }
-}
-
-async function writeStore(store) {
-  await fs.promises.mkdir(DATA_DIR, { recursive: true });
-  storeWriteSequence += 1;
-  const tmpFile = `${STORE_FILE}.${process.pid}.${storeWriteSequence}.tmp`;
-  await fs.promises.writeFile(tmpFile, JSON.stringify(store, null, 2));
-  await fs.promises.rename(tmpFile, STORE_FILE);
-}
-
-function mutateStore(payload) {
-  const operation = storeMutationQueue.then(async () => {
-    const store = mergeStore(await readStore(), payload);
-    await writeStore(store);
-    return store;
-  });
-  storeMutationQueue = operation.catch(() => undefined);
-  return operation;
-}
-
-function timestamp(value) {
-  const parsed = new Date(value || 0).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function isNewer(candidate, current) {
-  return timestamp(candidate) > timestamp(current);
-}
-
-function isNewerOrEqual(candidate, current) {
-  return timestamp(candidate) >= timestamp(current);
-}
-
-function mergeStore(store, payload) {
-  const now = new Date().toISOString();
-  const merged = {
-    ...emptyStore(),
-    ...store,
-    books: { ...(store.books || {}) },
-    deletedBooks: { ...(store.deletedBooks || {}) }
-  };
-
-  Object.entries(payload.deletedBooks || {}).forEach(([bookId, deletedAt]) => {
-    if (!merged.deletedBooks[bookId] || isNewer(deletedAt, merged.deletedBooks[bookId])) {
-      merged.deletedBooks[bookId] = deletedAt;
-    }
-
-    const existingBook = merged.books[bookId];
-    if (existingBook && isNewerOrEqual(deletedAt, existingBook.updatedAt || existingBook.lastRead)) {
-      delete merged.books[bookId];
-    }
-  });
-
-  (payload.books || []).forEach((book) => {
-    if (!book || !book.id) return;
-
-    const bookUpdatedAt = book.updatedAt || book.lastRead || now;
-    const deletedAt = merged.deletedBooks[book.id];
-    if (deletedAt && isNewerOrEqual(deletedAt, bookUpdatedAt)) return;
-
-    const existing = merged.books[book.id];
-    if (!existing || isNewer(bookUpdatedAt, existing.updatedAt || existing.lastRead)) {
-      merged.books[book.id] = { ...book, updatedAt: bookUpdatedAt };
-      delete merged.deletedBooks[book.id];
-    }
-  });
-
-  if (payload.settings && isNewer(payload.settingsUpdatedAt, merged.settingsUpdatedAt)) {
-    merged.settings = payload.settings;
-    merged.settingsUpdatedAt = payload.settingsUpdatedAt;
-  }
-
-  if (payload.draft && isNewer(payload.draft.updatedAt, merged.draft?.updatedAt)) {
-    merged.draft = payload.draft;
-  }
-
-  merged.updatedAt = now;
-  return merged;
-}
-
-function publicStore(store) {
-  return {
-    version: 1,
-    serverUpdatedAt: store.updatedAt,
-    settings: store.settings,
-    settingsUpdatedAt: store.settingsUpdatedAt,
-    draft: store.draft,
-    books: Object.values(store.books || {}),
-    deletedBooks: store.deletedBooks || {}
-  };
-}
-
 function sendJson(response, statusCode, payload, extraHeaders = {}) {
   response.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -221,7 +101,7 @@ function sendJson(response, statusCode, payload, extraHeaders = {}) {
   response.end(JSON.stringify(payload));
 }
 
-function readRequestBody(request, maxBytes = MAX_BODY_BYTES) {
+function readRequestBody(request, maxBytes = MAX_ARTICLE_REQUEST_BYTES) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
@@ -552,39 +432,6 @@ async function handleArticleImport(request, response) {
   }
 }
 
-async function handleSync(request, response) {
-  if (!LEGACY_SINGLE_USER_SYNC) {
-    sendJson(response, 410, {
-      error: 'Cloud sync is disabled. PaceFlow Reader stores books locally.'
-    });
-    return;
-  }
-
-  if (request.method === 'OPTIONS') {
-    response.writeHead(204, {
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Cache-Control': 'no-store'
-    });
-    response.end();
-    return;
-  }
-
-  if (request.method !== 'POST') {
-    sendJson(response, 405, { error: 'Method not allowed' });
-    return;
-  }
-
-  try {
-    const body = await readRequestBody(request);
-    const payload = JSON.parse(body || '{}');
-    const store = await mutateStore(payload);
-    sendJson(response, 200, publicStore(store));
-  } catch (error) {
-    sendJson(response, 400, { error: error.message || 'Sync failed' });
-  }
-}
-
 function sendStatic(request, response, url) {
   let pathname;
   try {
@@ -645,11 +492,6 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (url.pathname === '/api/sync' || url.pathname === '/rsvp/api/sync') {
-    await handleSync(request, response);
-    return;
-  }
-
   if (url.pathname === '/api/article' || url.pathname === '/rsvp/api/article') {
     await handleArticleImport(request, response);
     return;
@@ -659,8 +501,9 @@ const server = http.createServer(async (request, response) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`RSVP Reader listening on http://0.0.0.0:${PORT}`);
+  const host = process.env.HOST || '127.0.0.1';
+  server.listen(PORT, host, () => {
+    console.log(`RSVP Reader listening on http://${host}:${PORT}`);
   });
 }
 

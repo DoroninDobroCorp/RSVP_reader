@@ -1,5 +1,10 @@
 # PaceFlow Reader — план продолжения
 
+> Historical execution record. The former native article-import statement below
+> was superseded on 2026-08-11: iOS v1 is local-only and exposes no article
+> control or article-service endpoint. Current requirements live in the owner's
+> untracked mission files.
+
 Дата исходного плана: 2026-08-03
 Актуализирован: 2026-08-07
 Рабочая папка на сервере: `/srv/RSVP_reader`

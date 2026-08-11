@@ -39,13 +39,16 @@ Structure quality depends on the source file. A well-formed EPUB or document wit
 
 ## Privacy
 
-The native app is local-only by default:
+The native app is local-only:
 
 - no account, ads, analytics, tracking, or book uploads;
 - books, settings, bookmarks, and reading state stay in the app container;
-- native cloud sync is disabled.
+- article URL import is absent and no article-service endpoint is resolved;
+- legacy cloud sync is permanently disabled in web and native builds.
 
-`server.js` still contains a historical single-user sync endpoint for trusted, self-hosted testing. It is disabled by default and is never used by the native build. To opt in deliberately, start the local server with `PACEFLOW_ENABLE_LEGACY_SYNC=1`; the endpoint has no multi-user authentication and is not suitable for a public service.
+The historical unauthenticated `/api/sync` route is unavailable. Upgraded browser
+state is migrated to `cloudSyncEnabled: false` before any timer can be scheduled;
+pending flags are cleared without removing local books or progress.
 
 The Chrome extension uses `activeTab` only after an explicit click or shortcut, reads the clipboard only when **Read copied text** is pressed, and keeps pending handoffs in in-memory `chrome.storage.session` for at most ten minutes. It does not request browsing-history or all-sites access.
 
@@ -56,7 +59,7 @@ The Chrome extension uses `activeTab` only after an explicit click or shortcut, 
 | Reading core | Framework-free JavaScript in `app.js`, with parsing in `epub-parser.js` and localization in `i18n.js` |
 | Web/PWA | Static application shell, manifest, service worker, local IndexedDB/localStorage persistence |
 | Chrome | Manifest V3 service worker, popup, context menus, keyboard shortcut, session-only handoff, and a content bridge restricted to PaceFlow |
-| Native iOS | Capacitor 8 shell in `ios/`, minimum iOS 15, bundled `dist/` assets, Filesystem and Preferences persistence, lifecycle and haptics plugins |
+| Native iOS | Capacitor 8 shell in `ios/`, minimum iOS 15, bundled `dist/` assets, Filesystem/Preferences persistence, lifecycle, haptics, and pinned Keep Awake fallback |
 | Android | Planned reuse of the same web core; no Android platform is shipped in this repository yet |
 
 The native app starts from bundled assets and does not need a remote server for normal reading.
