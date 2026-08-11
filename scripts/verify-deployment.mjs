@@ -53,6 +53,9 @@ if (/alias\s+\/srv\/RSVP_reader\//u.test(`${ipFragment}\n${tlsFragment}`)) {
 for (const token of ['limit_req_zone', 'limit_conn_zone']) {
     if (!nginxHttp.includes(token)) throw new Error(`nginx HTTP policy is missing: ${token}`);
 }
+if (/^\s*gzip(?:_|\s)/mu.test(nginxHttp)) {
+    throw new Error('RSVP HTTP fragment must not redeclare server-global gzip policy.');
+}
 
 for (const token of [
     'User=paceflow',
@@ -177,7 +180,7 @@ try {
     execFileSync('nginx', ['-v'], { stdio: 'ignore' });
     const scratch = await mkdtemp(join(tmpdir(), 'hummingread-nginx-'));
     try {
-        const config = `pid ${scratch}/nginx.pid;\nerror_log ${scratch}/error.log;\nevents {}\nhttp {\naccess_log ${scratch}/access.log;\n${nginxHttp}\nserver { listen 127.0.0.1:18080;\n${ipFragment}\n}\nserver { listen 127.0.0.1:18081;\n${tlsFragment}\n}\n}\n`;
+        const config = `pid ${scratch}/nginx.pid;\nerror_log ${scratch}/error.log;\nevents {}\nhttp {\naccess_log ${scratch}/access.log;\ngzip on;\n${nginxHttp}\nserver { listen 127.0.0.1:18080;\n${ipFragment}\n}\nserver { listen 127.0.0.1:18081;\n${tlsFragment}\n}\n}\n`;
         const configPath = join(scratch, 'nginx.conf');
         await writeFile(configPath, config);
         execFileSync('nginx', ['-t', '-c', configPath, '-p', `${scratch}/`], { stdio: 'inherit' });
