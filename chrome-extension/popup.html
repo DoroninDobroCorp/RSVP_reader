@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaceFlow</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon-48.png" width="40" height="40" alt="">
+      <div>
+        <h1>PaceFlow</h1>
+        <p data-i18n="popupTagline">Send what you are reading into focus mode.</p>
+      </div>
+    </header>
+
+    <section class="quick-actions" aria-labelledby="quickTitle">
+      <h2 id="quickTitle" data-i18n="quickActions">Quick send</h2>
+      <button id="selectionBtn" class="primary" type="button" data-i18n="sendSelection">Read selected text</button>
+      <button id="articleBtn" type="button" data-i18n="sendArticle">Read this article</button>
+      <button id="clipboardBtn" type="button" data-i18n="sendClipboard">Read copied text</button>
+    </section>
+
+    <section aria-labelledby="pasteTitle">
+      <h2 id="pasteTitle" data-i18n="pasteTitle">Or paste text</h2>
+      <textarea id="textInput" maxlength="1500000" data-i18n-placeholder="pastePlaceholder" placeholder="Paste or edit text…"></textarea>
+      <button id="sendTextBtn" class="primary" type="button" data-i18n="sendText">Send text to PaceFlow</button>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite" data-i18n="readyStatus">Ready. Nothing is sent until you choose an action.</p>
+    <footer><span data-i18n="shortcutHint">Shortcut: Alt+Shift+R sends the selection, or the page when nothing is selected.</span></footer>
+  </main>
+  <script src="core.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

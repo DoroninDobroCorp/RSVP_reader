@@ -1,5 +1,5 @@
-const CACHE_NAME = 'paceflow-reader-v46';
-const ASSET_VERSION = 'v=46';
+const CACHE_NAME = 'paceflow-reader-v47';
+const ASSET_VERSION = 'v=47';
 const APP_SHELL = [
   './',
   './index.html',

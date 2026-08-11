@@ -20,6 +20,7 @@ The current product target is a native iPhone/iPad app built with Capacitor. The
 - Always-accessible book search with phrase matching and previous/next result navigation.
 - Table of contents from EPUB navigation, FB2 sections, document headings, or detected headings when the source format permits it.
 - English and Russian UI.
+- Manifest V3 Chrome extension for sending selected text, copied text, pasted text, links, or the current article directly into the local PaceFlow library and focus mode.
 - Optional Media Session controls on compatible web platforms. In the iOS build, Space works with a hardware keyboard while volume buttons always keep their normal system behavior.
 
 ## Supported input
@@ -45,12 +46,15 @@ The native app is local-only by default:
 
 `server.js` still contains a historical single-user sync endpoint for trusted, self-hosted testing. It is disabled by default and is never used by the native build. To opt in deliberately, start the local server with `PACEFLOW_ENABLE_LEGACY_SYNC=1`; the endpoint has no multi-user authentication and is not suitable for a public service.
 
+The Chrome extension uses `activeTab` only after an explicit click or shortcut, reads the clipboard only when **Read copied text** is pressed, and keeps pending handoffs in in-memory `chrome.storage.session` for at most ten minutes. It does not request browsing-history or all-sites access.
+
 ## Architecture
 
 | Area | Current implementation |
 | --- | --- |
 | Reading core | Framework-free JavaScript in `app.js`, with parsing in `epub-parser.js` and localization in `i18n.js` |
 | Web/PWA | Static application shell, manifest, service worker, local IndexedDB/localStorage persistence |
+| Chrome | Manifest V3 service worker, popup, context menus, keyboard shortcut, session-only handoff, and a content bridge restricted to PaceFlow |
 | Native iOS | Capacitor 8 shell in `ios/`, minimum iOS 15, bundled `dist/` assets, Filesystem and Preferences persistence, lifecycle and haptics plugins |
 | Android | Planned reuse of the same web core; no Android platform is shipped in this repository yet |
 
@@ -74,6 +78,16 @@ npm run build
 ```
 
 The generated output is placed in `dist/`.
+
+## Build and install the Chrome extension
+
+`npm run build` also creates `dist/downloads/paceflow-quick-send.zip`. Extract it, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the extracted folder. During development, the tracked `chrome-extension/` folder can be loaded directly.
+
+The extension supports:
+
+- right-clicking selected text, the current page, or a link;
+- sending the current selection, copied text, manually pasted text, or current article from the toolbar popup;
+- `Alt+Shift+R` to send the selection, falling back to the current article URL.
 
 ## Build the iOS app
 
@@ -99,6 +113,7 @@ Then run:
 ```bash
 npm test              # Node unit tests + complete Playwright suite
 npm run test:unit     # unit tests only
+npm run test:extension # real Chrome service-worker and website handoff
 npm run test:local    # focused local regression suite
 npm run test:prod     # smoke-test the deployed web demo
 npm run test:headed   # Playwright with a visible browser
@@ -115,6 +130,7 @@ Playwright starts the local server automatically on port 8081. The production sm
 ├── epub-parser.js              EPUB parsing and navigation
 ├── i18n.js                     English/Russian localization
 ├── assets/, vendor/            Product assets and vendored JSZip
+├── chrome-extension/           Manifest V3 extension source
 ├── scripts/build-web.mjs       Reproducible dist/ builder
 ├── server.js                   Local static server; legacy sync opt-in
 ├── ios/                        Capacitor/Xcode iOS project
@@ -147,6 +163,7 @@ PaceFlow Reader — спокойная приватная читалка для 
 - Всегда доступный поиск по книге, включая фразы и переходы к предыдущему/следующему совпадению.
 - Оглавление из навигации EPUB, секций FB2, заголовков документов либо распознанных заголовков, если формат это позволяет.
 - Интерфейс на английском и русском.
+- Расширение Chrome Manifest V3 отправляет выделенный, скопированный или вставленный текст, ссылку либо текущую статью прямо в локальную библиотеку и фокус-режим PaceFlow.
 - Опциональное управление через Media Session на совместимых веб-платформах. В iOS-сборке пробел работает с аппаратной клавиатурой, а кнопки громкости всегда сохраняют системное назначение.
 
 ## Поддерживаемые форматы
@@ -172,12 +189,15 @@ PaceFlow Reader — спокойная приватная читалка для 
 
 В `server.js` сохранён исторический однопользовательский endpoint синхронизации для доверенного self-hosted тестирования. По умолчанию он выключен и нативным приложением не используется. Явное включение: `PACEFLOW_ENABLE_LEGACY_SYNC=1 npm start`. У endpoint нет многопользовательской авторизации, поэтому для публичного сервиса он не подходит.
 
+Расширение Chrome получает временный доступ к активной вкладке только после явного действия, читает буфер только по кнопке **Читать скопированный текст** и держит незавершённую передачу в оперативной `chrome.storage.session` не более десяти минут. Доступ к истории и ко всем сайтам не запрашивается.
+
 ## Архитектура
 
 | Часть | Текущая реализация |
 | --- | --- |
 | Ядро чтения | JavaScript без фреймворка в `app.js`, парсинг в `epub-parser.js`, локализация в `i18n.js` |
 | Web/PWA | Статическое приложение, manifest, service worker, локальное хранение IndexedDB/localStorage |
+| Chrome | Manifest V3 service worker, popup, контекстное меню, горячая клавиша, сессионная передача и content bridge только для PaceFlow |
 | Нативный iOS | Оболочка Capacitor 8 в `ios/`, минимум iOS 15, встроенные ресурсы `dist/`, Filesystem/Preferences, lifecycle и haptics |
 | Android | Планируется на том же web-ядре; Android-платформа пока не поставляется в репозитории |
 
@@ -199,6 +219,12 @@ npm run build
 ```
 
 Результат создаётся в `dist/`.
+
+## Сборка и установка расширения Chrome
+
+`npm run build` также создаёт `dist/downloads/paceflow-quick-send.zip`. Распакуйте архив, откройте `chrome://extensions`, включите **Режим разработчика**, нажмите **Загрузить распакованное расширение** и выберите папку. Для разработки можно загрузить отслеживаемую папку `chrome-extension/` напрямую.
+
+Расширение умеет отправлять выделение, страницу или ссылку через контекстное меню; выделенный, скопированный или вручную вставленный текст и текущую статью через popup; `Alt+Shift+R` отправляет выделение, а при его отсутствии — адрес статьи.
 
 ## Сборка iOS
 
@@ -224,6 +250,7 @@ npx playwright install chromium webkit
 ```bash
 npm test              # unit-тесты Node + полный набор Playwright
 npm run test:unit     # только unit-тесты
+npm run test:extension # реальный Chrome service worker и передача на сайт
 npm run test:local    # сфокусированный локальный регресс
 npm run test:prod     # smoke-тест опубликованного web-demo
 npm run test:headed   # Playwright с видимым браузером
@@ -240,6 +267,7 @@ Playwright автоматически поднимает локальный се
 ├── epub-parser.js              Парсинг и навигация EPUB
 ├── i18n.js                     Английская/русская локализация
 ├── assets/, vendor/            Ресурсы продукта и локальный JSZip
+├── chrome-extension/           Исходники расширения Manifest V3
 ├── scripts/build-web.mjs       Сборщик dist/
 ├── server.js                   Локальный сервер; legacy-синхронизация opt-in
 ├── ios/                        Проект Capacitor/Xcode

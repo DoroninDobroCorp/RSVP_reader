@@ -502,6 +502,80 @@ input:focus {
     color: var(--primary-hover);
 }
 
+.extension-action {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px 16px;
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--surface-2), var(--primary-soft));
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 16px;
+}
+
+.extension-action-copy {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.extension-action-copy > div {
+    display: grid;
+    gap: 3px;
+}
+
+.extension-action-copy strong {
+    color: var(--text);
+}
+
+.extension-action-copy span:not(.extension-badge) {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.extension-badge {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    color: #fff;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 820;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.extension-action > a {
+    white-space: nowrap;
+}
+
+.extension-install {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.extension-install summary {
+    width: fit-content;
+    color: var(--primary-hover);
+    cursor: pointer;
+    font-weight: 720;
+}
+
+.extension-install ol {
+    margin: 10px 0 7px;
+    padding-left: 22px;
+    line-height: 1.55;
+}
+
+.extension-install p {
+    margin: 0;
+    line-height: 1.5;
+}
+
 .primary-btn,
 .secondary-btn,
 .danger-btn,
@@ -1751,6 +1825,19 @@ input:focus {
     .article-import-controls button {
         width: 100%;
         white-space: normal;
+    }
+
+    .extension-action {
+        grid-template-columns: 1fr;
+    }
+
+    .extension-action > a {
+        width: 100%;
+        white-space: normal;
+    }
+
+    .extension-install {
+        grid-column: 1;
     }
 
     .library-header,

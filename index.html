@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PaceFlow">
     <title>PaceFlow Reader</title>
-    <link rel="manifest" href="manifest.json?v=46">
-    <link rel="stylesheet" href="style.css?v=46">
+    <link rel="manifest" href="manifest.json?v=47">
+    <link rel="stylesheet" href="style.css?v=47">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png">
 </head>
@@ -72,6 +72,25 @@
                 </div>
                 <p id="articleImportStatus" class="article-import-status" role="status" aria-live="polite" data-i18n="articleOnlineOnly">Requires an internet connection. Paywalled and app-only pages may not be readable.</p>
             </form>
+            <div id="chromeExtensionPanel" class="extension-action">
+                <div class="extension-action-copy">
+                    <span class="extension-badge" aria-hidden="true">Chrome</span>
+                    <div>
+                        <strong data-i18n="chromeExtensionTitle">Send from Chrome in one click</strong>
+                        <span data-i18n="chromeExtensionHint">Select text, copy a passage, or right-click an article and open it directly in PaceFlow.</span>
+                    </div>
+                </div>
+                <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/paceflow-quick-send.zip" download data-i18n="chromeExtensionDownload">Download Chrome extension</a>
+                <details class="extension-install">
+                    <summary data-i18n="chromeExtensionInstall">Install in Chrome</summary>
+                    <ol>
+                        <li data-i18n="chromeExtensionStepOne">Download and extract the extension ZIP.</li>
+                        <li data-i18n="chromeExtensionStepTwo">Open chrome://extensions and enable Developer mode.</li>
+                        <li data-i18n="chromeExtensionStepThree">Choose Load unpacked and select the extracted folder.</li>
+                    </ol>
+                    <p data-i18n="chromeExtensionPrivacy">It reads a selection or clipboard only when you explicitly press a PaceFlow action. No browsing-history permission or analytics.</p>
+                </details>
+            </div>
             <textarea id="textInput" data-i18n-placeholder="textPlaceholder" placeholder="Paste text here, or import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF…" spellcheck="false"></textarea>
             <div class="input-group">
                 <label class="sr-only" for="bookNameInput" data-i18n="bookTitleLabel">Book title</label>
@@ -338,9 +357,9 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=46"></script>
+    <script src="i18n.js?v=47"></script>
     <script src="vendor/jszip.min.js?v=45"></script>
     <script src="epub-parser.js?v=45"></script>
-    <script src="app.js?v=46"></script>
+    <script src="app.js?v=47"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 # PaceFlow Reader — Privacy Policy Draft
 
-Effective date: **August 7, 2026**
+Effective date: **August 10, 2026**
 
-This policy describes the current local-only iOS build. A copy is bundled inside the app; the public source remains available in this repository until a final product domain is selected.
+This policy describes the current local-only iOS build, web reader, and optional Chrome extension. A copy is bundled inside the app; the public source remains available in this repository until a final product domain is selected.
 
 ## English
 
@@ -17,6 +17,10 @@ When you import a file or paste text, the app processes that content locally to 
 The current app does not upload your books, reading history, bookmarks, or settings. Its core reading features work without an internet connection.
 
 If you choose **Import article**, the URL you submit is sent to the PaceFlow server. The server downloads that public page, extracts its readable text, and returns the result to your device. The submitted URL and downloaded page are processed in memory for that request and are not stored in a server-side PaceFlow library or analytics database. Standard hosting security logs may retain your IP address, request time, and API path; the POST body containing the submitted URL and the extracted article text are not included in those logs. The source website receives a request from the PaceFlow server and handles it under its own policy. Do not use article import for private, authenticated, or confidential URLs.
+
+### Optional Chrome extension
+
+The Chrome extension runs only after an explicit toolbar, context-menu, or keyboard action. Selected and pasted text is transferred directly to the PaceFlow website and stored in that browser's local PaceFlow library. Article actions transfer the public URL to the guarded importer described above. The extension reads the clipboard only when **Read copied text** is pressed. A pending handoff is kept in in-memory `chrome.storage.session` for no more than ten minutes and deleted after delivery. It does not request browsing-history, all-sites, analytics, advertising, or remote-code access.
 
 Apple may process purchase, download, diagnostic, and support information under Apple's own policies; that processing is controlled by Apple, not by PaceFlow Reader.
 
@@ -57,6 +61,10 @@ PaceFlow Reader — офлайн-читалка документов и элек
 Текущая версия не загружает книги, историю чтения, закладки или настройки. Основные функции чтения работают без интернета.
 
 Если вы выбираете **Импортировать статью**, введённая ссылка передаётся серверу PaceFlow. Сервер загружает публичную страницу, выделяет читаемый текст и возвращает результат на устройство. Ссылка и загруженная страница обрабатываются в памяти только для этого запроса и не сохраняются в серверной библиотеке PaceFlow или базе аналитики. Стандартные защитные журналы хостинга могут хранить IP-адрес, время запроса и путь API; POST-тело с введённой ссылкой и извлечённый текст статьи в эти журналы не входят. Исходный сайт получает запрос от сервера PaceFlow и обрабатывает его по собственным правилам. Не используйте импорт для приватных, авторизованных или конфиденциальных ссылок.
+
+### Необязательное расширение Chrome
+
+Расширение работает только после явного действия в popup, контекстном меню или с клавиатуры. Выделенный и вставленный текст передаётся прямо на сайт PaceFlow и сохраняется в локальной библиотеке этого браузера. Для статьи защищённому импортёру передаётся публичная ссылка. Буфер читается только по кнопке **Читать скопированный текст**. Незавершённая передача остаётся в оперативной `chrome.storage.session` не более десяти минут и удаляется после доставки. Расширение не запрашивает доступ к истории, всем сайтам, аналитике, рекламе или удалённому коду.
 
 Apple может обрабатывать сведения о покупке, загрузке, диагностике и обращениях по собственным правилам; PaceFlow Reader не управляет этой обработкой.
 

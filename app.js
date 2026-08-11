@@ -134,6 +134,7 @@ class RSVPReader {
             this.setupHardwareControls();
             if (this.settings.cloudSyncEnabled && !this.isNativePlatform()) this.syncSoon(800);
         });
+        this.setupExtensionImportBridge();
     }
 
     initElements() {
@@ -151,6 +152,8 @@ class RSVPReader {
         this.articleUrlInput = document.getElementById('articleUrlInput');
         this.importArticleBtn = document.getElementById('importArticleBtn');
         this.articleImportStatus = document.getElementById('articleImportStatus');
+        this.chromeExtensionPanel = document.getElementById('chromeExtensionPanel');
+        if (this.chromeExtensionPanel && this.isNativePlatform()) this.chromeExtensionPanel.hidden = true;
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -506,6 +509,138 @@ class RSVPReader {
             console.error(error);
             this.showToast(error.message || this.t('actionFailed'), 'error');
         });
+    }
+
+    setupExtensionImportBridge() {
+        let nonce = '';
+        try {
+            nonce = new URL(window.location.href).searchParams.get('paceflow-extension-import') || '';
+        } catch (error) {
+            return;
+        }
+        if (!/^[a-f0-9]{32}$/u.test(nonce) || this.isNativePlatform()) return;
+
+        this.extensionImportNonce = nonce;
+        this.extensionImportInFlight = false;
+        this.extensionImportCompleted = false;
+        this.extensionImportSucceeded = false;
+        window.addEventListener('message', (event) => {
+            const message = event.data;
+            if (event.source !== window || event.origin !== window.location.origin) return;
+            if (message?.channel !== 'paceflow-extension' || message?.type !== 'paceflow-extension-import') return;
+            if (message.version !== 1 || message.nonce !== this.extensionImportNonce) return;
+            if (this.extensionImportCompleted) {
+                this.postExtensionImportResult(this.extensionImportSucceeded);
+                return;
+            }
+            if (this.extensionImportInFlight) return;
+
+            this.extensionImportInFlight = true;
+            Promise.resolve(this.handleExtensionImport(message.payload))
+                .then((ok) => {
+                    this.extensionImportSucceeded = Boolean(ok);
+                    this.extensionImportCompleted = true;
+                    this.postExtensionImportResult(this.extensionImportSucceeded);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    this.showToast(error.message || this.t('extensionImportFailed'), 'error');
+                    this.extensionImportSucceeded = false;
+                    this.extensionImportCompleted = true;
+                    this.postExtensionImportResult(false, error.message);
+                })
+                .finally(() => {
+                    this.extensionImportInFlight = false;
+                });
+        });
+    }
+
+    postExtensionImportResult(ok, error = '') {
+        window.postMessage({
+            channel: 'paceflow-extension',
+            type: 'paceflow-import-result',
+            version: 1,
+            nonce: this.extensionImportNonce,
+            ok,
+            error: String(error || '').slice(0, 500)
+        }, window.location.origin);
+    }
+
+    normalizeExtensionImportPayload(value) {
+        const payload = value && typeof value === 'object' ? value : {};
+        if (payload.type === 'url') {
+            const url = this.normalizeArticleUrlInput(payload.url || payload.sourceUrl);
+            if (!url) throw new Error(this.t('articleInvalidUrl'));
+            return { type: 'url', url };
+        }
+
+        const text = String(payload.text || '').replace(/\u0000/gu, '').trim();
+        if (!text) throw new Error(this.t('extensionEmptyText'));
+        if (text.length > Math.min(this.importLimits.maxTextCharacters, 1_500_000)) {
+            throw new Error(this.t('importSafetyLimit'));
+        }
+        this.assertTextTokenSafety(text, { requireReadable: true });
+        const sourceUrl = this.normalizeArticleUrlInput(payload.sourceUrl) || '';
+        const title = String(payload.title || '')
+            .replace(/[\u0000-\u001f\u007f]+/gu, ' ')
+            .replace(/\s+/gu, ' ')
+            .trim()
+            .slice(0, 300) || this.t('extensionSelectionTitle');
+        return { type: 'text', text, title, sourceUrl };
+    }
+
+    async handleExtensionImport(rawPayload) {
+        await this.ready;
+        const payload = this.normalizeExtensionImportPayload(rawPayload);
+        if (payload.type === 'url') {
+            const savedBook = await this.importArticleFromUrl({
+                sourceUrl: payload.url,
+                startFocus: true
+            });
+            return Boolean(savedBook);
+        }
+
+        if (this.textInput.value.trim() && this.textInput.value.trim() !== payload.text) {
+            const confirmed = await this.showActionDialog({
+                title: this.t('extensionReplaceTitle'),
+                message: this.t('extensionReplaceMessage'),
+                confirmLabel: this.t('extensionOpen')
+            });
+            if (!confirmed) return false;
+        }
+
+        this.composerRevision += 1;
+        const composerRevision = this.composerRevision;
+        this.currentBookId = null;
+        this.currentBookName = '';
+        this.currentTextSignature = '';
+        this.currentChapters = [];
+        this.pendingChapters = [];
+        this.currentIndex = 0;
+        this.words = [];
+        this.hasUnsavedTextInput = true;
+        this.hasUnsafeDraft = false;
+
+        const savedBook = await this.addParsedBookToLibrary(payload.title, {
+            text: payload.text,
+            chapters: this.detectChaptersFromText(payload.text)
+        }, 'extension', {
+            silent: true,
+            fileName: payload.sourceUrl,
+            select: true,
+            selectRevision: composerRevision
+        });
+        if (!savedBook || this.currentBookId !== savedBook.id) {
+            throw new Error(this.t('extensionImportFailed'));
+        }
+
+        await this.startNormalReading();
+        this.startRSVP();
+        this.showToast(this.t('extensionTextImported', {
+            title: savedBook.name,
+            count: this.formatWordCount(savedBook.wordCount)
+        }));
+        return true;
     }
 
     t(key, params = {}) {
@@ -2463,26 +2598,27 @@ class RSVPReader {
         this.articleImportStatus.textContent = statusMessage || this.t(isBusy ? 'importingArticle' : 'articleOnlineOnly');
     }
 
-    async importArticleFromUrl() {
+    async importArticleFromUrl(options = {}) {
         await this.ready;
 
-        const sourceUrl = this.normalizeArticleUrlInput(this.articleUrlInput.value);
+        const suppliedUrl = typeof options.sourceUrl === 'string' ? options.sourceUrl : this.articleUrlInput.value;
+        const sourceUrl = this.normalizeArticleUrlInput(suppliedUrl);
         if (!sourceUrl) {
             const message = this.t('articleInvalidUrl');
             this.articleImportStatus.textContent = message;
             this.showToast(message, 'error');
-            this.articleUrlInput.focus();
-            return;
+            if (!options.sourceUrl) this.articleUrlInput.focus();
+            return null;
         }
         this.articleUrlInput.value = sourceUrl;
 
-        if (this.textInput.value.trim()) {
+        if (this.textInput.value.trim() && options.confirmReplacement !== false) {
             const confirmed = await this.showActionDialog({
                 title: this.t('articleReplaceTitle'),
                 message: this.t('articleReplaceMessage'),
                 confirmLabel: this.t('importArticle')
             });
-            if (!confirmed) return;
+            if (!confirmed) return null;
         }
 
         const composerRevision = this.composerRevision;
@@ -2528,6 +2664,7 @@ class RSVPReader {
 
             if (this.currentBookId === savedBook.id) {
                 await this.startNormalReading();
+                if (options.startFocus) this.startRSVP();
             }
             this.articleUrlInput.value = '';
             const message = this.t('articleImported', {
@@ -2536,6 +2673,7 @@ class RSVPReader {
             });
             this.showToast(message);
             this.setArticleImportBusy(false, message);
+            return savedBook;
         } catch (error) {
             console.error(error);
             const message = error?.code
@@ -2543,6 +2681,7 @@ class RSVPReader {
                 : (error.message || this.t('articleImportFailed'));
             this.setArticleImportBusy(false, message);
             this.showToast(message, 'error');
+            return null;
         }
     }
 

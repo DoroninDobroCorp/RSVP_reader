@@ -1628,6 +1628,117 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('#textInput')).toHaveValue('Несохранённый черновик');
   });
 
+  test('Chrome extension text handoff is nonce-scoped, saved locally and opened in focus mode', async ({ page }) => {
+    const nonce = '0123456789abcdef0123456789abcdef';
+    await page.goto(`/?paceflow-extension-import=${nonce}`);
+    await page.evaluate(() => window.rsvpReader.ready);
+    await expect(page.locator('#chromeExtensionDownload')).toHaveAttribute(
+      'href',
+      'downloads/paceflow-quick-send.zip'
+    );
+
+    const ignoredText = 'This payload has the wrong nonce and must remain ignored by the PaceFlow import bridge.';
+    await page.evaluate(({ ignoredText }) => {
+      window.postMessage({
+        channel: 'paceflow-extension',
+        type: 'paceflow-extension-import',
+        version: 1,
+        nonce: 'ffffffffffffffffffffffffffffffff',
+        payload: { type: 'text', text: ignoredText, title: 'Ignored' }
+      }, window.location.origin);
+    }, { ignoredText });
+    await page.waitForTimeout(80);
+    await expect(page.locator('#textInput')).not.toHaveValue(ignoredText);
+
+    const text = [
+      'A selected passage arrives from Chrome without being placed in a URL or uploaded as a book.',
+      'PaceFlow stores the handoff locally, opens the reader, and starts focus mode at the first word.',
+      'The original page address remains useful as source metadata inside the private local library.'
+    ].join('\n\n');
+    const result = await page.evaluate(({ nonce, text }) => new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Chrome handoff acknowledgement timed out')), 5000);
+      const receive = (event) => {
+        if (event.data?.type !== 'paceflow-import-result' || event.data?.nonce !== nonce) return;
+        clearTimeout(timeout);
+        window.removeEventListener('message', receive);
+        resolve(event.data);
+      };
+      window.addEventListener('message', receive);
+      window.postMessage({
+        channel: 'paceflow-extension',
+        type: 'paceflow-extension-import',
+        version: 1,
+        nonce,
+        payload: {
+          type: 'text',
+          text,
+          title: 'Selected research notes',
+          sourceUrl: 'https://example.com/notes#selection'
+        }
+      }, window.location.origin);
+    }), { nonce, text });
+
+    expect(result.ok).toBe(true);
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    await expect(page.locator('#rsvpBookTitle')).toHaveText('Selected research notes');
+    const stored = await page.evaluate(() => {
+      const book = window.rsvpReader.library.find((item) => item.name === 'Selected research notes');
+      return { sourceType: book?.sourceType, fileName: book?.fileName };
+    });
+    expect(stored).toEqual({ sourceType: 'extension', fileName: 'https://example.com/notes' });
+  });
+
+  test('Chrome extension article handoff uses the guarded URL importer and starts focus mode', async ({ page }) => {
+    const nonce = 'abcdef0123456789abcdef0123456789';
+    await page.route('**/api/article', async (route) => {
+      const submitted = JSON.parse(route.request().postData() || '{}');
+      expect(submitted.url).toBe('https://news.example/long-story');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          title: 'A Chrome-sent article',
+          sourceUrl: 'https://news.example/long-story',
+          text: [
+            'The article importer keeps the useful opening paragraph and prepares it for paced reading.',
+            'A second paragraph makes the saved article long enough to enter focus mode reliably.',
+            'The final paragraph verifies that Chrome sends only a URL while the guarded server extracts the text.'
+          ].join('\n\n'),
+          wordCount: 45
+        })
+      });
+    });
+    await page.goto(`/?paceflow-extension-import=${nonce}`);
+    await page.evaluate(() => window.rsvpReader.ready);
+
+    const result = await page.evaluate((nonce) => new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Article handoff acknowledgement timed out')), 5000);
+      const receive = (event) => {
+        if (event.data?.type !== 'paceflow-import-result' || event.data?.nonce !== nonce) return;
+        clearTimeout(timeout);
+        window.removeEventListener('message', receive);
+        resolve(event.data);
+      };
+      window.addEventListener('message', receive);
+      window.postMessage({
+        channel: 'paceflow-extension',
+        type: 'paceflow-extension-import',
+        version: 1,
+        nonce,
+        payload: { type: 'url', url: 'https://news.example/long-story#comments' }
+      }, window.location.origin);
+    }), nonce);
+
+    expect(result.ok).toBe(true);
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    await expect(page.locator('#rsvpBookTitle')).toHaveText('A Chrome-sent article');
+    const stored = await page.evaluate(() => {
+      const book = window.rsvpReader.library.find((item) => item.name === 'A Chrome-sent article');
+      return { sourceType: book?.sourceType, fileName: book?.fileName };
+    });
+    expect(stored).toEqual({ sourceType: 'url', fileName: 'https://news.example/long-story' });
+  });
+
   test('accessible app dialogs replace browser prompts and expose privacy and support', async ({ page }) => {
     let browserDialogOpened = false;
     page.on('dialog', async (dialog) => {
