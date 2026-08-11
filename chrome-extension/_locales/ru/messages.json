@@ -6,7 +6,7 @@
   "contextSelection": { "message": "Читать выделение в PaceFlow" },
   "contextPage": { "message": "Читать эту статью в PaceFlow" },
   "contextLink": { "message": "Читать статью по ссылке в PaceFlow" },
-  "popupTagline": { "message": "Отправьте читаемый материал прямо в фокус-режим." },
+  "popupTagline": { "message": "Пико доставит ваш текст прямиком в фокус-режим." },
   "quickActions": { "message": "Быстрая отправка" },
   "sendSelection": { "message": "Читать выделенный текст" },
   "sendArticle": { "message": "Читать эту статью" },

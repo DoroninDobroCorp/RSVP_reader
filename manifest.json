@@ -1,13 +1,13 @@
 {
   "name": "PaceFlow Reader",
   "short_name": "PaceFlow",
-  "description": "A calm, private pace reader for real books, with smart rhythm and context.",
+  "description": "Read long books and articles in rhythm with Pico, your private focus pilot.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#0f172a",
+  "background_color": "#f5eedf",
+  "theme_color": "#101529",
   "orientation": "any",
   "categories": ["books", "productivity"],
   "icons": [

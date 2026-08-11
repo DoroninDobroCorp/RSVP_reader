@@ -17,6 +17,10 @@ test('public app shell loads without browser errors', async ({ page }) => {
   await expect(page.locator('#tryDemoBtn')).toBeVisible();
   await expect(page.locator('#articleImportForm')).toBeVisible();
   await expect(page.locator('#chromeExtensionPanel')).toBeVisible();
+  await expect(page.locator('.pico-hero-image')).toBeVisible();
+  await expect(page.locator('.pico-signature')).toContainText('PICO');
+  expect(await page.locator('.pico-hero-image').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   expect(browserErrors).toEqual([]);
 });
 

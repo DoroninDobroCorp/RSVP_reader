@@ -8,29 +8,62 @@
 </head>
 <body>
   <main>
-    <header>
-      <img src="icons/icon-48.png" width="40" height="40" alt="">
-      <div>
-        <h1>PaceFlow</h1>
-        <p data-i18n="popupTagline">Send what you are reading into focus mode.</p>
+    <header class="popup-hero">
+      <div class="brand-row">
+        <img class="brand-mark" src="icons/icon-48.png" width="48" height="48" alt="">
+        <div class="brand-copy">
+          <span class="pilot-label" aria-hidden="true">PICO · FOCUS PILOT</span>
+          <h1>PaceFlow</h1>
+        </div>
+      </div>
+      <p data-i18n="popupTagline">Pico flies what you are reading straight into focus mode.</p>
+      <div class="flight-stage" aria-hidden="true">
+        <span class="flight-line flight-line-one"></span>
+        <span class="flight-line flight-line-two"></span>
+        <img src="assets/pico-quick-send.png" width="420" height="280" alt="">
+        <span class="focus-chip">COPY → FOCUS</span>
       </div>
     </header>
 
-    <section class="quick-actions" aria-labelledby="quickTitle">
-      <h2 id="quickTitle" data-i18n="quickActions">Quick send</h2>
-      <button id="selectionBtn" class="primary" type="button" data-i18n="sendSelection">Read selected text</button>
-      <button id="articleBtn" type="button" data-i18n="sendArticle">Read this article</button>
-      <button id="clipboardBtn" type="button" data-i18n="sendClipboard">Read copied text</button>
+    <section class="action-card quick-actions" aria-labelledby="quickTitle">
+      <div class="section-heading">
+        <span aria-hidden="true">01</span>
+        <h2 id="quickTitle" data-i18n="quickActions">Quick send</h2>
+      </div>
+      <button id="selectionBtn" class="flight-action action-selection" type="button">
+        <span class="action-glyph" aria-hidden="true">Aa</span>
+        <span data-i18n="sendSelection">Read selected text</span>
+        <span class="action-arrow" aria-hidden="true">↗</span>
+      </button>
+      <button id="articleBtn" class="flight-action action-article" type="button">
+        <span class="action-glyph" aria-hidden="true">▤</span>
+        <span data-i18n="sendArticle">Read this article</span>
+        <span class="action-arrow" aria-hidden="true">↗</span>
+      </button>
+      <button id="clipboardBtn" class="flight-action action-clipboard" type="button">
+        <span class="action-glyph" aria-hidden="true">⌘</span>
+        <span data-i18n="sendClipboard">Read copied text</span>
+        <span class="action-arrow" aria-hidden="true">↗</span>
+      </button>
     </section>
 
-    <section aria-labelledby="pasteTitle">
-      <h2 id="pasteTitle" data-i18n="pasteTitle">Or paste text</h2>
+    <section class="action-card paste-card" aria-labelledby="pasteTitle">
+      <div class="section-heading">
+        <span aria-hidden="true">02</span>
+        <h2 id="pasteTitle" data-i18n="pasteTitle">Or paste text</h2>
+      </div>
       <textarea id="textInput" maxlength="1500000" data-i18n-placeholder="pastePlaceholder" placeholder="Paste or edit text…"></textarea>
-      <button id="sendTextBtn" class="primary" type="button" data-i18n="sendText">Send text to PaceFlow</button>
+      <button id="sendTextBtn" class="send-button" type="button">
+        <span data-i18n="sendText">Send text to PaceFlow</span>
+        <span aria-hidden="true">FLY ↗</span>
+      </button>
     </section>
 
     <p id="status" class="status" role="status" aria-live="polite" data-i18n="readyStatus">Ready. Nothing is sent until you choose an action.</p>
-    <footer><span data-i18n="shortcutHint">Shortcut: Alt+Shift+R sends the selection, or the page when nothing is selected.</span></footer>
+    <footer>
+      <span class="shortcut-key" aria-hidden="true">⌥ ⇧ R</span>
+      <span data-i18n="shortcutHint">Shortcut: Alt+Shift+R sends the selection, or the page when nothing is selected.</span>
+    </footer>
   </main>
   <script src="core.js"></script>
   <script src="popup.js"></script>

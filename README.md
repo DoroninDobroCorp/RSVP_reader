@@ -2,7 +2,7 @@
 
 **English** · [Русский](#русский)
 
-A calm, private pace reader for books and long-form text. PaceFlow presents text in controlled one- or two-word frames, preserves useful context when paused, and returns to the exact saved reading position.
+A private pace reader for books, articles, and long-form text, guided by Pico—the hummingbird focus pilot. PaceFlow presents text in controlled one- or two-word frames, preserves useful context when paused, and returns to the exact saved reading position.
 
 The current product target is a native iPhone/iPad app built with Capacitor. The same reading core also runs as a local web/PWA build. Android is planned, but is not part of the current release.
 
@@ -20,6 +20,7 @@ The current product target is a native iPhone/iPad app built with Capacitor. The
 - Always-accessible book search with phrase matching and previous/next result navigation.
 - Table of contents from EPUB navigation, FB2 sections, document headings, or detected headings when the source format permits it.
 - English and Russian UI.
+- A connected editorial interface and original Pico hummingbird character shared by the web/PWA, iOS icon and launch screen, and Chrome popup. See [docs/BRAND_SYSTEM.md](docs/BRAND_SYSTEM.md).
 - Manifest V3 Chrome extension for sending selected text, copied text, pasted text, links, or the current article directly into the local PaceFlow library and focus mode.
 - Optional Media Session controls on compatible web platforms. In the iOS build, Space works with a hardware keyboard while volume buttons always keep their normal system behavior.
 
@@ -145,7 +146,7 @@ See also [App Store copy](docs/APP_STORE_COPY.md) and the [market and positionin
 
 ## Русский
 
-PaceFlow Reader — спокойная приватная читалка для книг и длинных текстов. Она показывает текст управляемыми кадрами по одному или два слова, сохраняет полезный контекст на паузе и возвращает к точной сохранённой позиции.
+PaceFlow Reader — приватная читалка для книг, статей и длинных текстов с Пико, колибри-пилотом фокуса. Она показывает текст управляемыми кадрами по одному или два слова, сохраняет полезный контекст на паузе и возвращает к точной сохранённой позиции.
 
 Текущая цель — нативное приложение для iPhone/iPad на Capacitor. То же ядро работает как локальная web/PWA-версия. Android запланирован, но пока не входит в текущий релиз.
 
@@ -163,6 +164,7 @@ PaceFlow Reader — спокойная приватная читалка для 
 - Всегда доступный поиск по книге, включая фразы и переходы к предыдущему/следующему совпадению.
 - Оглавление из навигации EPUB, секций FB2, заголовков документов либо распознанных заголовков, если формат это позволяет.
 - Интерфейс на английском и русском.
+- Единый редакционный интерфейс и оригинальный персонаж Пико-колибри для web/PWA, иконки и стартового экрана iOS и popup Chrome. Правила собраны в [docs/BRAND_SYSTEM.md](docs/BRAND_SYSTEM.md).
 - Расширение Chrome Manifest V3 отправляет выделенный, скопированный или вставленный текст, ссылку либо текущую статью прямо в локальную библиотеку и фокус-режим PaceFlow.
 - Опциональное управление через Media Session на совместимых веб-платформах. В iOS-сборке пробел работает с аппаратной клавиатурой, а кнопки громкости всегда сохраняют системное назначение.
 

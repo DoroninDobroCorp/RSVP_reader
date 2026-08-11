@@ -6,7 +6,7 @@
   "contextSelection": { "message": "Read selection in PaceFlow" },
   "contextPage": { "message": "Read this article in PaceFlow" },
   "contextLink": { "message": "Read linked article in PaceFlow" },
-  "popupTagline": { "message": "Send what you are reading into focus mode." },
+  "popupTagline": { "message": "Pico flies what you are reading straight into focus mode." },
   "quickActions": { "message": "Quick send" },
   "sendSelection": { "message": "Read selected text" },
   "sendArticle": { "message": "Read this article" },

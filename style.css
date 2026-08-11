@@ -2265,6 +2265,959 @@ input:focus {
     }
 }
 
+/* Pico brand system — the home screen is one connected reading journey. */
+:root,
+[data-theme="night"] {
+    --brand-ink: #101529;
+    --brand-navy: #17233f;
+    --brand-cobalt: #3156d8;
+    --brand-cobalt-bright: #4f74ff;
+    --brand-mint: #75d3bd;
+    --brand-mint-strong: #42bda2;
+    --brand-paper: #f5eedf;
+    --brand-paper-light: #fffaf0;
+    --brand-amber: #f2ad4c;
+    --brand-line: #101529;
+    --bg: #0b1122;
+    --bg-soft: #121b31;
+    --surface: rgba(23, 35, 63, 0.96);
+    --surface-solid: #17233f;
+    --surface-2: #202e4c;
+    --surface-3: #2a3a5d;
+    --border: rgba(117, 211, 189, 0.2);
+    --border-strong: rgba(117, 211, 189, 0.45);
+    --primary: var(--brand-cobalt-bright);
+    --primary-hover: #8fa4ff;
+    --primary-action-hover: #3d62e8;
+    --primary-soft: rgba(79, 116, 255, 0.16);
+    --secondary: var(--brand-mint);
+    --secondary-text: #a6eadb;
+    --secondary-action: var(--brand-mint-strong);
+    --secondary-action-hover: #33a98f;
+    --secondary-soft: rgba(117, 211, 189, 0.14);
+    --accent: var(--brand-amber);
+    --header-bg: rgba(16, 21, 41, 0.96);
+    --focus-ring: rgba(117, 211, 189, 0.62);
+}
+
+[data-theme="day"] {
+    --brand-ink: #101529;
+    --brand-navy: #17233f;
+    --brand-cobalt: #3156d8;
+    --brand-cobalt-bright: #3f63eb;
+    --brand-mint: #75d3bd;
+    --brand-mint-strong: #32a98f;
+    --brand-paper: #f5eedf;
+    --brand-paper-light: #fffaf0;
+    --brand-amber: #f2ad4c;
+    --brand-line: #101529;
+    --bg: #e7decc;
+    --bg-soft: #f1e8d8;
+    --surface: rgba(255, 250, 240, 0.97);
+    --surface-solid: #fffaf0;
+    --surface-2: #f0e6d4;
+    --surface-3: #e3d5be;
+    --border: rgba(16, 21, 41, 0.16);
+    --border-strong: rgba(16, 21, 41, 0.38);
+    --text: #17233f;
+    --text-soft: #34425f;
+    --muted: #5a6478;
+    --primary: var(--brand-cobalt);
+    --primary-hover: #2448c6;
+    --primary-action-hover: #2448c6;
+    --primary-soft: rgba(49, 86, 216, 0.1);
+    --secondary: #168c74;
+    --secondary-text: #0c6855;
+    --secondary-action: var(--brand-mint-strong);
+    --secondary-action-hover: #248d77;
+    --secondary-soft: rgba(50, 169, 143, 0.12);
+    --accent: #c87515;
+    --header-bg: rgba(16, 21, 41, 0.97);
+    --focus-ring: rgba(49, 86, 216, 0.42);
+}
+
+body {
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(circle at 8% 8%, rgba(117, 211, 189, 0.2), transparent 22rem),
+        radial-gradient(circle at 93% 18%, rgba(49, 86, 216, 0.2), transparent 28rem),
+        linear-gradient(180deg, var(--bg-soft), var(--bg));
+}
+
+body::before {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    content: "";
+    opacity: 0.16;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(16, 21, 41, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 21, 41, 0.12) 1px, transparent 1px);
+    background-size: 32px 32px;
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 82%);
+    mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.app-header {
+    min-height: calc(72px + env(safe-area-inset-top, 0px));
+    padding-block: calc(9px + env(safe-area-inset-top, 0px)) 9px;
+    color: var(--brand-paper-light);
+    background: var(--header-bg);
+    border-bottom: 2px solid var(--brand-mint);
+    box-shadow: 0 8px 0 rgba(16, 21, 41, 0.16);
+    backdrop-filter: blur(18px) saturate(130%);
+}
+
+.brand-button {
+    color: var(--brand-paper-light);
+}
+
+.brand-button img {
+    width: 42px;
+    height: 42px;
+    border: 2px solid var(--brand-mint);
+    border-radius: 50%;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.38);
+}
+
+.brand-copy strong {
+    font-size: 1.04rem;
+    font-weight: 850;
+    letter-spacing: -0.025em;
+}
+
+.brand-copy small {
+    color: var(--brand-mint);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.app-header .icon-btn {
+    color: var(--brand-paper-light);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(117, 211, 189, 0.42);
+}
+
+.app-header .icon-btn:hover {
+    color: var(--brand-ink);
+    background: var(--brand-mint);
+    border-color: var(--brand-mint);
+}
+
+.app-header .status-pill {
+    color: var(--brand-ink);
+    background: var(--brand-mint);
+    border: 1px solid var(--brand-ink);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.app-header .status-pill.offline {
+    color: var(--brand-paper);
+    background: transparent;
+    border-color: rgba(245, 238, 223, 0.38);
+    box-shadow: none;
+}
+
+#mainContainer {
+    width: min(1280px, 100%);
+    padding-top: 26px;
+}
+
+.composer-panel {
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.pico-hero {
+    position: relative;
+    min-height: 520px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(390px, 0.92fr);
+    overflow: hidden;
+    color: var(--brand-ink);
+    background:
+        radial-gradient(circle at 87% 16%, rgba(117, 211, 189, 0.42), transparent 17rem),
+        linear-gradient(145deg, var(--brand-paper-light), var(--brand-paper));
+    border: 3px solid var(--brand-line);
+    border-radius: 34px;
+    box-shadow: 9px 9px 0 var(--brand-line);
+    isolation: isolate;
+}
+
+.pico-hero::before,
+.pico-hero::after {
+    position: absolute;
+    z-index: -1;
+    content: "";
+    pointer-events: none;
+}
+
+.pico-hero::before {
+    width: 310px;
+    height: 310px;
+    right: -76px;
+    top: -92px;
+    background: var(--brand-cobalt);
+    border: 3px solid var(--brand-line);
+    border-radius: 50%;
+}
+
+.pico-hero::after {
+    inset: 0;
+    opacity: 0.13;
+    background-image: radial-gradient(var(--brand-line) 1px, transparent 1px);
+    background-size: 16px 16px;
+    -webkit-mask-image: linear-gradient(90deg, black, transparent 70%);
+    mask-image: linear-gradient(90deg, black, transparent 70%);
+}
+
+.pico-hero-copy {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: clamp(34px, 5.5vw, 72px);
+}
+
+.hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+    border: 2px solid var(--brand-line);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--brand-line);
+    font-size: 0.73rem;
+    font-weight: 850;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.hero-kicker > span:first-child {
+    color: var(--brand-amber);
+}
+
+.pico-hero h1 {
+    max-width: 10ch;
+    margin: 24px 0 16px;
+    color: var(--brand-ink);
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
+    font-size: clamp(4.25rem, 7.8vw, 7.4rem);
+    font-stretch: condensed;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 0.84;
+    text-transform: uppercase;
+}
+
+.pico-hero h1 span,
+.pico-hero h1 em {
+    display: block;
+}
+
+.pico-hero h1 em {
+    margin-top: 0.09em;
+    color: var(--brand-cobalt);
+    font-style: normal;
+    text-shadow: 3px 3px 0 var(--brand-mint);
+}
+
+.pico-hero-copy > p {
+    max-width: 58ch;
+    margin: 0;
+    color: #39445c;
+    font-size: clamp(1rem, 1.5vw, 1.17rem);
+    font-weight: 570;
+    line-height: 1.62;
+}
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 26px;
+}
+
+.composer-panel .hero-demo-btn {
+    min-height: 52px;
+    padding: 13px 19px;
+    color: var(--brand-ink);
+    background: var(--brand-mint);
+    border: 2px solid var(--brand-line);
+    border-radius: 13px;
+    box-shadow: 5px 5px 0 var(--brand-line);
+    font-weight: 850;
+}
+
+.composer-panel .hero-demo-btn:hover {
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0 var(--brand-line);
+}
+
+.hero-promise {
+    max-width: 25ch;
+    color: #4b566d;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.45;
+    text-transform: uppercase;
+}
+
+.pico-hero .privacy-card {
+    max-width: 420px;
+    margin-top: 24px;
+    color: var(--brand-ink);
+    background: rgba(117, 211, 189, 0.24);
+    border: 2px solid var(--brand-line);
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 rgba(16, 21, 41, 0.18);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.74rem;
+    font-weight: 650;
+}
+
+.pico-hero .privacy-dot {
+    background: var(--brand-mint-strong);
+    box-shadow: 0 0 0 4px rgba(50, 169, 143, 0.2);
+}
+
+.pico-hero-visual {
+    position: relative;
+    min-height: 520px;
+}
+
+.pico-hero-image {
+    position: absolute;
+    z-index: 2;
+    width: min(92%, 455px);
+    height: auto;
+    right: 4%;
+    bottom: -8%;
+    filter: drop-shadow(9px 13px 0 rgba(16, 21, 41, 0.18));
+    animation: pico-hover 4.8s ease-in-out infinite;
+    transform-origin: 58% 76%;
+}
+
+.hero-orbit {
+    position: absolute;
+    z-index: 1;
+    border: 3px solid var(--brand-line);
+    border-radius: 50%;
+    transform: rotate(-14deg);
+}
+
+.hero-orbit-one {
+    width: 410px;
+    height: 165px;
+    right: 2%;
+    bottom: 20%;
+    border-color: var(--brand-mint-strong);
+}
+
+.hero-orbit-two {
+    width: 330px;
+    height: 118px;
+    right: 10%;
+    bottom: 27%;
+    border-color: rgba(49, 86, 216, 0.7);
+}
+
+.focus-bubble {
+    position: absolute;
+    z-index: 4;
+    top: 17%;
+    right: 3%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 13px;
+    color: var(--brand-ink);
+    background: var(--brand-paper-light);
+    border: 2px solid var(--brand-line);
+    border-radius: 12px;
+    box-shadow: 4px 4px 0 var(--brand-line);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(0.72rem, 1vw, 0.86rem);
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.focus-bubble strong {
+    position: relative;
+    padding: 3px 6px;
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+    border-radius: 4px;
+}
+
+.focus-bubble strong::after {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    left: 50%;
+    bottom: -3px;
+    content: "";
+    background: var(--brand-amber);
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.pico-signature {
+    position: absolute;
+    z-index: 4;
+    right: 5%;
+    bottom: 5%;
+    padding: 6px 9px;
+    color: var(--brand-paper-light);
+    background: var(--brand-ink);
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+@keyframes pico-hover {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
+    50% { transform: translate3d(0, -10px, 0) rotate(1deg); }
+}
+
+.flow-map {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 22px 0 28px;
+    padding: 0;
+    overflow: hidden;
+    color: var(--brand-paper-light);
+    background: var(--brand-ink);
+    border: 3px solid var(--brand-line);
+    border-radius: 20px;
+    box-shadow: 7px 7px 0 var(--brand-mint);
+    list-style: none;
+}
+
+.flow-map li {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 18px 20px;
+}
+
+.flow-map li + li {
+    border-left: 1px solid rgba(245, 238, 223, 0.22);
+}
+
+.flow-number,
+.source-number {
+    flex: 0 0 auto;
+    color: var(--brand-amber);
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.flow-map li > div,
+.source-card-heading > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.flow-map strong {
+    font-size: 0.88rem;
+    letter-spacing: 0.015em;
+}
+
+.flow-map li > div > span {
+    color: rgba(245, 238, 223, 0.7);
+    font-size: 0.73rem;
+    line-height: 1.4;
+}
+
+.reading-dock {
+    padding: clamp(20px, 3vw, 34px);
+    background: var(--surface);
+    border: 3px solid var(--brand-line);
+    border-radius: 28px;
+    box-shadow: 9px 9px 0 var(--brand-line);
+}
+
+.dock-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr);
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.dock-heading .eyebrow {
+    color: var(--brand-mint-strong);
+}
+
+.dock-heading h2 {
+    margin: 5px 0 0;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", sans-serif;
+    font-size: clamp(2.25rem, 5vw, 4.2rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    text-transform: uppercase;
+}
+
+.dock-heading > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.dock-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+    align-items: start;
+    gap: 18px;
+}
+
+.dock-editor,
+.source-card {
+    border: 2px solid var(--brand-line);
+    border-radius: 20px;
+}
+
+.dock-editor {
+    padding: 18px;
+    color: var(--brand-ink);
+    background: var(--brand-paper);
+    box-shadow: 5px 5px 0 rgba(16, 21, 41, 0.18);
+}
+
+.source-card-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-bottom: 14px;
+}
+
+.source-card-heading strong {
+    color: currentColor;
+    font-size: 0.96rem;
+}
+
+.source-card-heading > div > span {
+    color: #626b7d;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.dock-editor #textInput {
+    min-height: clamp(360px, 46vh, 520px);
+    color: var(--brand-ink);
+    background: var(--brand-paper-light);
+    border: 2px solid var(--brand-line);
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1px rgba(49, 86, 216, 0.08);
+}
+
+.dock-editor #textInput:focus,
+.dock-editor input:focus,
+.article-import-controls input:focus {
+    border-color: var(--brand-cobalt);
+}
+
+.dock-editor .input-group input {
+    color: var(--brand-ink);
+    background: var(--brand-paper-light);
+    border: 2px solid var(--brand-line);
+    border-radius: 12px;
+}
+
+.composer-panel .primary-actions .primary-btn,
+.composer-panel .dock-footer-actions .secondary-btn,
+.composer-panel .article-import .secondary-btn,
+.composer-panel .extension-action .secondary-btn {
+    border: 2px solid var(--brand-line);
+    border-radius: 12px;
+    box-shadow: 4px 4px 0 var(--brand-line);
+    font-weight: 820;
+}
+
+.composer-panel .primary-actions .primary-btn {
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+}
+
+.composer-panel .primary-actions .accent-btn {
+    color: var(--brand-ink);
+    background: var(--brand-mint);
+}
+
+.composer-panel .primary-actions .primary-btn:hover,
+.composer-panel .dock-footer-actions .secondary-btn:hover,
+.composer-panel .article-import .secondary-btn:hover,
+.composer-panel .extension-action .secondary-btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--brand-line);
+}
+
+.dock-inlets {
+    display: grid;
+    gap: 18px;
+}
+
+.article-import.source-card {
+    margin: 0;
+    padding: 18px;
+    background: var(--surface-2);
+    box-shadow: 5px 5px 0 rgba(16, 21, 41, 0.18);
+}
+
+.article-import.source-card .source-number {
+    color: var(--brand-amber);
+}
+
+.article-import-controls input {
+    min-height: 47px;
+    border: 2px solid var(--brand-line);
+}
+
+.article-import.source-card .secondary-btn {
+    color: var(--brand-paper-light);
+    background: var(--brand-cobalt);
+}
+
+.extension-action.source-card {
+    position: relative;
+    min-height: 348px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 13px;
+    margin: 0;
+    padding: 18px;
+    overflow: hidden;
+    color: var(--brand-paper-light);
+    background:
+        radial-gradient(circle at 92% 92%, rgba(49, 86, 216, 0.65), transparent 14rem),
+        var(--brand-navy);
+    box-shadow: 5px 5px 0 var(--brand-mint);
+}
+
+.extension-action.source-card::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    opacity: 0.14;
+    background-image: radial-gradient(var(--brand-mint) 1px, transparent 1px);
+    background-size: 14px 14px;
+    -webkit-mask-image: linear-gradient(90deg, black, transparent 72%);
+    mask-image: linear-gradient(90deg, black, transparent 72%);
+}
+
+.pico-quick-send {
+    position: absolute;
+    z-index: 1;
+    width: 67%;
+    height: auto;
+    right: -12%;
+    bottom: -1%;
+    filter: drop-shadow(5px 7px 0 rgba(0, 0, 0, 0.18));
+}
+
+.extension-action-copy,
+.extension-action > a,
+.extension-install {
+    position: relative;
+    z-index: 2;
+}
+
+.extension-action-copy {
+    width: min(62%, 310px);
+    align-items: flex-start;
+}
+
+.extension-action-copy > div {
+    gap: 7px;
+}
+
+.extension-action-copy strong {
+    color: var(--brand-paper-light);
+    font-size: 1.02rem;
+    line-height: 1.25;
+}
+
+.extension-action-copy span:not(.extension-badge) {
+    color: rgba(245, 238, 223, 0.72);
+}
+
+.extension-badge {
+    width: fit-content;
+    color: var(--brand-ink);
+    background: var(--brand-amber);
+    border: 1px solid var(--brand-line);
+    border-radius: 5px;
+}
+
+.extension-action.source-card > a {
+    width: min(62%, 310px);
+    color: var(--brand-ink);
+    background: var(--brand-mint);
+    white-space: normal;
+}
+
+.extension-action.source-card .extension-install {
+    width: min(62%, 310px);
+    grid-column: auto;
+    color: rgba(245, 238, 223, 0.72);
+}
+
+.extension-action.source-card .extension-install summary {
+    color: var(--brand-mint);
+}
+
+.dock-footer-actions {
+    justify-content: flex-end;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border-strong);
+}
+
+.composer-panel .dock-footer-actions .secondary-btn {
+    min-width: 190px;
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+@media (max-width: 1040px) {
+    .pico-hero {
+        grid-template-columns: minmax(0, 1fr) minmax(330px, 0.75fr);
+    }
+
+    .pico-hero h1 {
+        font-size: clamp(3.8rem, 7vw, 5.6rem);
+    }
+
+    .dock-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dock-inlets {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .article-import.source-card,
+    .extension-action.source-card {
+        min-height: 370px;
+    }
+}
+
+@media (max-width: 760px) {
+    #mainContainer {
+        padding: 16px 10px calc(30px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .pico-hero {
+        min-height: 0;
+        grid-template-columns: minmax(0, 1fr);
+        border-radius: 25px;
+        box-shadow: 6px 6px 0 var(--brand-line);
+    }
+
+    .pico-hero-copy {
+        padding: 28px 22px 8px;
+    }
+
+    .pico-hero h1 {
+        max-width: 9ch;
+        margin-top: 21px;
+        font-size: clamp(3.55rem, 16vw, 5.2rem);
+    }
+
+    .pico-hero-copy > p {
+        font-size: 0.96rem;
+    }
+
+    .hero-actions {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .composer-panel .hero-demo-btn {
+        width: 100%;
+    }
+
+    .hero-promise {
+        max-width: none;
+        text-align: center;
+    }
+
+    .pico-hero .privacy-card {
+        width: 100%;
+        max-width: none;
+    }
+
+    .pico-hero-visual {
+        min-height: 360px;
+    }
+
+    .pico-hero-image {
+        width: min(82%, 330px);
+        right: 7%;
+        bottom: -11%;
+    }
+
+    .hero-orbit-one {
+        width: 320px;
+        height: 125px;
+    }
+
+    .hero-orbit-two {
+        width: 250px;
+        height: 88px;
+    }
+
+    .focus-bubble {
+        top: 15%;
+        right: 5%;
+    }
+
+    .pico-signature {
+        right: 4%;
+        bottom: 4%;
+    }
+
+    .flow-map {
+        grid-template-columns: 1fr;
+        box-shadow: 5px 5px 0 var(--brand-mint);
+    }
+
+    .flow-map li + li {
+        border-top: 1px solid rgba(245, 238, 223, 0.22);
+        border-left: 0;
+    }
+
+    .reading-dock {
+        padding: 18px 14px;
+        border-radius: 23px;
+        box-shadow: 6px 6px 0 var(--brand-line);
+    }
+
+    .dock-heading {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 10px;
+    }
+
+    .dock-heading h2 {
+        font-size: clamp(2.45rem, 12vw, 3.7rem);
+    }
+
+    .dock-inlets {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .article-import.source-card,
+    .extension-action.source-card {
+        min-height: 0;
+    }
+
+    .article-import-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .article-import-controls button {
+        width: 100%;
+    }
+
+    .extension-action.source-card {
+        min-height: 410px;
+    }
+
+    .extension-action-copy,
+    .extension-action.source-card > a,
+    .extension-action.source-card .extension-install {
+        width: 70%;
+    }
+
+    .pico-quick-send {
+        width: 76%;
+        right: -20%;
+        bottom: 0;
+    }
+
+    .dock-footer-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .composer-panel .dock-footer-actions .secondary-btn {
+        flex: 0 0 auto;
+        min-height: 50px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .hero-kicker {
+        font-size: 0.64rem;
+    }
+
+    .pico-hero h1 {
+        font-size: clamp(3.15rem, 15vw, 4.25rem);
+    }
+
+    .pico-hero-visual {
+        min-height: 315px;
+    }
+
+    .pico-hero-image {
+        width: 82%;
+        right: 5%;
+    }
+
+    .focus-bubble {
+        font-size: 0.62rem;
+    }
+
+    .dock-editor,
+    .article-import.source-card,
+    .extension-action.source-card {
+        padding: 14px;
+    }
+
+    .dock-editor #textInput {
+        min-height: 300px;
+    }
+
+    .extension-action-copy,
+    .extension-action.source-card > a,
+    .extension-action.source-card .extension-install {
+        width: 78%;
+    }
+
+    .pico-quick-send {
+        width: 84%;
+        right: -28%;
+    }
+}
+
 @media (hover: none) {
     .speed-btn:hover {
         color: var(--text-soft);

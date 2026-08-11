@@ -15,7 +15,12 @@ const packagedFiles = [
     'manifest.json',
     'service-worker.js',
     'sample_text.txt',
-    'sample_text_ru.txt'
+    'sample_text_ru.txt',
+    'assets/brand/pico-hero.png',
+    'assets/brand/pico-quick-send.png',
+    'assets/brand/pico-mark-1024.png',
+    'assets/icons/app-icon-192.png',
+    'assets/icons/app-icon-512.png'
 ];
 
 const digest = (contents) => createHash('sha256').update(contents).digest('hex');

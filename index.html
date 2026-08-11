@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="A calm, private pace reader for real books — with smart rhythm, context and reliable progress.">
+    <meta name="theme-color" content="#101529">
+    <meta name="description" content="Pico guides books, articles and pasted text into a calm, private reading rhythm.">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PaceFlow">
     <title>PaceFlow Reader</title>
-    <link rel="manifest" href="manifest.json?v=47">
-    <link rel="stylesheet" href="style.css?v=47">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png">
+    <link rel="manifest" href="manifest.json?v=48">
+    <link rel="stylesheet" href="style.css?v=48">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png?v=48">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=48">
 </head>
 <body>
     <a class="skip-link" href="#mainContainer" data-i18n="skipToContent">Skip to content</a>
 
     <header class="app-header">
         <button id="homeBtn" class="brand-button" type="button" aria-label="PaceFlow Reader home" data-i18n-aria="homeAria">
-            <img src="assets/icons/app-icon-64.png" width="36" height="36" alt="" aria-hidden="true">
+            <img src="assets/icons/app-icon-64.png?v=48" width="36" height="36" alt="" aria-hidden="true">
             <span class="brand-copy">
                 <strong data-i18n="appName">PaceFlow Reader</strong>
                 <small data-i18n="appTagline">Focused reading, at your rhythm</small>
@@ -40,75 +40,129 @@
         <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
         <section id="textInputSection" class="app-panel composer-panel">
-            <div class="welcome-grid">
-                <div class="welcome-copy">
-                    <span class="eyebrow">EPUB · FB2 · DOCX · TXT</span>
-                    <h1 data-i18n="textOrBook">Start reading</h1>
-                    <p data-i18n="textOrBookHint">Paste text or import a DRM-free book. Your reading stays on this device.</p>
+            <div class="pico-hero">
+                <div class="pico-hero-copy">
+                    <span class="hero-kicker"><span aria-hidden="true">◆</span><span data-i18n="heroKicker">Meet Pico · your reading wingmate</span></span>
+                    <h1><span data-i18n="heroTitle">Long reads.</span> <em data-i18n="heroTitleAccent">Zero drag.</em></h1>
+                    <p data-i18n="heroHint">Pico turns books, articles and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.</p>
+                    <div class="hero-actions">
+                        <button id="tryDemoBtn" class="primary-btn hero-demo-btn" type="button">
+                            <span aria-hidden="true">▶</span>
+                            <span data-i18n="tryDemo">Fly through the 45-second demo</span>
+                        </button>
+                        <span class="hero-promise" data-i18n="heroPromise">No account · no upload · no tracking</span>
+                    </div>
+                    <div class="privacy-card" aria-live="polite">
+                        <span class="privacy-dot" aria-hidden="true"></span>
+                        <span id="storageStatus" data-i18n="localStorageReady">Private, local storage is ready.</span>
+                    </div>
                 </div>
-                <div class="privacy-card" aria-live="polite">
-                    <span class="privacy-dot" aria-hidden="true"></span>
-                    <span id="storageStatus" data-i18n="localStorageReady">Private, local storage is ready.</span>
+                <div class="pico-hero-visual" aria-hidden="true">
+                    <span class="hero-orbit hero-orbit-one"></span>
+                    <span class="hero-orbit hero-orbit-two"></span>
+                    <img class="pico-hero-image" src="assets/brand/pico-hero.png" width="873" height="960" alt="" fetchpriority="high" decoding="async">
+                    <div class="focus-bubble">
+                        <span data-i18n="heroWordBefore">keep</span>
+                        <strong data-i18n="heroWordFocus">your</strong>
+                        <span data-i18n="heroWordAfter">rhythm</span>
+                    </div>
+                    <span class="pico-signature" data-i18n="picoSignature">PICO · FOCUS PILOT</span>
                 </div>
             </div>
 
-            <label class="sr-only" for="textInput" data-i18n="textOrBook">Start reading</label>
-            <div class="demo-action">
-                <div>
-                    <strong data-i18n="tryDemoTitle">No book ready?</strong>
-                    <span data-i18n="tryDemoHint">Try the reading flow with a short built-in text. Nothing is added to your library.</span>
-                </div>
-                <button id="tryDemoBtn" class="secondary-btn compact-btn" type="button" data-i18n="tryDemo">Try the 45-second demo</button>
-            </div>
-            <form id="articleImportForm" class="article-import" novalidate>
-                <div class="article-import-copy">
-                    <strong data-i18n="articleImportTitle">Read an article from a link</strong>
-                    <span data-i18n="articleImportHint">PaceFlow removes menus and distractions, then saves the readable text to your library.</span>
-                </div>
-                <div class="article-import-controls">
-                    <label class="sr-only" for="articleUrlInput" data-i18n="articleUrlLabel">Article URL</label>
-                    <input id="articleUrlInput" type="url" inputmode="url" enterkeyhint="go" autocomplete="url" spellcheck="false" data-i18n-placeholder="articleUrlPlaceholder" data-i18n-aria="articleUrlLabel" aria-label="Article URL" placeholder="https://example.com/article">
-                    <button id="importArticleBtn" class="secondary-btn compact-btn" type="submit" data-i18n="importArticle">Import article</button>
-                </div>
-                <p id="articleImportStatus" class="article-import-status" role="status" aria-live="polite" data-i18n="articleOnlineOnly">Requires an internet connection. Paywalled and app-only pages may not be readable.</p>
-            </form>
-            <div id="chromeExtensionPanel" class="extension-action">
-                <div class="extension-action-copy">
-                    <span class="extension-badge" aria-hidden="true">Chrome</span>
+            <ol class="flow-map" data-i18n-aria="flowMapLabel" aria-label="How PaceFlow works">
+                <li>
+                    <span class="flow-number">01</span>
+                    <div><strong data-i18n="flowBringTitle">Bring the text</strong><span data-i18n="flowBringHint">Paste, import, or send it from Chrome.</span></div>
+                </li>
+                <li>
+                    <span class="flow-number">02</span>
+                    <div><strong data-i18n="flowPaceTitle">Pick your pace</strong><span data-i18n="flowPaceHint">Pico shapes timing around words and punctuation.</span></div>
+                </li>
+                <li>
+                    <span class="flow-number">03</span>
+                    <div><strong data-i18n="flowReadTitle">Stay in the flow</strong><span data-i18n="flowReadHint">Read, pause, rewind, and return exactly where you left.</span></div>
+                </li>
+            </ol>
+
+            <div class="reading-dock">
+                <div class="dock-heading">
                     <div>
-                        <strong data-i18n="chromeExtensionTitle">Send from Chrome in one click</strong>
-                        <span data-i18n="chromeExtensionHint">Select text, copy a passage, or right-click an article and open it directly in PaceFlow.</span>
+                        <span class="eyebrow" data-i18n="dockKicker">Pico's reading dock</span>
+                        <h2 data-i18n="dockTitle">What are we reading?</h2>
                     </div>
+                    <p data-i18n="dockHint">Drop text into the main lane, or use a fast lane for a link or Chrome handoff.</p>
                 </div>
-                <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/paceflow-quick-send.zip" download data-i18n="chromeExtensionDownload">Download Chrome extension</a>
-                <details class="extension-install">
-                    <summary data-i18n="chromeExtensionInstall">Install in Chrome</summary>
-                    <ol>
-                        <li data-i18n="chromeExtensionStepOne">Download and extract the extension ZIP.</li>
-                        <li data-i18n="chromeExtensionStepTwo">Open chrome://extensions and enable Developer mode.</li>
-                        <li data-i18n="chromeExtensionStepThree">Choose Load unpacked and select the extracted folder.</li>
-                    </ol>
-                    <p data-i18n="chromeExtensionPrivacy">It reads a selection or clipboard only when you explicitly press a PaceFlow action. No browsing-history permission or analytics.</p>
-                </details>
-            </div>
-            <textarea id="textInput" data-i18n-placeholder="textPlaceholder" placeholder="Paste text here, or import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF…" spellcheck="false"></textarea>
-            <div class="input-group">
-                <label class="sr-only" for="bookNameInput" data-i18n="bookTitleLabel">Book title</label>
-                <input type="text" id="bookNameInput" data-i18n-placeholder="bookNamePlaceholder" placeholder="Book title (optional)" autocomplete="off">
-            </div>
-            <div class="button-group primary-actions">
-                <button id="loadFileBtn" class="primary-btn" type="button">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-                    <span data-i18n="importBook">Import book</span>
-                </button>
-                <button id="startReadingBtn" class="primary-btn accent-btn" type="button">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
-                    <span data-i18n="startReading">Open reader</span>
-                </button>
-            </div>
-            <div class="button-group secondary-actions">
-                <button id="addToLibraryBtn" class="secondary-btn" type="button" data-i18n="saveBook">Save to library</button>
-                <button id="libraryBtn" class="secondary-btn" type="button" data-i18n="myLibrary">Library</button>
+
+                <div class="dock-grid">
+                    <div class="dock-editor">
+                        <div class="source-card-heading">
+                            <span class="source-number">01</span>
+                            <div><strong data-i18n="pasteSourceTitle">Paste or import</strong><span data-i18n="pasteSourceHint">Your text stays readable, editable, and local.</span></div>
+                        </div>
+                        <label class="sr-only" for="textInput" data-i18n="textOrBook">Start reading</label>
+                        <textarea id="textInput" data-i18n-placeholder="textPlaceholder" placeholder="Paste text here, or import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF…" spellcheck="false"></textarea>
+                        <div class="input-group">
+                            <label class="sr-only" for="bookNameInput" data-i18n="bookTitleLabel">Book title</label>
+                            <input type="text" id="bookNameInput" data-i18n-placeholder="bookNamePlaceholder" placeholder="Book title (optional)" autocomplete="off">
+                        </div>
+                        <div class="button-group primary-actions">
+                            <button id="loadFileBtn" class="primary-btn" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                                <span data-i18n="importBook">Import book</span>
+                            </button>
+                            <button id="startReadingBtn" class="primary-btn accent-btn" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                                <span data-i18n="startReading">Open reader</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <aside class="dock-inlets" data-i18n-aria="fastLanes" aria-label="Fast reading lanes">
+                        <form id="articleImportForm" class="article-import source-card" novalidate>
+                            <div class="source-card-heading">
+                                <span class="source-number">02</span>
+                                <div class="article-import-copy">
+                                    <strong data-i18n="articleImportTitle">Read an article from a link</strong>
+                                    <span data-i18n="articleImportHint">PaceFlow removes menus and distractions, then saves the readable text to your library.</span>
+                                </div>
+                            </div>
+                            <div class="article-import-controls">
+                                <label class="sr-only" for="articleUrlInput" data-i18n="articleUrlLabel">Article URL</label>
+                                <input id="articleUrlInput" type="url" inputmode="url" enterkeyhint="go" autocomplete="url" spellcheck="false" data-i18n-placeholder="articleUrlPlaceholder" data-i18n-aria="articleUrlLabel" aria-label="Article URL" placeholder="https://example.com/article">
+                                <button id="importArticleBtn" class="secondary-btn compact-btn" type="submit" data-i18n="importArticle">Import article</button>
+                            </div>
+                            <p id="articleImportStatus" class="article-import-status" role="status" aria-live="polite" data-i18n="articleOnlineOnly">Requires an internet connection. Paywalled and app-only pages may not be readable.</p>
+                        </form>
+
+                        <div id="chromeExtensionPanel" class="extension-action source-card">
+                            <img class="pico-quick-send" src="assets/brand/pico-quick-send.png" width="1100" height="733" alt="" decoding="async">
+                            <div class="extension-action-copy">
+                                <span class="source-number">03</span>
+                                <div>
+                                    <span class="extension-badge" aria-hidden="true">Chrome</span>
+                                    <strong data-i18n="chromeExtensionTitle">Send from Chrome in one click</strong>
+                                    <span data-i18n="chromeExtensionHint">Select text, copy a passage, or right-click an article and open it directly in PaceFlow.</span>
+                                </div>
+                            </div>
+                            <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/paceflow-quick-send.zip" download data-i18n="chromeExtensionDownload">Download Chrome extension</a>
+                            <details class="extension-install">
+                                <summary data-i18n="chromeExtensionInstall">Install in Chrome</summary>
+                                <ol>
+                                    <li data-i18n="chromeExtensionStepOne">Download and extract the extension ZIP.</li>
+                                    <li data-i18n="chromeExtensionStepTwo">Open chrome://extensions and enable Developer mode.</li>
+                                    <li data-i18n="chromeExtensionStepThree">Choose Load unpacked and select the extracted folder.</li>
+                                </ol>
+                                <p data-i18n="chromeExtensionPrivacy">It reads a selection or clipboard only when you explicitly press a PaceFlow action. No browsing-history permission or analytics.</p>
+                            </details>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="button-group secondary-actions dock-footer-actions">
+                    <button id="addToLibraryBtn" class="secondary-btn" type="button" data-i18n="saveBook">Save to library</button>
+                    <button id="libraryBtn" class="secondary-btn" type="button" data-i18n="myLibrary">Library</button>
+                </div>
             </div>
             <input type="file" id="fileInput" class="visually-hidden-file" tabindex="-1" aria-hidden="true" accept=".fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*">
         </section>
@@ -357,9 +411,9 @@
         </div>
     </div>
 
-    <script src="i18n.js?v=47"></script>
-    <script src="vendor/jszip.min.js?v=45"></script>
-    <script src="epub-parser.js?v=45"></script>
-    <script src="app.js?v=47"></script>
+    <script src="i18n.js?v=48"></script>
+    <script src="vendor/jszip.min.js?v=48"></script>
+    <script src="epub-parser.js?v=48"></script>
+    <script src="app.js?v=48"></script>
 </body>
 </html>

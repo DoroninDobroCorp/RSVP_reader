@@ -1,5 +1,5 @@
-const CACHE_NAME = 'paceflow-reader-v47';
-const ASSET_VERSION = 'v=47';
+const CACHE_NAME = 'paceflow-reader-v48';
+const ASSET_VERSION = 'v=48';
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,6 +16,9 @@ const APP_SHELL = [
   './assets/icons/app-icon-180.png',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
+  './assets/brand/pico-hero.png',
+  './assets/brand/pico-quick-send.png',
+  './assets/brand/pico-mark-1024.png',
   './sample_text.txt',
   './sample_text_ru.txt'
 ];

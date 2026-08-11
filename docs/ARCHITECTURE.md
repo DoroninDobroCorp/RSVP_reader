@@ -22,6 +22,7 @@ The extension stores a normalized payload behind a random 128-bit nonce in `chro
 
 ## UI layer
 
-- Responsive EN/RU interface with day/night themes and accessible dialogs.
+- Pico is the product character: an indigo hummingbird with a mint rhythm trail, amber focus point, and bookmark-shaped tail. The canonical rules and source assets are documented in `docs/BRAND_SYSTEM.md`.
+- Responsive EN/RU interface with day/night themes, an editorial cream/navy/cobalt/mint system, and accessible dialogs.
 - Keyboard, touch, Media Session, focus scrubber, and compact mobile layouts.
 - Built-in demo, manual URL import, file import, and the Chrome Quick Send installation card.

@@ -133,6 +133,34 @@ async function makeEpub({ sameFileFragments = false } = {}) {
 }
 
 test.describe('production reader regressions', () => {
+  test('Pico home journey is branded, localised, loaded and free of horizontal overflow', async ({ page }) => {
+    await openReader(page, 'en');
+
+    await expect(page.locator('.pico-hero h1')).toContainText('Long reads.');
+    await expect(page.locator('.pico-hero h1')).toContainText('Zero drag.');
+    await expect(page.locator('.pico-signature')).toHaveText('PICO · FOCUS PILOT');
+    await expect(page.locator('.flow-map > li')).toHaveCount(3);
+    await expect(page.locator('#chromeExtensionPanel')).toBeVisible();
+    await expect(page.locator('.pico-hero-image')).toBeVisible();
+    await expect(page.locator('.pico-quick-send')).toBeVisible();
+
+    const imageState = await page.locator('.pico-hero-image, .pico-quick-send').evaluateAll((images) => (
+      images.map((image) => ({ complete: image.complete, width: image.naturalWidth, height: image.naturalHeight }))
+    ));
+    expect(imageState.every((image) => image.complete && image.width > 0 && image.height > 0)).toBe(true);
+
+    const overflow = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      content: document.documentElement.scrollWidth
+    }));
+    expect(overflow.content - overflow.viewport).toBeLessThanOrEqual(1);
+
+    await page.evaluate(() => window.rsvpReader.setLanguage('ru'));
+    await expect(page.locator('.pico-hero h1')).toContainText('Длинные тексты.');
+    await expect(page.locator('.pico-signature')).toHaveText('ПИКО · ПИЛОТ ФОКУСА');
+    await expect(page.locator('.brand-copy small')).toHaveText('Читайте в ритме с Пико');
+  });
+
   test('article URL import confirms replacement, saves clean text and opens the reader', async ({ page }) => {
     let articleRequests = 0;
     let submittedUrl = '';
@@ -1593,7 +1621,7 @@ test.describe('production reader regressions', () => {
 
   test('the built-in demo starts without a book and focus scrubbing seeks precisely', async ({ page }) => {
     await openReader(page);
-    await expect(page.locator('#tryDemoBtn')).toHaveText('Try the 45-second demo');
+    await expect(page.locator('#tryDemoBtn [data-i18n="tryDemo"]')).toHaveText('Fly through the 45-second demo');
     await page.locator('#tryDemoBtn').click();
 
     await expect(page.locator('#rsvpReadingSection')).toBeVisible();

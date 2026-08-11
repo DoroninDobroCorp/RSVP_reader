@@ -15,6 +15,7 @@ const requiredFiles = [
     'popup.html',
     'popup.css',
     'popup.js',
+    'assets/pico-quick-send.png',
     '_locales/en/messages.json',
     '_locales/ru/messages.json',
     'icons/icon-16.png',
@@ -27,6 +28,10 @@ const iconSizes = new Map([
     ['icons/icon-32.png', 32],
     ['icons/icon-48.png', 48],
     ['icons/icon-128.png', 128]
+]);
+const imageSizes = new Map([
+    ...iconSizes,
+    ['assets/pico-quick-send.png', { width: 420, height: 280 }]
 ]);
 
 function pngDimensions(buffer) {
@@ -70,11 +75,13 @@ for (const file of requiredFiles) {
     const source = await readFile(join(extensionRoot, file));
     const packaged = await archived.async('nodebuffer');
     if (digest(source) !== digest(packaged)) throw new Error(`Chrome ZIP differs from source: ${file}`);
-    if (iconSizes.has(file)) {
-        const expected = iconSizes.get(file);
+    if (imageSizes.has(file)) {
+        const expected = imageSizes.get(file);
         const dimensions = pngDimensions(packaged);
-        if (dimensions.width !== expected || dimensions.height !== expected) {
-            throw new Error(`Chrome icon ${file} must be exactly ${expected}x${expected}.`);
+        const expectedWidth = typeof expected === 'number' ? expected : expected.width;
+        const expectedHeight = typeof expected === 'number' ? expected : expected.height;
+        if (dimensions.width !== expectedWidth || dimensions.height !== expectedHeight) {
+            throw new Error(`Chrome image ${file} must be exactly ${expectedWidth}x${expectedHeight}.`);
         }
     }
 }

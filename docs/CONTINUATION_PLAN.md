@@ -97,7 +97,7 @@ npm run cap:sync
 - Не включать legacy unauthenticated cloud sync в production.
 - Не выпускать под рабочим именем PaceFlow без проверки collision/trademark.
 
-## Статус выполнения — 2026-08-07
+## Статус выполнения — 2026-08-10
 
 Технические задачи P0 и P1 из этого плана закрыты. Реализованы и покрыты regression-тестами:
 
@@ -106,15 +106,16 @@ npm run cap:sync
 - безопасная legacy migration, quarantine повреждённых книг и атомарный импорт backup без частичного состояния;
 - атомарное сохранение настроек с восстановлением после очистки `localStorage`;
 - ранние лимиты до DOM/крупных аллокаций, дополнительные кодировки, RTF/HTML/EPUB/DOCX/ZIP regressions;
-- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v47`.
+- Netlify-сборка только из `dist`, безопасная навигационная обработка service worker и cache version `v48`.
 - browser `prompt()` / `confirm()` заменены локализованными доступными диалогами; privacy/support встроены в приложение и доступны офлайн.
 - launch bootstrap отложен до первого paint, чтобы native storage bridge не удерживал пустой стартовый экран.
 - legacy `armv7` capability заменена на `arm64`; добавлена автоматическая проверка соответствия source, `dist`, iOS bundle и privacy metadata.
 - добавлен импорт публичной статьи по URL в браузере и native shell: Readability-извлечение, автоматическое локальное сохранение, EN/RU UI, CORS для Capacitor и SSRF-защита с DNS-проверкой каждого redirect, блокировкой private/local адресов и нестандартных портов, лимитами размера/времени/частоты.
 - восстановлен отдельный production smoke-gate для публичного web-demo: desktop Chromium и Mobile Safari проверяют загрузку shell и мгновенный запуск встроенного demo, а Chromium дополнительно подтверждает SSRF-отказ article endpoint. Адрес можно переопределить через `PACEFLOW_PRODUCTION_URL`.
 - реализовано Chrome-расширение Manifest V3 для выделенного/скопированного/вставленного текста, текущей страницы и ссылок: popup, контекстное меню, `Alt+Shift+R`, одноразовый nonce, `chrome.storage.session`, автоматическое локальное сохранение и запуск focus mode. Сайт публикует воспроизводимый ZIP и инструкцию установки; реальный Chrome E2E проверяет service worker → content bridge → сайт → очистку handoff.
+- создан единый визуальный язык вокруг Пико — оригинального колибри-пилота фокуса: характер, палитра и правила закреплены в `docs/BRAND_SYSTEM.md`; home превращён в связный маршрут promise → rhythm → reading dock, popup Chrome стал компактной самостоятельной поверхностью, а web/PWA, Chrome и iOS используют согласованные иконки и launch assets.
 
-Итоговая проверка: 12/12 unit-тестов и 156 production-тестов в Chromium, WebKit и Mobile Safari (ещё 2 ожидаемых cross-project skip для одноразового серверного SSRF-теста); отдельный реальный Chrome E2E проверяет service worker → session handoff → website focus mode → очистку временных данных. Публичный smoke-gate дополнительно проверяет загрузку shell, демо, SSRF-отказ и скачиваемый Manifest V3 ZIP (6 применимых проверок, 2 ожидаемых cross-project skip). Реальная русская FB2-книга (937 070 символов) импортируется успешно; реальная Wikipedia-статья на 3 099 слов извлекается через публичный endpoint; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 11 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`, а 13 файлов ZIP и его копия в iOS bundle — `npm run verify:extension`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходят в Xcode 26.3 с iOS 26 SDK.
+Итоговая проверка: 12/12 unit-тестов и 159 применимых production-тестов в Chromium, WebKit и Mobile Safari (ещё 2 ожидаемых cross-project skip для одноразового серверного SSRF-теста); отдельный реальный Chrome E2E проверяет service worker → session handoff → website focus mode → очистку временных данных. Публичный smoke-gate дополнительно проверяет загрузку shell, Пико-ассеты без horizontal overflow, демо, SSRF-отказ и скачиваемый Manifest V3 ZIP (6 применимых проверок, 2 ожидаемых cross-project skip). Реальная русская FB2-книга (937 070 символов) импортируется успешно; реальная Wikipedia-статья на 3 099 слов извлекается через публичный endpoint; `npm audit` сообщает 0 уязвимостей. Сборка синхронизирована с `ios/App/App/public`, 16 source/web/iOS assets и native privacy metadata проверяются командой `npm run verify:package`, а 14 обязательных файлов ZIP и его копия в iOS bundle — `npm run verify:extension`. Чистый Release build для iOS Simulator и `xcodebuild analyze` проходили в Xcode 26.3 с iOS 26 SDK до визуальной замены icon/splash assets; структура native target не менялась.
 
 Серверная legacy cloud sync остаётся выключенной, приватное хранилище не публикуется. Тег отката `pre-app-store-polish-20260802` сохранён без изменений.
 
