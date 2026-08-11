@@ -1,17 +1,17 @@
 # HummingRead existing-server deployment runbook
 
-Status: **prepared and fixture-tested, not deployed**. Production remains the checked-out `main` at `/srv/RSVP_reader`; these commands require a separate owner approval and maintenance window.
+Status: **deployed and rollback-tested**. The tester preview is served from the immutable target of `/srv/hummingread/current`; `/srv/RSVP_reader` deliberately remains the previous checked-out release and must not be fast-forwarded during the rollback window.
 
 ## Observed production topology (2026-08-11)
 
-- systemd: `/etc/systemd/system/rsvp-reader.service` (currently broad `User=ubuntu`, `npm start`, port `0.0.0.0:8081`);
+- systemd: `/etc/systemd/system/rsvp-reader.service` runs direct Node as locked `paceflow` on `127.0.0.1:8081`;
 - restricted/IP server: `/etc/nginx/conf.d/00-ip-access.conf`;
 - public TLS server: `/etc/nginx/sites-enabled/spanish-sslip`;
-- static build: `/srv/RSVP_reader/dist/`;
-- ignored legacy store: `/srv/RSVP_reader/data/sync-store.json` (must be backed up before recoverable quarantine);
+- static build: `/srv/hummingread/current/dist/`;
+- ignored legacy sync store: already moved recoverably to root-only `/var/lib/hummingread/legacy/` during the first activation;
 - absent and therefore deliberately not used: `hummingread.service`, `/etc/nginx/snippets/rsvp.locations.conf`, and `/etc/nginx/sites-enabled/default`.
 
-The prepared layout installs immutable/versioned releases below `/srv/hummingread/releases/` and atomically changes `/srv/hummingread/current`. It does not merge, pull, or overwrite production `main`.
+The deployed layout installs immutable/versioned releases below `/srv/hummingread/releases/` and atomically changes `/srv/hummingread/current`. The scripts never merge, pull, or overwrite a Git branch; remote `main` is advanced separately only after review.
 
 ## Owner approval and release staging
 
