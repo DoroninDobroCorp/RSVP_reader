@@ -19,6 +19,7 @@ const files = [
     'app.js',
     'epub-parser.js',
     'manifest.json',
+    'manifest.webmanifest',
     'service-worker.js',
     'sample_text.txt',
     'sample_text_ru.txt',
@@ -94,6 +95,33 @@ await writeFile(join(destination, 'index.html'), applyLocaleToHtml(rootIndexHtml
 const localeConfigs = {
     en: {
         lang: 'en',
+        manifest: {
+            name: 'HummingRead: Speed Reader',
+            short_name: 'HummingRead',
+            description: 'Read long books and articles in rhythm with Pico, your local-first focus pilot.',
+            start_url: '/',
+            display: 'standalone',
+            background_color: '#f5eedf',
+            theme_color: '#101529',
+            orientation: 'any',
+            id: '/',
+            lang: 'en',
+            icons: [
+                {
+                    src: '/assets/icons/app-icon-192.png',
+                    sizes: '192x192',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
+                {
+                    src: '/assets/icons/app-icon-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'any maskable'
+                }
+            ],
+            categories: ['books', 'productivity']
+        },
         privacy: {
             title: 'Privacy Policy — HummingRead',
             description: 'HummingRead privacy policy — local-first speed reader for books and documents with zero tracking, ads, or account requirements.',
@@ -112,6 +140,33 @@ const localeConfigs = {
     },
     ru: {
         lang: 'ru',
+        manifest: {
+            name: 'HummingRead: Скорочиталка',
+            short_name: 'HummingRead',
+            description: 'HummingRead — спокойная RSVP-скорочиталка для книг, вставленного текста и чтения по одному слову с Пико.',
+            start_url: '/ru/',
+            display: 'standalone',
+            background_color: '#f5eedf',
+            theme_color: '#101529',
+            orientation: 'any',
+            id: '/',
+            lang: 'ru',
+            icons: [
+                {
+                    src: '/assets/icons/app-icon-192.png',
+                    sizes: '192x192',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
+                {
+                    src: '/assets/icons/app-icon-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'any maskable'
+                }
+            ],
+            categories: ['books', 'productivity']
+        },
         index: {
             title: 'HummingRead: Скорочиталка',
             description: 'HummingRead — спокойная RSVP-скорочиталка для книг, вставленного текста и чтения по одному слову с Пико.',
@@ -140,6 +195,33 @@ const localeConfigs = {
     },
     es: {
         lang: 'es',
+        manifest: {
+            name: 'HummingRead: Lector de velocidad',
+            short_name: 'HummingRead',
+            description: 'HummingRead es un lector de velocidad RSVP para libros, texto pegado y lectura enfocada palabra por palabra con Pico.',
+            start_url: '/es/',
+            display: 'standalone',
+            background_color: '#f5eedf',
+            theme_color: '#101529',
+            orientation: 'any',
+            id: '/',
+            lang: 'es',
+            icons: [
+                {
+                    src: '/assets/icons/app-icon-192.png',
+                    sizes: '192x192',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
+                {
+                    src: '/assets/icons/app-icon-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'any maskable'
+                }
+            ],
+            categories: ['books', 'productivity']
+        },
         index: {
             title: 'HummingRead: Lector de velocidad',
             description: 'HummingRead es un lector de velocidad RSVP para libros, texto pegado y lectura enfocada palabra por palabra con Pico.',
@@ -327,11 +409,17 @@ export function transformLegalForLocale(html, pageKey, config) {
     return adjustRelativePathsForSubdir(out, lang === 'en' ? null : lang);
 }
 
-// Generate locale directories
+// Generate locale directories and manifests
 for (const [locale, config] of Object.entries(localeConfigs)) {
     const isRoot = locale === 'en';
     const targetDir = isRoot ? destination : join(destination, locale);
     await mkdir(targetDir, { recursive: true });
+
+    if (config.manifest) {
+        const manifestJson = JSON.stringify(config.manifest, null, 2) + '\n';
+        await writeFile(join(targetDir, 'manifest.webmanifest'), manifestJson);
+        await writeFile(join(targetDir, 'manifest.json'), manifestJson);
+    }
 
     if (!isRoot) {
         const indexHtml = await readFile(join(root, 'index.html'), 'utf8');

@@ -26,6 +26,8 @@ const APP_SHELL = [
   '/manifest.webmanifest',
   '/ru/manifest.webmanifest',
   '/es/manifest.webmanifest',
+  '/ru/manifest.json',
+  '/es/manifest.json',
   '/assets/icons/app-icon-32.png',
   '/assets/icons/app-icon-64.png',
   '/assets/icons/app-icon-180.png',
@@ -96,7 +98,8 @@ function isVersionedAppAsset(requestUrl) {
     '/style.css',
     '/epub-parser.js',
     '/vendor/jszip.min.js',
-    '/manifest.json'
+    '/manifest.json',
+    '/manifest.webmanifest'
   ].some((path) => requestUrl.pathname.endsWith(path));
 }
 
@@ -121,7 +124,14 @@ async function handleNavigation(request) {
 
 function isAppShellNavigation(url) {
   const pathname = new URL(url).pathname.replace(/\/+/g, '/');
-  return ['/', '/index.html', '/rsvp/', '/rsvp/index.html'].includes(pathname);
+  return [
+    '/', '/index.html',
+    '/ru/', '/ru/index.html',
+    '/es/', '/es/index.html',
+    '/rsvp/', '/rsvp/index.html',
+    '/rsvp/ru/', '/rsvp/ru/index.html',
+    '/rsvp/es/', '/rsvp/es/index.html'
+  ].includes(pathname);
 }
 
 async function staleWhileRevalidate(request, event) {

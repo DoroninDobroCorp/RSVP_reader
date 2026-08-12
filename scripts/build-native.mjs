@@ -12,6 +12,7 @@ await cp(source, destination, { recursive: true });
 for (const relativePath of [
     'downloads',
     'manifest.json',
+    'manifest.webmanifest',
     'robots.txt',
     'service-worker.js',
     'sitemap.xml',

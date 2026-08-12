@@ -67,6 +67,7 @@ const webPackagedFiles = [
     'app.js',
     'epub-parser.js',
     'manifest.json',
+    'manifest.webmanifest',
     'service-worker.js',
     'robots.txt',
     'sample_text.txt',

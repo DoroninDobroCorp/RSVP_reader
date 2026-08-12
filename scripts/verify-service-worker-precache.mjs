@@ -10,11 +10,25 @@ const required = [
     '/privacy.html',
     '/support.html',
     '/acknowledgements.html',
+    '/ru/',
+    '/ru/index.html',
+    '/ru/privacy.html',
+    '/ru/support.html',
+    '/ru/acknowledgements.html',
+    '/es/',
+    '/es/index.html',
+    '/es/privacy.html',
+    '/es/support.html',
+    '/es/acknowledgements.html',
+    '/manifest.webmanifest',
+    '/ru/manifest.webmanifest',
+    '/es/manifest.webmanifest',
     '/assets/brand/pico-hero-640.webp',
     '/assets/brand/pico-quick-send-640.webp',
     '/sample_text.txt',
     '/sample_text_ru.txt',
-    '/sample_text_es.txt'
+    '/sample_text_es.txt',
+    '/sample_text_en.txt'
 ];
 
 for (const asset of required) {
