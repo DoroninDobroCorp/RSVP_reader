@@ -2495,4 +2495,122 @@ test.describe('production reader regressions', () => {
     expect(webpResponse.headers()['content-type']).toBe('image/webp');
     expect((await request.get('/package.json')).status()).toBe(404);
   });
+
+  test('VAL-WEB-001/003/006/CROSS-003: 3-way language toggle between EN, RU, and ES preserves reader position, WPM, theme, bookmarks, and search query', async ({ page }) => {
+    await openReader(page);
+    await loadPlainText(page, 'Primero segundo tercero cuarto quinto sexto séptimo octavo noveno décimo');
+
+    await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.settings.wpm = 420;
+      reader.settings.theme = 'night';
+      reader.setCurrentWordIndex(4);
+      const book = await reader.ensureCurrentBook();
+      if (book) {
+        await reader.mutateBook(book.id, (latest) => ({
+          ...latest,
+          bookmarks: [...latest.bookmarks, { id: 'bm1', name: 'Test Bookmark', index: 4, createdAt: new Date().toISOString() }]
+        }));
+      }
+      reader.searchInput.value = 'tercero';
+      reader.handleSearch();
+    });
+
+    await page.locator('#settingsBtn').click();
+    await expect(page.locator('#languageEnBtn')).toBeVisible();
+    await expect(page.locator('#languageRuBtn')).toBeVisible();
+    await expect(page.locator('#languageEsBtn')).toBeVisible();
+
+    await expect(page.locator('#languageEnBtn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#languageEsBtn')).toHaveAttribute('aria-pressed', 'false');
+
+    await page.locator('#languageEsBtn').click();
+    await expect(page.locator('#languageEsBtn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#languageEnBtn')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+
+    await page.locator('#closeSettingsBtn').click();
+
+    const stateInEs = await page.evaluate(async () => {
+      const book = await window.rsvpReader.getBook(window.rsvpReader.currentBookId);
+      return {
+        currentIndex: window.rsvpReader.currentIndex,
+        wpm: window.rsvpReader.settings.wpm,
+        theme: window.rsvpReader.settings.theme,
+        searchQuery: window.rsvpReader.searchInput.value,
+        hasBookmarks: (book?.bookmarks || []).length > 0,
+        language: window.rsvpReader.i18n.language
+      };
+    });
+    expect(stateInEs).toEqual({
+      currentIndex: 2,
+      wpm: 420,
+      theme: 'night',
+      searchQuery: 'tercero',
+      hasBookmarks: true,
+      language: 'es'
+    });
+
+    await page.locator('#settingsBtn').click();
+    await page.locator('#languageRuBtn').click();
+    await expect(page.locator('#languageRuBtn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
+    await page.locator('#closeSettingsBtn').click();
+
+    const stateInRu = await page.evaluate(() => ({
+      currentIndex: window.rsvpReader.currentIndex,
+      wpm: window.rsvpReader.settings.wpm,
+      language: window.rsvpReader.i18n.language
+    }));
+    expect(stateInRu).toEqual({
+      currentIndex: 2,
+      wpm: 420,
+      language: 'ru'
+    });
+  });
+
+  test('VAL-WEB-010: Spanish diacritics, accents, and opening punctuation center ORP correctly without splitting grapheme clusters', async ({ page }) => {
+    await openReader(page);
+    const orpData = await page.evaluate(() => {
+      const reader = window.rsvpReader;
+      reader.setLanguage('es');
+
+      const words = ['canción', '¿Cómo?', '¡Rápido!', 'año', '«español»'];
+      return words.map((word) => {
+        const focusIndex = reader.calculateFocusPoint(word);
+        const graphemes = reader.segmentGraphemes(word);
+        const focusGrapheme = graphemes.find((g) => g.index === focusIndex)?.segment;
+        const leftText = word.slice(0, focusIndex);
+        const rightText = word.slice(focusIndex + (focusGrapheme?.length || 1));
+        return { word, focusIndex, focusGrapheme, leftText, rightText };
+      });
+    });
+
+    expect(orpData[0]).toMatchObject({ word: 'canción', focusGrapheme: 'n' });
+    expect(orpData[1]).toMatchObject({ word: '¿Cómo?', focusGrapheme: 'ó', leftText: '¿C' });
+    expect(orpData[2]).toMatchObject({ word: '¡Rápido!', focusGrapheme: 'á', leftText: '¡R' });
+    expect(orpData[3]).toMatchObject({ word: 'año', focusGrapheme: 'ñ' });
+  });
+
+  test('VAL-WEB-011: 320px viewport renders EN, RU, and ES views without clipping or horizontal page scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await openReader(page);
+
+    for (const lang of ['en', 'ru', 'es']) {
+      await page.evaluate((l) => window.rsvpReader.setLanguage(l), lang);
+      const overflow = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth
+      }));
+      expect(overflow.scroll - overflow.viewport, `horizontal overflow in ${lang} at 320px`).toBeLessThanOrEqual(1);
+
+      await page.locator('#settingsBtn').click();
+      const settingsOverflow = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth
+      }));
+      expect(settingsOverflow.scroll - settingsOverflow.viewport, `settings overflow in ${lang} at 320px`).toBeLessThanOrEqual(1);
+      await page.locator('#closeSettingsBtn').click();
+    }
+  });
 });

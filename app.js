@@ -275,6 +275,7 @@ class RSVPReader {
         this.hardwareControlsHint = document.getElementById('hardwareControlsHint');
         this.languageEnBtn = document.getElementById('languageEnBtn');
         this.languageRuBtn = document.getElementById('languageRuBtn');
+        this.languageEsBtn = document.getElementById('languageEsBtn');
 
         this.bookmarksModal = document.getElementById('bookmarksModal');
         this.closeBookmarksBtn = document.getElementById('closeBookmarksBtn');
@@ -434,8 +435,9 @@ class RSVPReader {
         this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
         this.settingsExportBtn.addEventListener('click', () => this.runAsync(() => this.exportLibrary()));
         this.deleteAllDataBtn.addEventListener('click', () => this.runAsync(() => this.deleteAllLocalData()));
-        this.languageEnBtn.addEventListener('click', () => this.setLanguage('en'));
-        this.languageRuBtn.addEventListener('click', () => this.setLanguage('ru'));
+        if (this.languageEnBtn) this.languageEnBtn.addEventListener('click', () => this.setLanguage('en'));
+        if (this.languageRuBtn) this.languageRuBtn.addEventListener('click', () => this.setLanguage('ru'));
+        if (this.languageEsBtn) this.languageEsBtn.addEventListener('click', () => this.setLanguage('es'));
 
         this.textInput.addEventListener('input', () => this.handleTextInputChanged());
         this.bookNameInput.addEventListener('input', () => {
@@ -3959,7 +3961,7 @@ class RSVPReader {
             return true;
         }
 
-        const locale = this.i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+        const locale = this.i18n.language === 'ru' ? 'ru-RU' : (this.i18n.language === 'es' ? 'es-ES' : 'en-US');
         const normalizedQuery = query.toLocaleLowerCase(locale).replace(/\s+/g, ' ');
         const queryParts = normalizedQuery.split(' ');
         const matches = [];
@@ -4054,7 +4056,7 @@ class RSVPReader {
             this.scrollWordWithinReader(visibleSpan, true);
         }
 
-        this.searchResults.textContent = `${matchIndex + 1} / ${this.searchMatches.length}`;
+        this.searchResults.textContent = `${this.i18n.formatNumber(matchIndex + 1)} / ${this.i18n.formatNumber(this.searchMatches.length)}`;
         this.setCurrentWordIndex(wordIndex, { scroll: false });
     }
 
@@ -4612,6 +4614,15 @@ class RSVPReader {
         if (graphemes.length === 0) return 0;
         let target = graphemes.length <= 2 ? 0 : (graphemes.length === 3 ? 1 : Math.floor(graphemes.length * 0.35));
         target = Math.min(target, graphemes.length - 1);
+        if (/[\p{L}\p{N}]/u.test(graphemes[target].segment)) return graphemes[target].index;
+
+        for (let offset = 1; offset < graphemes.length; offset++) {
+            const right = target + offset;
+            if (right < graphemes.length && /[\p{L}\p{N}]/u.test(graphemes[right].segment)) return graphemes[right].index;
+            const left = target - offset;
+            if (left >= 0 && /[\p{L}\p{N}]/u.test(graphemes[left].segment)) return graphemes[left].index;
+        }
+
         if (!/^\s$/u.test(graphemes[target].segment)) return graphemes[target].index;
 
         for (let offset = 1; offset < graphemes.length; offset++) {
@@ -5543,41 +5554,35 @@ class RSVPReader {
 
     formatLibrarySummary(filteredCount, totalCount) {
         if (filteredCount === totalCount) {
-            if (this.i18n.language === 'ru') {
-                return `${totalCount} ${this.pluralize(totalCount, ['книга', 'книги', 'книг'])}`;
-            }
-            return `${totalCount} ${totalCount === 1 ? 'book' : 'books'}`;
+            return this.formatBookCount(totalCount);
         }
-        return this.t('filteredBookCount', { filtered: filteredCount, total: totalCount });
+        return this.t('filteredBookCount', {
+            filtered: this.i18n.formatNumber(filteredCount),
+            total: this.i18n.formatNumber(totalCount)
+        });
     }
 
-    pluralize(value, forms) {
-        const abs = Math.abs(value) % 100;
-        const last = abs % 10;
-        if (abs > 10 && abs < 20) return forms[2];
-        if (last > 1 && last < 5) return forms[1];
-        if (last === 1) return forms[0];
-        return forms[2];
-    }
-
-    formatCount(value, englishForms, russianForms) {
+    formatCount(value, englishForms, russianForms, spanishForms) {
         const formatted = this.i18n.formatNumber(value);
+        let forms = englishForms;
         if (this.i18n.language === 'ru') {
-            return `${formatted} ${this.pluralize(value, russianForms)}`;
+            forms = russianForms;
+        } else if (this.i18n.language === 'es') {
+            forms = spanishForms || englishForms;
         }
-        return `${formatted} ${value === 1 ? englishForms[0] : englishForms[1]}`;
+        return `${formatted} ${this.i18n.pluralize(value, forms)}`;
     }
 
     formatWordCount(value) {
-        return this.formatCount(value, ['word', 'words'], ['слово', 'слова', 'слов']);
+        return this.formatCount(value, ['word', 'words'], ['слово', 'слова', 'слов'], ['palabra', 'palabras']);
     }
 
     formatBookmarkCount(value) {
-        return this.formatCount(value, ['bookmark', 'bookmarks'], ['закладка', 'закладки', 'закладок']);
+        return this.formatCount(value, ['bookmark', 'bookmarks'], ['закладка', 'закладки', 'закладок'], ['marcador', 'marcadores']);
     }
 
     formatBookCount(value) {
-        return this.formatCount(value, ['book', 'books'], ['книга', 'книги', 'книг']);
+        return this.formatCount(value, ['book', 'books'], ['книга', 'книги', 'книг'], ['libro', 'libros']);
     }
 
     async loadBook(bookId, options = {}) {
@@ -6067,7 +6072,7 @@ class RSVPReader {
             const tokens = this.parseText(book.text);
             const wordNumber = this.wordOrdinalAtIndex(bookmark.index, tokens);
             const progress = book.wordCount > 0 ? Math.round((wordNumber / book.wordCount) * 100) : 0;
-            meta.textContent = this.t('bookmarkMeta', { progress, word: Math.max(1, wordNumber), date: this.formatDate(bookmark.createdAt) });
+            meta.textContent = this.t('bookmarkMeta', { progress, word: this.i18n.formatNumber(Math.max(1, wordNumber)), date: this.formatDate(bookmark.createdAt) });
 
             const excerpt = document.createElement('div');
             excerpt.className = 'bookmark-excerpt';
@@ -6544,8 +6549,20 @@ class RSVPReader {
             this.renderNormalText();
             if (this.searchInput.value) this.handleSearch();
         }
+        if (this.mode === 'rsvp' && !this.isPlaying) {
+            this.displayCurrentWord();
+        }
         if (this.mode === 'normal' || this.mode === 'rsvp') this.updateProgress();
-        if (this.tocModal.classList.contains('active')) this.renderToc();
+        if (this.tocModal && this.tocModal.classList.contains('active')) this.renderToc();
+        if (this.bookmarksModal && this.bookmarksModal.classList.contains('active')) {
+            this.runAsync(async () => {
+                const book = this.currentBookId ? await this.getBook(this.currentBookId) : null;
+                this.renderBookmarks(book);
+            });
+        }
+        if (this.actionDialog && this.actionDialog.classList.contains('active')) {
+            this.actionDialogCancelBtn.textContent = this.t('cancel');
+        }
     }
 
     getPlatform() {
