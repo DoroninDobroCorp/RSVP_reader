@@ -7,6 +7,10 @@
     <meta name="description" content="HummingRead is a calm RSVP speed reader for books, pasted text and focused one-word-at-a-time reading with Pico.">
     <meta name="robots" content="index,follow">
     <link rel="canonical" href="__HUMMINGREAD_SITE_URL__">
+    <link rel="alternate" hreflang="en" href="__HUMMINGREAD_SITE_URL__">
+    <link rel="alternate" hreflang="ru" href="__HUMMINGREAD_SITE_URL__ru/">
+    <link rel="alternate" hreflang="es" href="__HUMMINGREAD_SITE_URL__es/">
+    <link rel="alternate" hreflang="x-default" href="__HUMMINGREAD_SITE_URL__">
     <meta property="og:type" content="website">
     <meta property="og:title" content="HummingRead: Speed Reader">
     <meta property="og:description" content="Read books and long text in a calm, adjustable one-word-at-a-time rhythm.">
@@ -42,7 +46,7 @@
     <a class="skip-link" href="#mainContainer" data-i18n="skipToContent">Skip to content</a>
 
     <header class="app-header">
-        <button id="homeBtn" class="brand-button" type="button" aria-label="HummingRead home" data-i18n-aria="homeAria">
+        <button id="homeBtn" class="brand-button" type="button">
             <img src="assets/icons/app-icon-64.png?v=49" width="36" height="36" alt="" aria-hidden="true">
             <span class="brand-copy">
                 <strong data-i18n="appName">HummingRead</strong>
@@ -50,11 +54,11 @@
             </span>
         </button>
         <div class="header-actions">
-            <button id="globalSearchBtn" class="icon-btn is-contextual" type="button" hidden data-i18n-title="search" data-i18n-aria="search">
+            <button id="globalSearchBtn" class="icon-btn is-contextual" type="button" hidden title="Search" aria-label="Search" data-i18n-title="search" data-i18n-aria="search">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
             </button>
             <span id="offlineBadge" class="status-pill" data-i18n="checkingCache">Preparing offline mode…</span>
-            <button id="settingsBtn" class="icon-btn" type="button" data-i18n-title="settings" data-i18n-aria="settings">
+            <button id="settingsBtn" class="icon-btn" type="button" title="Settings" aria-label="Settings" data-i18n-title="settings" data-i18n-aria="settings">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.55V21h-4v-.08A1.7 1.7 0 0 0 8.95 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.52-1H3v-4h.08A1.7 1.7 0 0 0 4.6 8.95a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.95 4.6 1.7 1.7 0 0 0 10 3.08V3h4v.08a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.12.4.52.98 1.52 1H21v4h-.08c-1 0-1.4.58-1.52 1Z"/></svg>
             </button>
         </div>

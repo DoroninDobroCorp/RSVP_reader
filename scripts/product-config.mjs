@@ -89,7 +89,5 @@ export function configureWebText(source) {
         .replace(
             /<meta name="robots" content="[^"]*">/u,
             '<meta name="robots" content="noindex,nofollow,noarchive">'
-        )
-        .replace(/\s*<link rel="canonical"[^>]*>/u, '')
-        .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/u, '');
+        );
 }

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { configureFinalSeoText, configureWebText } from './product-config.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const configuredTextFiles = new Set(['index.html', 'robots.txt']);
+const configuredTextFiles = new Set(['index.html', 'privacy.html', 'support.html', 'acknowledgements.html', 'robots.txt']);
 const webPackagedFiles = [
     'index.html',
     'privacy.html',
@@ -90,12 +90,35 @@ for (const id of ['fileInput', 'libraryImportInput']) {
 }
 
 const previewIndex = await readFile(join(root, 'dist', 'index.html'), 'utf8');
+const previewRuIndex = await readFile(join(root, 'dist', 'ru', 'index.html'), 'utf8');
+const previewEsIndex = await readFile(join(root, 'dist', 'es', 'index.html'), 'utf8');
 const previewRobots = await readFile(join(root, 'dist', 'robots.txt'), 'utf8');
+
 if (!previewIndex.includes('content="noindex,nofollow,noarchive"')
-    || /rel="canonical"|application\/ld\+json/u.test(previewIndex)
+    || !previewRuIndex.includes('content="noindex,nofollow,noarchive"')
+    || !previewEsIndex.includes('content="noindex,nofollow,noarchive"')
     || previewRobots !== 'User-agent: *\nDisallow: /\n') {
     throw new Error('Tester-preview SEO output is not consistently noindex/disallow.');
 }
+
+for (const [doc, lang, canonicalPath] of [
+    [previewIndex, 'en', ''],
+    [previewRuIndex, 'ru', 'ru/'],
+    [previewEsIndex, 'es', 'es/']
+]) {
+    if (!doc.includes(`<html lang="${lang}">`)) {
+        throw new Error(`Locale doc missing static <html lang="${lang}">.`);
+    }
+    if (!doc.includes(`rel="canonical" href="https://145.239.82.124.sslip.io/rsvp/${canonicalPath}"`)) {
+        throw new Error(`Locale doc ${lang} missing self-referencing canonical URL.`);
+    }
+    for (const hreflangCode of ['en', 'ru', 'es', 'x-default']) {
+        if (!doc.includes(`hreflang="${hreflangCode}"`)) {
+            throw new Error(`Locale doc ${lang} missing hreflang="${hreflangCode}".`);
+        }
+    }
+}
+
 await expectMissing(join(root, 'dist', 'sitemap.xml'), 'Tester-preview sitemap');
 
 const finalSeo = configureFinalSeoText(sourceIndex, 'https://reader.example/');
