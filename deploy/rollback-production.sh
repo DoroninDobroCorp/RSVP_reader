@@ -55,8 +55,12 @@ fi
 if [[ -s ${backup_root}/previous-release-target.txt ]]; then
   previous_target=$(cat "${backup_root}/previous-release-target.txt")
   [[ ${previous_target} == "${runtime_root}"/releases/* ]]
-  ln -s "${previous_target}" "${runtime_root}/current.rollback"
-  mv -Tf "${runtime_root}/current.rollback" "${runtime_root}/current"
+  if mv --help 2>&1 | grep -q -- '-T'; then
+    ln -s "${previous_target}" "${runtime_root}/current.rollback"
+    mv -Tf "${runtime_root}/current.rollback" "${runtime_root}/current"
+  else
+    ln -sfn "${previous_target}" "${runtime_root}/current"
+  fi
 fi
 
 if [[ -f ${backup_root}/sync-store.json && ! -e ${repo_root}/data/sync-store.json ]]; then
