@@ -4,7 +4,8 @@
   "mascotName": "Pico",
   "taglines": {
     "en": "RSVP, one word at a time",
-    "ru": "Читайте в своём ритме — слово за словом"
+    "ru": "Читайте в своём ритме — слово за словом",
+    "es": "RSVP, una palabra a la vez"
   },
   "urls": {
     "support": "https://145.239.82.124.sslip.io/rsvp/support.html",

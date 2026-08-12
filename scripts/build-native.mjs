@@ -14,7 +14,9 @@ for (const relativePath of [
     'manifest.json',
     'robots.txt',
     'service-worker.js',
-    'sitemap.xml'
+    'sitemap.xml',
+    'ru',
+    'es'
 ]) {
     await rm(join(destination, relativePath), { recursive: true, force: true });
 }

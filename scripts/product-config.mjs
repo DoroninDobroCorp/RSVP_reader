@@ -13,6 +13,7 @@ const requiredStrings = [
     ['mascotName', productConfig.mascotName],
     ['taglines.en', productConfig.taglines?.en],
     ['taglines.ru', productConfig.taglines?.ru],
+    ['taglines.es', productConfig.taglines?.es],
     ['urls.support', productConfig.urls?.support],
     ['urls.privacy', productConfig.urls?.privacy],
     ['urls.marketingSite', productConfig.urls?.marketingSite],

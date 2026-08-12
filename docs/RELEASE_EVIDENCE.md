@@ -9,8 +9,7 @@ publication remain separate account/review actions and are not claimed here.
 - `npm audit --omit=dev`: 0 vulnerabilities.
 - `npm run test:isolation`: 1/1 passed while an unrelated process occupied port
   8081; the Playwright suite connected only to its owned marked server on 43181.
-- `npm run test:unit`: 17/17 passed, including SSRF transition/special ranges and
-  hard, non-sliding, bounded raw-IP bucket expiry.
+- `npm run test:unit`: 25/25 passed, including locale detection/fallback, Intl.PluralRules (EN, RU, ES), safe string interpolation, key/placeholder parity, and UI counter pluralization.
 - `npm run test:production`: 200/200 passed with one worker across Chromium,
   desktop WebKit, and Mobile Safari; `test-results/.last-run.json` recorded
   `status: passed` with no failed tests.
@@ -28,7 +27,7 @@ publication remain separate account/review actions and are not claimed here.
   `noindex,nofollow,noarchive`, has `robots.txt` `Disallow: /`, no canonical or
   JSON-LD, and no sitemap; package verification checks that separate contract.
 - `npm run cap:sync`: passed and copied only the filtered `dist-native` tree.
-  Five Capacitor plugins include pinned Keep Awake 8.0.1.
+  Five Capacitor plugins include pinned Keep Awake 8.0.1. iOS `CFBundleLocalizations` includes `en`, `ru`, and `es`.
 - Xcode 26.3 resolved the pinned Swift packages, completed an unsigned Release
   build, and completed Analyze. The Release app launched on iOS 18.5 iPhone 16
   Pro and 13-inch iPad Pro simulators.
@@ -37,9 +36,9 @@ publication remain separate account/review actions and are not claimed here.
   now opens Files directly instead of offering irrelevant camera/photo sources;
   package verification prevents the wildcard media type from returning.
 - `npm run verify:all`: brand, complete notices, web/native package separation,
-  extension, service-worker, deployment, and deterministic-build gates passed.
-  The deterministic web/extension output contains 40 files with tree SHA-256
-  `ac47752bd6a75c3cde59fd9dd9b34a7cb06fe8faf5a1ec6b72a55ff125de4f6c`.
+  extension, service-worker, deployment, deterministic-build, and store-copy character limits gates passed.
+  The deterministic web/extension output contains 49 files with tree SHA-256
+  `56a75bb3ebafd02ebcfd009f0bb616b6632edff112cddf8665a8d719bc6332c3`.
 - Deployment verification rendered both observed live nginx files without
   modifying them, preserved unrelated locations, passed a real `nginx -t`, and
   executed rollback against an isolated fixture. The fixture restored the old

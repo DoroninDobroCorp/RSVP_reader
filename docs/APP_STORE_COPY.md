@@ -6,8 +6,10 @@ Status: release-candidate copy for a **provisional pending owner/legal confirmat
 
 - Name (25/30): `HummingRead: Speed Reader`
 - Subtitle (26/30): `RSVP Reader for Real Books`
-- Promotional text: `Bring EPUB, FB2, DOCX and long text into one calm focal point. Pause for context, rewind ten words, and return to the exact saved word.`
-- Keywords (94/100): `rsvp,speed reading,epub,fb2,docx,focus,offline,one word,book reader,read faster,local`
+- Promotional text (148/170): `Bring EPUB, FB2, DOCX and long text into one calm focal point. Pause for context, rewind ten words, and return to the exact saved word.`
+- Keywords (84/100): `rsvp,speed reading,epub,fb2,docx,focus,offline,one word,book reader,read faster,local`
+- Chrome Web Store Name (25/45): `HummingRead: Speed Reader`
+- Chrome Web Store Summary (115/132): `Calm RSVP speed reader for books, articles, and pasted text. Keep your focus on one word with zero distractions.`
 
 ### Description
 
@@ -21,10 +23,12 @@ HummingRead controls presentation pace. It does not promise a particular increas
 
 ## Russian metadata
 
-- Название: `HummingRead: Быстрое чтение`
-- Подзаголовок: `Книги в режиме RSVP`
-- Промотекст: `Импортируйте EPUB, FB2, DOCX и длинные тексты. Пауза возвращает контекст, перемотка — десять слов, а позиция сохраняется точно.`
-- Ключевые слова: `чтение,книги,epub,fb2,docx,офлайн,RSVP,фокус,по одному слову,скорочтение`
+- Название (26/30): `HummingRead: Быстрое чтение`
+- Подзаголовок (19/30): `Книги в режиме RSVP`
+- Промотекст (139/170): `Импортируйте EPUB, FB2, DOCX и длинные тексты. Пауза возвращает контекст, перемотка — десять слов, а позиция сохраняется точно.`
+- Ключевые слова (74/100): `чтение,книги,epub,fb2,docx,офлайн,RSVP,фокус,по одному слову,скорочтение`
+- Название Chrome Web Store (25/45): `HummingRead: Скорочиталка`
+- Краткое описание Chrome Web Store (123/132): `Спокойная RSVP-скорочиталка для книг, статей и вставленного текста. Читайте по одному слову без отвлекающих факторов.`
 
 ### Описание
 
@@ -35,6 +39,25 @@ HummingRead — спокойная офлайн-читалка для ваших
 Нативная библиотека хранится только на устройстве. В приложении нет аккаунта, рекламы, аналитики, отслеживания, облачной синхронизации и импорта статей по ссылке. Книги, извлечённый текст, закладки, настройки и позиция не покидают устройство; основное чтение работает в авиарежиме.
 
 HummingRead управляет темпом показа, но не обещает определённого роста скорости или понимания текста.
+
+## Spanish metadata
+
+- Nombre (27/30): `HummingRead: Lectura rápida`
+- Subtítulo (24/30): `Lector RSVP para libros`
+- Texto promocional (146/170): `Importa EPUB, FB2, DOCX y textos largos a un punto focal tranquilo. Pausa para ver el contexto y rebobina diez palabras.`
+- Palabras clave (89/100): `rsvp,lectura rapida,epub,fb2,docx,enfoque,sin conexion,una palabra,lector libros,local`
+- Nombre Chrome Web Store (27/45): `HummingRead: Lectura rápida`
+- Resumen Chrome Web Store (119/132): `Lector de velocidad RSVP para libros, artículos y texto pegado. Mantén tu enfoque en una palabra sin distracciones.`
+
+### Descripción
+
+HummingRead es un lector tranquilo y sin conexión para sus propios libros y documentos sin DRM. Importe EPUB, FB2, DOCX, TXT, HTML, Markdown o RTF, elija un ritmo de presentación cómodo y mantenga la mirada en un punto claro mientras las palabras avanzan.
+
+Pico, el colibrí piloto de enfoque, guía una breve demostración. Reproduzca o pause en cualquier momento, revele la oración alrededor de la palabra actual, rebobine diez palabras, desplácese a una posición exacta, busque en un libro extenso, añada marcadores y continúe donde se detuvo.
+
+Su biblioteca nativa es solo local. No hay cuenta, publicidad, SDK de analítica, SDK de seguimiento, sincronización en la nube ni importador de URL de artículos en la versión para iOS. Los libros importados, el texto extraído, los marcadores, la configuración y la posición de lectura permanecen en el dispositivo. La lectura principal funciona en modo avión.
+
+HummingRead controla el ritmo de presentación. No promete un aumento determinado en la comprensión o en la velocidad de lectura; los resultados varían según el lector, el idioma, el material y el ritmo elegido.
 
 ## App Review notes
 
