@@ -7,6 +7,10 @@ const MENU_SELECTION = 'hummingread-read-selection';
 const MENU_PAGE = 'hummingread-read-page';
 const EXPIRATION_ALARM_PREFIX = 'hummingread-expire:';
 
+function getMessage(key, fallback = '') {
+  return Core?.getMessage?.(key, fallback) || (typeof chrome !== 'undefined' && chrome?.i18n?.getMessage?.(key)) || fallback;
+}
+
 function expirationAlarm(scope, nonce) {
   return `${EXPIRATION_ALARM_PREFIX}${scope}:${nonce}`;
 }
@@ -15,12 +19,12 @@ async function installContextMenus() {
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: MENU_SELECTION,
-    title: chrome.i18n.getMessage('contextSelection'),
+    title: getMessage('contextSelection', 'Read selection locally with HummingRead'),
     contexts: ['selection']
   });
   chrome.contextMenus.create({
     id: MENU_PAGE,
-    title: chrome.i18n.getMessage('contextPage'),
+    title: getMessage('contextPage', 'Extract and read this page locally'),
     contexts: ['page']
   });
 }
@@ -43,7 +47,7 @@ async function resolvePreviewUrl() {
   const configured = await chrome.storage.local.get('hummingreadPreviewUrl');
   const defaultUrl = Core.configuredPreviewUrl();
   const candidate = Core.configuredPreviewUrl(configured.hummingreadPreviewUrl || defaultUrl);
-  if (!candidate) throw new Error('Quick Send is unavailable because this tester build has no configured web preview.');
+  if (!candidate) throw new Error(getMessage('quickSendUnavailable', 'Quick Send is unavailable because this tester build has no configured web preview.'));
   const parsed = new URL(candidate);
   const configuredDefault = defaultUrl ? new URL(defaultUrl) : null;
   const isConfiguredPreview = configuredDefault
@@ -52,7 +56,7 @@ async function resolvePreviewUrl() {
   const isLocalTest = ['localhost', '127.0.0.1'].includes(parsed.hostname)
     && parsed.protocol === 'http:';
   if (!isConfiguredPreview && !isLocalTest) {
-    throw new Error('Quick Send rejected an untrusted preview address.');
+    throw new Error(getMessage('quickSendUntrusted', 'Quick Send rejected an untrusted preview address.'));
   }
   return parsed.href;
 }
@@ -106,7 +110,7 @@ async function queueQuickSend(rawPayload) {
 
 async function openLocalReader(rawPayload) {
   const payload = Core.normalizePayload(rawPayload);
-  if (payload.type !== 'text') throw new Error('Standalone reading requires locally extracted or pasted text.');
+  if (payload.type !== 'text') throw new Error(getMessage('standaloneTextRequired', 'Standalone reading requires locally extracted or pasted text.'));
   const nonce = Core.createNonce();
   const now = Date.now();
   const key = Core.readerStorageKey(nonce);
@@ -129,13 +133,13 @@ async function openLocalReader(rawPayload) {
 
 async function openReaderError(message) {
   const url = new URL(chrome.runtime.getURL('reader.html'));
-  const defaultError = chrome.i18n.getMessage('couldNotRead') || 'This page could not be read locally.';
+  const defaultError = getMessage('couldNotRead', 'This page could not be read locally.');
   url.searchParams.set('error', String(message || defaultError).slice(0, 500));
   await chrome.tabs.create({ active: true, url: url.href });
 }
 
 async function readSelectionFromTab(tab) {
-  if (!tab?.id) throw new Error('Open a normal web page first.');
+  if (!tab?.id) throw new Error(getMessage('openNormalWebPageFirst', 'Open a normal web page first.'));
   const status = Core.isExtractablePageUrl(tab.url);
   if (!status.ok) throw new Error(status.reason);
   const [{ result = '' } = {}] = await chrome.scripting.executeScript({
@@ -146,7 +150,7 @@ async function readSelectionFromTab(tab) {
 }
 
 async function extractPageFromTab(tab) {
-  if (!tab?.id) throw new Error('Open a normal web page first.');
+  if (!tab?.id) throw new Error(getMessage('openNormalWebPageFirst', 'Open a normal web page first.'));
   const status = Core.isExtractablePageUrl(tab.url);
   if (!status.ok) throw new Error(status.reason);
   let result;
@@ -156,9 +160,9 @@ async function extractPageFromTab(tab) {
       func: Core.extractReadablePageFromDocument
     });
   } catch (error) {
-    throw new Error('Chrome blocked access to this page. Select text manually or paste it into HummingRead.');
+    throw new Error(getMessage('chromeBlockedPageAccess', 'Chrome blocked access to this page. Select text manually or paste it into HummingRead.'));
   }
-  if (!result?.ok) throw new Error(result?.error || 'This page does not expose readable text.');
+  if (!result?.ok) throw new Error(result?.error || getMessage('pageNoReadableText', 'This page does not expose readable text.'));
   return Core.normalizePayload({ type: 'text', ...result });
 }
 
@@ -223,7 +227,7 @@ async function handleMessage(message, sender) {
   if (message?.type === 'hummingread:read-selection') {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     const text = await readSelectionFromTab(tab);
-    if (!text) return { ok: false, error: 'Select some text on the page first.' };
+    if (!text) return { ok: false, error: getMessage('selectTextFirst', 'Select some text on the page first.') };
     return openLocalReader({ type: 'text', text, title: tab.title, sourceUrl: tab.url });
   }
 
@@ -233,7 +237,7 @@ async function handleMessage(message, sender) {
 
   if (message?.type === 'hummingread:get-pending') {
     if (!await isHummingReadSender(sender) || !Core.isValidNonce(message.nonce)) {
-      return { ok: false, error: 'Invalid HummingRead handoff.' };
+      return { ok: false, error: getMessage('invalidHandoff', 'Invalid HummingRead handoff.') };
     }
     const key = Core.handoffStorageKey(message.nonce);
     const result = await chrome.storage.session.get(key);
@@ -241,26 +245,26 @@ async function handleMessage(message, sender) {
     if (!pending || Number(pending.expiresAt) <= Date.now()) {
       await chrome.storage.session.remove(key);
       await chrome.alarms.clear(expirationAlarm('handoff', message.nonce));
-      return { ok: false, error: 'The handoff expired.' };
+      return { ok: false, error: getMessage('handoffExpired', 'The handoff expired.') };
     }
     return { ok: true, payload: pending.payload };
   }
 
   if (message?.type === 'hummingread:clear-pending') {
     if (!await isHummingReadSender(sender) || !Core.isValidNonce(message.nonce)) {
-      return { ok: false, error: 'Invalid HummingRead handoff.' };
+      return { ok: false, error: getMessage('invalidHandoff', 'Invalid HummingRead handoff.') };
     }
     await chrome.storage.session.remove(Core.handoffStorageKey(message.nonce));
     await chrome.alarms.clear(expirationAlarm('handoff', message.nonce));
     return { ok: true };
   }
 
-  return { ok: false, error: 'Unknown request.' };
+  return { ok: false, error: getMessage('unknownRequest', 'Unknown request.') };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
-    .catch((error) => sendResponse({ ok: false, error: error.message || chrome.i18n.getMessage('readFailed') || 'HummingRead could not complete this action.' }));
+    .catch((error) => sendResponse({ ok: false, error: error.message || getMessage('readFailed', 'HummingRead could not complete this action.') }));
   return true;
 });

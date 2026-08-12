@@ -1,60 +1,239 @@
 {
-  "extensionName": { "message": "HummingRead — локальная скорочиталка" },
-  "extensionDescription": { "message": "Читайте выделенный, извлечённый или вставленный текст локально в RSVP-читалке." },
-  "actionTitle": { "message": "Читать локально в HummingRead" },
-  "commandDescription": { "message": "Читать выделение или текущую страницу локально" },
-  "contextSelection": { "message": "Читать выделение локально в HummingRead" },
-  "contextPage": { "message": "Извлечь и читать эту страницу локально" },
-  "popupTagline": { "message": "Пико удерживает взгляд, пока слова набирают скорость." },
-  "readHere": { "message": "Читать здесь" },
-  "readSelection": { "message": "Читать выделенный текст локально" },
-  "readPage": { "message": "Извлечь эту страницу локально" },
-  "pasteTitle": { "message": "Или вставьте текст" },
-  "pastePlaceholder": { "message": "Вставьте или отредактируйте текст…" },
-  "readText": { "message": "Читать вставленный текст локально" },
-  "quickSendSummary": { "message": "Необязательно: Quick Send в web-preview" },
-  "quickSendHint": { "message": "Это действие покинет расширение и откроет настроенный тестовый сайт. Вставленный текст передаётся только после нажатия кнопки." },
-  "quickSendButton": { "message": "Отправить вставленный текст" },
-  "quickSendNeedsText": { "message": "Перед Quick Send вставьте текст." },
-  "readyStatus": { "message": "Самостоятельное чтение остаётся внутри расширения." },
-  "pasteDetectedStatus": { "message": "Текст вставлен локально. Нажмите «Читать», когда будете готовы." },
-  "shortcutHint": { "message": "Alt+Shift+R читает выделение — или страницу — локально." },
-  "preparingStatus": { "message": "Готовим локальную читалку…" },
-  "openedStatus": { "message": "Локальная читалка открыта." },
-  "readFailed": { "message": "HummingRead не смог прочитать этот материал." },
-  "pastedTextTitle": { "message": "Вставленный текст" },
-  "skipToReader": { "message": "Перейти к читалке" },
-  "localReaderLabel": { "message": "ЛОКАЛЬНАЯ RSVP-ЧИТАЛКА" },
-  "themeLabel": { "message": "Тема" },
-  "themeSystem": { "message": "Системная" },
-  "themeLight": { "message": "Светлая" },
-  "themeDark": { "message": "Тёмная" },
-  "preparingReader": { "message": "Пико расставляет слова…" },
-  "preparingReaderHint": { "message": "Большие тексты готовятся небольшими отменяемыми порциями." },
-  "gentleError": { "message": "МЯГКИЙ ОБХОДНОЙ МАРШРУТ" },
-  "couldNotRead": { "message": "Эту страницу не удалось прочитать локально" },
-  "backToPopup": { "message": "Выбрать другой текст" },
-  "readingWithPico": { "message": "ЧИТАЕМ С ПИКО" },
-  "localBadge": { "message": "ЛОКАЛЬНО · НА ЭТОМ УСТРОЙСТВЕ" },
-  "readingControls": { "message": "Управление чтением" },
-  "rewindTen": { "message": "Назад на 10 слов" },
-  "play": { "message": "Старт" },
-  "pause": { "message": "Пауза" },
-  "readingSpeed": { "message": "Скорость чтения" },
-  "slower": { "message": "Уменьшить скорость на 20 слов в минуту" },
-  "faster": { "message": "Увеличить скорость на 20 слов в минуту" },
-  "progress": { "message": "Прогресс" },
-  "keyboardShortcuts": { "message": "Горячие клавиши" },
-  "shortcutPlay": { "message": "старт / пауза" },
-  "shortcutRewind": { "message": "назад на 10" },
-  "shortcutSpeed": { "message": "скорость" },
-  "quickSendReader": { "message": "Quick Send этого текста в web-preview ↗" },
-  "readerPrivateStatus": { "message": "Текст и прогресс остаются в хранилище расширения." },
-  "noSavedText": { "message": "Сохранённого локального текста нет. Откройте popup HummingRead и выберите выделение, страницу или вставленный текст." },
-  "readerLinkInvalid": { "message": "Некорректная ссылка локальной читалки." },
-  "readerLinkExpired": { "message": "Ссылка локальной читалки истекла. Выберите текст в popup ещё раз." },
-  "pastedLocally": { "message": "Вставлено локально" },
-  "quickSendOpening": { "message": "Открываем настроенный web-preview…" },
-  "quickSendOpened": { "message": "Web-preview открыт после вашего явного действия." },
-  "quickSendFailed": { "message": "Quick Send не смог открыть web-preview." }
+  "actionTitle": {
+    "message": "Читать локально в HummingRead"
+  },
+  "backToPopup": {
+    "message": "Выбрать другой текст"
+  },
+  "chromeBlockedPageAccess": {
+    "message": "Chrome заблокировал доступ к этой странице. Выделите текст вручную или вставьте его в HummingRead."
+  },
+  "chromePdfExtractionUnreliable": {
+    "message": "Страницы PDF в Chrome нельзя надёжно извлечь. Выделите текст в PDF или вставьте его."
+  },
+  "chromeProtectsPage": {
+    "message": "Chrome защищает эту страницу. Откройте обычный сайт или вставьте текст в HummingRead."
+  },
+  "commandDescription": {
+    "message": "Читать выделение или текущую страницу локально"
+  },
+  "contextPage": {
+    "message": "Извлечь и читать эту страницу локально"
+  },
+  "contextSelection": {
+    "message": "Читать выделение локально в HummingRead"
+  },
+  "couldNotRead": {
+    "message": "Эту страницу не удалось прочитать локально"
+  },
+  "credentialFreeUrlsOnly": {
+    "message": "Поддерживаются только URL-адреса HTTP и HTTPS без учётных данных."
+  },
+  "enterValidUrl": {
+    "message": "Введите корректный публичный URL-адрес HTTP или HTTPS."
+  },
+  "extensionDescription": {
+    "message": "Читайте выделенный, извлечённый или вставленный текст локально в RSVP-читалке."
+  },
+  "extensionName": {
+    "message": "HummingRead — локальная скорочиталка"
+  },
+  "faster": {
+    "message": "Увеличить скорость на 20 слов в минуту"
+  },
+  "gentleError": {
+    "message": "МЯГКИЙ ОБХОДНОЙ МАРШРУТ"
+  },
+  "handoffExpired": {
+    "message": "Срок действия передачи истёк."
+  },
+  "invalidExtensionToken": {
+    "message": "Недействительный токен расширения."
+  },
+  "invalidHandoff": {
+    "message": "Недействительная передача HummingRead."
+  },
+  "keyboardShortcuts": {
+    "message": "Горячие клавиши"
+  },
+  "localBadge": {
+    "message": "ЛОКАЛЬНО · НА ЭТОМ УСТРОЙСТВЕ"
+  },
+  "localReaderLabel": {
+    "message": "ЛОКАЛЬНАЯ RSVP-ЧИТАЛКА"
+  },
+  "noSavedText": {
+    "message": "Сохранённого локального текста нет. Откройте popup HummingRead и выберите выделение, страницу или вставленный текст."
+  },
+  "openNormalWebPageFirst": {
+    "message": "Сначала откройте обычную страницу HTTP или HTTPS."
+  },
+  "openedStatus": {
+    "message": "Локальная читалка открыта."
+  },
+  "pageNoReadableText": {
+    "message": "На этой странице нет доступного для чтения текста."
+  },
+  "pageNotEnoughReadableText": {
+    "message": "На этой странице недостаточно текста для чтения. Выделите или вставьте фрагмент вручную."
+  },
+  "pasteDetectedStatus": {
+    "message": "Текст вставлен локально. Нажмите «Читать», когда будете готовы."
+  },
+  "pastePlaceholder": {
+    "message": "Вставьте или отредактируйте текст…"
+  },
+  "pasteTitle": {
+    "message": "Или вставьте текст"
+  },
+  "pastedLocally": {
+    "message": "Вставлено локально"
+  },
+  "pastedTextTitle": {
+    "message": "Вставленный текст"
+  },
+  "pause": {
+    "message": "Пауза"
+  },
+  "play": {
+    "message": "Старт"
+  },
+  "popupTagline": {
+    "message": "Пико удерживает взгляд, пока слова набирают скорость."
+  },
+  "preparingReader": {
+    "message": "Пико расставляет слова…"
+  },
+  "preparingReaderHint": {
+    "message": "Большие тексты готовятся небольшими отменяемыми порциями."
+  },
+  "preparingStatus": {
+    "message": "Готовим локальную читалку…"
+  },
+  "progress": {
+    "message": "Прогресс"
+  },
+  "quickSendButton": {
+    "message": "Отправить вставленный текст"
+  },
+  "quickSendFailed": {
+    "message": "Quick Send не смог открыть web-preview."
+  },
+  "quickSendHint": {
+    "message": "Это действие покинет расширение и откроет настроенный тестовый сайт. Вставленный текст передаётся только после нажатия кнопки."
+  },
+  "quickSendNeedsText": {
+    "message": "Перед Quick Send вставьте текст."
+  },
+  "quickSendOpened": {
+    "message": "Web-preview открыт после вашего явного действия."
+  },
+  "quickSendOpening": {
+    "message": "Открываем настроенный web-preview…"
+  },
+  "quickSendReader": {
+    "message": "Quick Send этого текста в web-preview ↗"
+  },
+  "quickSendSummary": {
+    "message": "Необязательно: Quick Send в web-preview"
+  },
+  "quickSendUnavailable": {
+    "message": "Quick Send недоступен, так как в этой тестовой сборке не настроен web-preview."
+  },
+  "quickSendUntrusted": {
+    "message": "Quick Send отклонил недоверенный адрес preview."
+  },
+  "readFailed": {
+    "message": "HummingRead не смог прочитать этот материал."
+  },
+  "readHere": {
+    "message": "Читать здесь"
+  },
+  "readPage": {
+    "message": "Извлечь эту страницу локально"
+  },
+  "readSelection": {
+    "message": "Читать выделенный текст локально"
+  },
+  "readText": {
+    "message": "Читать вставленный текст локально"
+  },
+  "readerLinkExpired": {
+    "message": "Ссылка локальной читалки истекла. Выберите текст в popup ещё раз."
+  },
+  "readerLinkInvalid": {
+    "message": "Некорректная ссылка локальной читалки."
+  },
+  "readerPrivateStatus": {
+    "message": "Текст и прогресс остаются в хранилище расширения."
+  },
+  "readingControls": {
+    "message": "Управление чтением"
+  },
+  "readingPreparationCancelled": {
+    "message": "Подготовка к чтению была отменена."
+  },
+  "readingSpeed": {
+    "message": "Скорость чтения"
+  },
+  "readingWithPico": {
+    "message": "ЧИТАЕМ С ПИКО"
+  },
+  "readyStatus": {
+    "message": "Самостоятельное чтение остаётся внутри расширения."
+  },
+  "rewindTen": {
+    "message": "Назад на 10 слов"
+  },
+  "secureRandomnessUnavailable": {
+    "message": "Надёжный генератор случайных чисел недоступен."
+  },
+  "selectOrPasteTextFirst": {
+    "message": "Сначала выделите или вставьте текст."
+  },
+  "selectTextFirst": {
+    "message": "Сначала выделите текст на странице."
+  },
+  "shortcutHint": {
+    "message": "Alt+Shift+R читает выделение — или страницу — локально."
+  },
+  "shortcutPlay": {
+    "message": "старт / пауза"
+  },
+  "shortcutRewind": {
+    "message": "назад на 10"
+  },
+  "shortcutSpeed": {
+    "message": "скорость"
+  },
+  "skipToReader": {
+    "message": "Перейти к читалке"
+  },
+  "slower": {
+    "message": "Уменьшить скорость на 20 слов в минуту"
+  },
+  "standaloneTextRequired": {
+    "message": "Автономное чтение требует локально извлечённого или вставленного текста."
+  },
+  "textTooLarge": {
+    "message": "Текст слишком большой. Используйте более короткий фрагмент (до 1,5 млн символов)."
+  },
+  "themeDark": {
+    "message": "Тёмная"
+  },
+  "themeLabel": {
+    "message": "Тема"
+  },
+  "themeLight": {
+    "message": "Светлая"
+  },
+  "themeSystem": {
+    "message": "Системная"
+  },
+  "unknownRequest": {
+    "message": "Неизвестный запрос."
+  },
+  "webPreviewNotConfigured": {
+    "message": "Web-preview не настроен в этой тестовой сборке."
+  }
 }

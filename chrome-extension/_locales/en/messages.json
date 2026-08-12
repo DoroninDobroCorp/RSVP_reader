@@ -1,60 +1,239 @@
 {
-  "extensionName": { "message": "HummingRead: Local Speed Reader" },
-  "extensionDescription": { "message": "Read selected, extracted, or pasted text locally with a private RSVP reader." },
-  "actionTitle": { "message": "Read locally with HummingRead" },
-  "commandDescription": { "message": "Read the selection or current page locally" },
-  "contextSelection": { "message": "Read selection locally with HummingRead" },
-  "contextPage": { "message": "Extract and read this page locally" },
-  "popupTagline": { "message": "Pico holds your gaze still while the words take flight." },
-  "readHere": { "message": "Read here" },
-  "readSelection": { "message": "Read selected text locally" },
-  "readPage": { "message": "Extract this page locally" },
-  "pasteTitle": { "message": "Or paste text" },
-  "pastePlaceholder": { "message": "Paste or edit text…" },
-  "readText": { "message": "Read pasted text locally" },
-  "quickSendSummary": { "message": "Optional Quick Send to web preview" },
-  "quickSendHint": { "message": "This leaves the extension and opens the configured tester website. Pasted text is transferred only when you press the button." },
-  "quickSendButton": { "message": "Quick Send pasted text" },
-  "quickSendNeedsText": { "message": "Paste text before using Quick Send." },
-  "readyStatus": { "message": "Standalone reading stays inside this extension." },
-  "pasteDetectedStatus": { "message": "Pasted locally. Press Read when you are ready." },
-  "shortcutHint": { "message": "Alt+Shift+R reads the selection—or the page—locally." },
-  "preparingStatus": { "message": "Preparing the local reader…" },
-  "openedStatus": { "message": "Local reader opened." },
-  "readFailed": { "message": "HummingRead could not read this content." },
-  "pastedTextTitle": { "message": "Pasted text" },
-  "skipToReader": { "message": "Skip to reader" },
-  "localReaderLabel": { "message": "LOCAL RSVP READER" },
-  "themeLabel": { "message": "Theme" },
-  "themeSystem": { "message": "System" },
-  "themeLight": { "message": "Light" },
-  "themeDark": { "message": "Dark" },
-  "preparingReader": { "message": "Pico is arranging the words…" },
-  "preparingReaderHint": { "message": "Large passages are prepared in small cancellable batches." },
-  "gentleError": { "message": "GENTLE DETOUR" },
-  "couldNotRead": { "message": "This page could not be read locally" },
-  "backToPopup": { "message": "Choose another text" },
-  "readingWithPico": { "message": "READING WITH PICO" },
-  "localBadge": { "message": "LOCAL · ON THIS DEVICE" },
-  "readingControls": { "message": "Reading controls" },
-  "rewindTen": { "message": "Rewind 10 words" },
-  "play": { "message": "Play" },
-  "pause": { "message": "Pause" },
-  "readingSpeed": { "message": "Reading speed" },
-  "slower": { "message": "Decrease speed by 20 WPM" },
-  "faster": { "message": "Increase speed by 20 WPM" },
-  "progress": { "message": "Progress" },
-  "keyboardShortcuts": { "message": "Keyboard shortcuts" },
-  "shortcutPlay": { "message": "play / pause" },
-  "shortcutRewind": { "message": "rewind 10" },
-  "shortcutSpeed": { "message": "speed" },
-  "quickSendReader": { "message": "Quick Send this text to web preview ↗" },
-  "readerPrivateStatus": { "message": "Text and progress stay in extension storage." },
-  "noSavedText": { "message": "No saved local text is available. Open the HummingRead popup and choose a selection, page, or pasted text." },
-  "readerLinkInvalid": { "message": "This local reader link is invalid." },
-  "readerLinkExpired": { "message": "This local reader link expired. Choose the text again from the popup." },
-  "pastedLocally": { "message": "Pasted locally" },
-  "quickSendOpening": { "message": "Opening the configured web preview…" },
-  "quickSendOpened": { "message": "Web preview opened after your explicit action." },
-  "quickSendFailed": { "message": "Quick Send could not open the web preview." }
+  "actionTitle": {
+    "message": "Read locally with HummingRead"
+  },
+  "backToPopup": {
+    "message": "Choose another text"
+  },
+  "chromeBlockedPageAccess": {
+    "message": "Chrome blocked access to this page. Select text manually or paste it into HummingRead."
+  },
+  "chromePdfExtractionUnreliable": {
+    "message": "Chrome PDF pages cannot be extracted reliably. Select text in the PDF or paste it instead."
+  },
+  "chromeProtectsPage": {
+    "message": "Chrome protects this page. Open a normal website, or paste text into HummingRead."
+  },
+  "commandDescription": {
+    "message": "Read the selection or current page locally"
+  },
+  "contextPage": {
+    "message": "Extract and read this page locally"
+  },
+  "contextSelection": {
+    "message": "Read selection locally with HummingRead"
+  },
+  "couldNotRead": {
+    "message": "This page could not be read locally"
+  },
+  "credentialFreeUrlsOnly": {
+    "message": "Only credential-free HTTP and HTTPS URLs are supported."
+  },
+  "enterValidUrl": {
+    "message": "Enter a valid public HTTP or HTTPS URL."
+  },
+  "extensionDescription": {
+    "message": "Read selected, extracted, or pasted text locally with a private RSVP reader."
+  },
+  "extensionName": {
+    "message": "HummingRead: Local Speed Reader"
+  },
+  "faster": {
+    "message": "Increase speed by 20 WPM"
+  },
+  "gentleError": {
+    "message": "GENTLE DETOUR"
+  },
+  "handoffExpired": {
+    "message": "The handoff expired."
+  },
+  "invalidExtensionToken": {
+    "message": "Invalid extension token."
+  },
+  "invalidHandoff": {
+    "message": "Invalid HummingRead handoff."
+  },
+  "keyboardShortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "localBadge": {
+    "message": "LOCAL · ON THIS DEVICE"
+  },
+  "localReaderLabel": {
+    "message": "LOCAL RSVP READER"
+  },
+  "noSavedText": {
+    "message": "No saved local text is available. Open the HummingRead popup and choose a selection, page, or pasted text."
+  },
+  "openNormalWebPageFirst": {
+    "message": "Open a normal HTTP or HTTPS page first."
+  },
+  "openedStatus": {
+    "message": "Local reader opened."
+  },
+  "pageNoReadableText": {
+    "message": "This page does not expose readable text."
+  },
+  "pageNotEnoughReadableText": {
+    "message": "This page does not expose enough readable text. Select or paste the passage instead."
+  },
+  "pasteDetectedStatus": {
+    "message": "Pasted locally. Press Read when you are ready."
+  },
+  "pastePlaceholder": {
+    "message": "Paste or edit text…"
+  },
+  "pasteTitle": {
+    "message": "Or paste text"
+  },
+  "pastedLocally": {
+    "message": "Pasted locally"
+  },
+  "pastedTextTitle": {
+    "message": "Pasted text"
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "play": {
+    "message": "Play"
+  },
+  "popupTagline": {
+    "message": "Pico holds your gaze still while the words take flight."
+  },
+  "preparingReader": {
+    "message": "Pico is arranging the words…"
+  },
+  "preparingReaderHint": {
+    "message": "Large passages are prepared in small cancellable batches."
+  },
+  "preparingStatus": {
+    "message": "Preparing the local reader…"
+  },
+  "progress": {
+    "message": "Progress"
+  },
+  "quickSendButton": {
+    "message": "Quick Send pasted text"
+  },
+  "quickSendFailed": {
+    "message": "Quick Send could not open the web preview."
+  },
+  "quickSendHint": {
+    "message": "This leaves the extension and opens the configured tester website. Pasted text is transferred only when you press the button."
+  },
+  "quickSendNeedsText": {
+    "message": "Paste text before using Quick Send."
+  },
+  "quickSendOpened": {
+    "message": "Web preview opened after your explicit action."
+  },
+  "quickSendOpening": {
+    "message": "Opening the configured web preview…"
+  },
+  "quickSendReader": {
+    "message": "Quick Send this text to web preview ↗"
+  },
+  "quickSendSummary": {
+    "message": "Optional Quick Send to web preview"
+  },
+  "quickSendUnavailable": {
+    "message": "Quick Send is unavailable because this tester build has no configured web preview."
+  },
+  "quickSendUntrusted": {
+    "message": "Quick Send rejected an untrusted preview address."
+  },
+  "readFailed": {
+    "message": "HummingRead could not read this content."
+  },
+  "readHere": {
+    "message": "Read here"
+  },
+  "readPage": {
+    "message": "Extract this page locally"
+  },
+  "readSelection": {
+    "message": "Read selected text locally"
+  },
+  "readText": {
+    "message": "Read pasted text locally"
+  },
+  "readerLinkExpired": {
+    "message": "This local reader link expired. Choose the text again from the popup."
+  },
+  "readerLinkInvalid": {
+    "message": "This local reader link is invalid."
+  },
+  "readerPrivateStatus": {
+    "message": "Text and progress stay in extension storage."
+  },
+  "readingControls": {
+    "message": "Reading controls"
+  },
+  "readingPreparationCancelled": {
+    "message": "Reading preparation was cancelled."
+  },
+  "readingSpeed": {
+    "message": "Reading speed"
+  },
+  "readingWithPico": {
+    "message": "READING WITH PICO"
+  },
+  "readyStatus": {
+    "message": "Standalone reading stays inside this extension."
+  },
+  "rewindTen": {
+    "message": "Rewind 10 words"
+  },
+  "secureRandomnessUnavailable": {
+    "message": "Secure randomness is unavailable."
+  },
+  "selectOrPasteTextFirst": {
+    "message": "Select or paste some text first."
+  },
+  "selectTextFirst": {
+    "message": "Select some text on the page first."
+  },
+  "shortcutHint": {
+    "message": "Alt+Shift+R reads the selection—or the page—locally."
+  },
+  "shortcutPlay": {
+    "message": "play / pause"
+  },
+  "shortcutRewind": {
+    "message": "rewind 10"
+  },
+  "shortcutSpeed": {
+    "message": "speed"
+  },
+  "skipToReader": {
+    "message": "Skip to reader"
+  },
+  "slower": {
+    "message": "Decrease speed by 20 WPM"
+  },
+  "standaloneTextRequired": {
+    "message": "Standalone reading requires locally extracted or pasted text."
+  },
+  "textTooLarge": {
+    "message": "This text is too large. Use a shorter selection (up to 1.5 million characters)."
+  },
+  "themeDark": {
+    "message": "Dark"
+  },
+  "themeLabel": {
+    "message": "Theme"
+  },
+  "themeLight": {
+    "message": "Light"
+  },
+  "themeSystem": {
+    "message": "System"
+  },
+  "unknownRequest": {
+    "message": "Unknown request."
+  },
+  "webPreviewNotConfigured": {
+    "message": "The web preview is not configured in this tester build."
+  }
 }

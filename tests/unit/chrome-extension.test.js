@@ -124,3 +124,57 @@ test('protected URLs are rejected before scripting and local HTTP pages remain e
     url: 'https://example.com/article'
   });
 });
+
+test('all background.js and core.js error keys exist in catalogs and resolve via chrome.i18n', () => {
+  const en = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/en/messages.json'), 'utf8'));
+  const ru = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/ru/messages.json'), 'utf8'));
+  const es = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/es/messages.json'), 'utf8'));
+
+  const requiredErrorKeys = [
+    'enterValidUrl',
+    'credentialFreeUrlsOnly',
+    'selectOrPasteTextFirst',
+    'textTooLarge',
+    'secureRandomnessUnavailable',
+    'invalidExtensionToken',
+    'webPreviewNotConfigured',
+    'openNormalWebPageFirst',
+    'chromeProtectsPage',
+    'chromePdfExtractionUnreliable',
+    'readingPreparationCancelled',
+    'pageNoReadableText',
+    'pageNotEnoughReadableText',
+    'quickSendUnavailable',
+    'quickSendUntrusted',
+    'standaloneTextRequired',
+    'chromeBlockedPageAccess',
+    'selectTextFirst',
+    'invalidHandoff',
+    'handoffExpired',
+    'unknownRequest',
+    'couldNotRead',
+    'readFailed'
+  ];
+
+  for (const key of requiredErrorKeys) {
+    assert.ok(en[key], `EN catalog missing error key: ${key}`);
+    assert.ok(ru[key], `RU catalog missing error key: ${key}`);
+    assert.ok(es[key], `ES catalog missing error key: ${key}`);
+  }
+
+  const originalChrome = global.chrome;
+  global.chrome = {
+    i18n: {
+      getMessage(key) {
+        return ru[key]?.message || null;
+      }
+    }
+  };
+
+  try {
+    assert.equal(Core.getMessage('selectOrPasteTextFirst'), 'Сначала выделите или вставьте текст.');
+    assert.throws(() => Core.normalizePayload({ type: 'text', text: '' }), /Сначала выделите или вставьте текст/u);
+  } finally {
+    global.chrome = originalChrome;
+  }
+});

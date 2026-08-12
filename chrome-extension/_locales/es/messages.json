@@ -5,6 +5,15 @@
   "backToPopup": {
     "message": "Elegir otro texto"
   },
+  "chromeBlockedPageAccess": {
+    "message": "Chrome bloqueó el acceso a esta página. Selecciona el texto manualmente o pégalo en HummingRead."
+  },
+  "chromePdfExtractionUnreliable": {
+    "message": "Las páginas PDF de Chrome no se pueden extraer de forma fiable. Selecciona texto en el PDF o pégalo."
+  },
+  "chromeProtectsPage": {
+    "message": "Chrome protege esta página. Abre un sitio web normal o pega texto en HummingRead."
+  },
   "commandDescription": {
     "message": "Leer la selección o la página actual localmente"
   },
@@ -16,6 +25,12 @@
   },
   "couldNotRead": {
     "message": "Esta página no se pudo leer localmente"
+  },
+  "credentialFreeUrlsOnly": {
+    "message": "Solo se admiten URL HTTP y HTTPS sin datos de autenticación."
+  },
+  "enterValidUrl": {
+    "message": "Introduce una URL HTTP o HTTPS pública válida."
   },
   "extensionDescription": {
     "message": "Lee texto seleccionado, extraído o pegado de forma local con un lector RSVP privado."
@@ -29,6 +44,15 @@
   "gentleError": {
     "message": "DESVÍO SUAVE"
   },
+  "handoffExpired": {
+    "message": "La transferencia ha caducado."
+  },
+  "invalidExtensionToken": {
+    "message": "Token de extensión no válido."
+  },
+  "invalidHandoff": {
+    "message": "Transferencia de HummingRead no válida."
+  },
   "keyboardShortcuts": {
     "message": "Atajos de teclado"
   },
@@ -41,8 +65,17 @@
   "noSavedText": {
     "message": "No hay texto local guardado. Abre el menú flotante de HummingRead y elige una selección, página o texto pegado."
   },
+  "openNormalWebPageFirst": {
+    "message": "Abre primero una página HTTP o HTTPS normal."
+  },
   "openedStatus": {
     "message": "Lector local abierto."
+  },
+  "pageNoReadableText": {
+    "message": "Esta página no expone texto legible."
+  },
+  "pageNotEnoughReadableText": {
+    "message": "Esta página no expone suficiente texto legible. Selecciona o pega el pasaje en su lugar."
   },
   "pasteDetectedStatus": {
     "message": "Pegado localmente. Pulsa Leer cuando estés listo."
@@ -104,6 +137,12 @@
   "quickSendSummary": {
     "message": "Envío rápido opcional a la vista previa web"
   },
+  "quickSendUnavailable": {
+    "message": "Envío rápido no está disponible porque esta versión de prueba no tiene vista previa web configurada."
+  },
+  "quickSendUntrusted": {
+    "message": "Envío rápido rechazó una dirección de vista previa no confiable."
+  },
   "readFailed": {
     "message": "HummingRead no pudo leer este contenido."
   },
@@ -131,6 +170,9 @@
   "readingControls": {
     "message": "Controles de lectura"
   },
+  "readingPreparationCancelled": {
+    "message": "Se canceló la preparación de la lectura."
+  },
   "readingSpeed": {
     "message": "Velocidad de lectura"
   },
@@ -142,6 +184,15 @@
   },
   "rewindTen": {
     "message": "Rebobinar 10 palabras"
+  },
+  "secureRandomnessUnavailable": {
+    "message": "La generación de números aleatorios seguros no está disponible."
+  },
+  "selectOrPasteTextFirst": {
+    "message": "Selecciona o pega algún texto primero."
+  },
+  "selectTextFirst": {
+    "message": "Selecciona primero algo de texto en la página."
   },
   "shortcutHint": {
     "message": "Alt+Shift+R lee la selección —o la página— localmente."
@@ -161,6 +212,12 @@
   "slower": {
     "message": "Disminuir la velocidad en 20 PPM"
   },
+  "standaloneTextRequired": {
+    "message": "La lectura independiente requiere texto extraído localmente o pegado."
+  },
+  "textTooLarge": {
+    "message": "Este texto es demasiado grande. Usa una selección más corta (hasta 1,5 millones de caracteres)."
+  },
   "themeDark": {
     "message": "Oscuro"
   },
@@ -172,5 +229,11 @@
   },
   "themeSystem": {
     "message": "Sistema"
+  },
+  "unknownRequest": {
+    "message": "Solicitud desconocida."
+  },
+  "webPreviewNotConfigured": {
+    "message": "La vista previa web no está configurada en esta versión de prueba."
   }
 }

@@ -9,6 +9,14 @@
   const MAX_TITLE_CHARACTERS = 300;
   const PENDING_TTL_MS = 10 * 60 * 1000;
 
+  function getMessage(key, fallback = '') {
+    if (typeof chrome !== 'undefined' && chrome?.i18n?.getMessage) {
+      const localized = chrome.i18n.getMessage(key);
+      if (localized) return localized;
+    }
+    return fallback;
+  }
+
   function normalizeTitle(value, fallback = 'Pasted text') {
     const title = String(value || '')
       .replace(/[\u0000-\u001f\u007f]+/gu, ' ')
@@ -25,10 +33,10 @@
     try {
       parsed = new URL(raw);
     } catch (error) {
-      throw new Error('Enter a valid public HTTP or HTTPS URL.');
+      throw new Error(getMessage('enterValidUrl', 'Enter a valid public HTTP or HTTPS URL.'));
     }
     if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) {
-      throw new Error('Only credential-free HTTP and HTTPS URLs are supported.');
+      throw new Error(getMessage('credentialFreeUrlsOnly', 'Only credential-free HTTP and HTTPS URLs are supported.'));
     }
     parsed.hash = '';
     return parsed.href;
@@ -58,9 +66,9 @@
     }
 
     const text = String(payload.text || '').replace(/\u0000/gu, '').trim();
-    if (!text) throw new Error('Select or paste some text first.');
+    if (!text) throw new Error(getMessage('selectOrPasteTextFirst', 'Select or paste some text first.'));
     if (text.length > MAX_TEXT_CHARACTERS) {
-      throw new Error('This text is too large. Use a shorter selection (up to 1.5 million characters).');
+      throw new Error(getMessage('textTooLarge', 'This text is too large. Use a shorter selection (up to 1.5 million characters).'));
     }
     return {
       type,
@@ -76,7 +84,7 @@
 
   function createNonce(cryptoProvider = global.crypto) {
     if (!cryptoProvider || typeof cryptoProvider.getRandomValues !== 'function') {
-      throw new Error('Secure randomness is unavailable.');
+      throw new Error(getMessage('secureRandomnessUnavailable', 'Secure randomness is unavailable.'));
     }
     const bytes = new Uint8Array(16);
     cryptoProvider.getRandomValues(bytes);
@@ -84,7 +92,7 @@
   }
 
   function scopedStorageKey(prefix, nonce) {
-    if (!isValidNonce(nonce)) throw new Error('Invalid extension token.');
+    if (!isValidNonce(nonce)) throw new Error(getMessage('invalidExtensionToken', 'Invalid extension token.'));
     return `${prefix}${nonce}`;
   }
 
@@ -106,7 +114,7 @@
   }
 
   function buildHandoffUrl(nonce, baseUrl = configuredPreviewUrl()) {
-    if (!baseUrl) throw new Error('The web preview is not configured in this tester build.');
+    if (!baseUrl) throw new Error(getMessage('webPreviewNotConfigured', 'The web preview is not configured in this tester build.'));
     const target = new URL(baseUrl);
     target.searchParams.set(HANDOFF_PARAM, isValidNonce(nonce) ? nonce : scopedStorageKey('', nonce));
     return target.href;
@@ -117,13 +125,13 @@
     try {
       parsed = new URL(value);
     } catch (error) {
-      return { ok: false, reason: 'Open a normal HTTP or HTTPS page first.' };
+      return { ok: false, reason: getMessage('openNormalWebPageFirst', 'Open a normal HTTP or HTTPS page first.') };
     }
     if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return { ok: false, reason: 'Chrome protects this page. Open a normal website, or paste text into HummingRead.' };
+      return { ok: false, reason: getMessage('chromeProtectsPage', 'Chrome protects this page. Open a normal website, or paste text into HummingRead.') };
     }
     if (/\.pdf(?:$|[?#])/iu.test(parsed.href)) {
-      return { ok: false, reason: 'Chrome PDF pages cannot be extracted reliably. Select text in the PDF or paste it instead.' };
+      return { ok: false, reason: getMessage('chromePdfExtractionUnreliable', 'Chrome PDF pages cannot be extracted reliably. Select text in the PDF or paste it instead.') };
     }
     return { ok: true, url: parsed.href };
   }
@@ -132,14 +140,14 @@
     const text = String(value || '').replace(/\u0000/gu, '').trim();
     if (!text) return [];
     if (text.length > MAX_TEXT_CHARACTERS) {
-      throw new Error('This text is too large. Use a shorter selection (up to 1.5 million characters).');
+      throw new Error(getMessage('textTooLarge', 'This text is too large. Use a shorter selection (up to 1.5 million characters).'));
     }
     const yieldEvery = Math.max(500, Number(options.yieldEvery) || 4000);
     const isCancelled = typeof options.isCancelled === 'function' ? options.isCancelled : () => false;
     const tokens = [];
     let start = -1;
     for (let index = 0; index <= text.length; index += 1) {
-      if (isCancelled()) throw new Error('Reading preparation was cancelled.');
+      if (isCancelled()) throw new Error(getMessage('readingPreparationCancelled', 'Reading preparation was cancelled.'));
       const character = text[index] || ' ';
       const whitespace = /\s/u.test(character);
       if (!whitespace && start < 0) start = index;
@@ -172,6 +180,12 @@
   }
 
   function extractReadablePageFromDocument() {
+    const getMsg = (key, fallback) => {
+      if (typeof chrome !== 'undefined' && chrome?.i18n?.getMessage) {
+        return chrome.i18n.getMessage(key) || fallback;
+      }
+      return fallback;
+    };
     const blocked = 'script,style,noscript,nav,aside,form,footer,svg,canvas,iframe,template,[hidden],[aria-hidden="true"]';
     const candidates = Array.from(document.querySelectorAll('article,main,[role="main"]'));
     const body = document.body;
@@ -185,7 +199,7 @@
         return (rightBonus + right.length) - (leftBonus + left.length);
       });
     const source = ranked[0]?.element;
-    if (!source) return { ok: false, error: 'This page does not expose readable text.' };
+    if (!source) return { ok: false, error: getMsg('pageNoReadableText', 'This page does not expose readable text.') };
     const clone = source.cloneNode(true);
     clone.querySelectorAll(blocked).forEach((element) => element.remove());
     clone.querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,br,section,div').forEach((element) => {
@@ -197,7 +211,7 @@
       .replace(/\n{3,}/gu, '\n\n')
       .trim()
       .slice(0, 1_500_001);
-    if (text.length < 40) return { ok: false, error: 'This page does not expose enough readable text. Select or paste the passage instead.' };
+    if (text.length < 40) return { ok: false, error: getMsg('pageNotEnoughReadableText', 'This page does not expose enough readable text. Select or paste the passage instead.') };
     return {
       ok: true,
       text,
@@ -219,6 +233,7 @@
     createNonce,
     extractReadablePageFromDocument,
     focusSegments,
+    getMessage,
     handoffStorageKey,
     isExtractablePageUrl,
     isValidNonce,
