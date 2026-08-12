@@ -4,6 +4,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { configureFinalSeoText, configureWebText } from './product-config.mjs';
+import { transformLegalForLocale } from './build-web.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const enCatalog = JSON.parse(await readFile(join(root, 'i18n', 'locales', 'en.json'), 'utf8'));
@@ -106,6 +107,26 @@ for (const file of webPackagedFiles) {
         let text = source.toString('utf8');
         if (file === 'index.html') {
             text = applyLocaleToHtml(text, 'en', enCatalog);
+        } else if (['privacy.html', 'support.html', 'acknowledgements.html'].includes(file)) {
+            const pageKey = file.replace('.html', '');
+            text = transformLegalForLocale(text, pageKey, {
+                lang: 'en',
+                privacy: {
+                    title: 'Privacy Policy — HummingRead',
+                    description: 'HummingRead privacy policy — local-first speed reader for books and documents with zero tracking, ads, or account requirements.',
+                    canonicalUrl: '__HUMMINGREAD_SITE_URL__privacy.html'
+                },
+                support: {
+                    title: 'Support — HummingRead',
+                    description: 'HummingRead tester support and troubleshooting guide for local-first book reading.',
+                    canonicalUrl: '__HUMMINGREAD_SITE_URL__support.html'
+                },
+                acknowledgements: {
+                    title: 'Open-source acknowledgements · HummingRead',
+                    description: 'Open-source software acknowledgements and third-party notices for HummingRead.',
+                    canonicalUrl: '__HUMMINGREAD_SITE_URL__acknowledgements.html'
+                }
+            });
         }
         text = configureWebText(text);
         expected = Buffer.from(text);

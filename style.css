@@ -1549,6 +1549,61 @@ input:focus {
     padding: max(24px, env(safe-area-inset-top)) 0 max(48px, env(safe-area-inset-bottom));
 }
 
+.legal-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.legal-nav-header .legal-back {
+    margin-bottom: 0;
+}
+
+.legal-locale-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.legal-locale-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-soft);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.legal-locale-link:hover {
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+.legal-locale-link.active {
+    color: var(--text);
+    background: var(--surface-solid);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.legal-footer {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+}
+
 .legal-back,
 .legal-contact {
     display: inline-flex;

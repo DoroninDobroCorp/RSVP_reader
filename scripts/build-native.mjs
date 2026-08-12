@@ -94,4 +94,7 @@ privacy = privacy
     );
 await writeFile(privacyPath, privacy);
 
+const iosDestination = join(root, 'ios', 'App', 'App', 'public');
+await cp(destination, iosDestination, { recursive: true });
+
 console.log(`Built filtered native assets in ${destination}`);

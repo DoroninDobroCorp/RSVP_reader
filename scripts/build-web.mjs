@@ -92,6 +92,24 @@ const rootIndexHtml = await readFile(join(root, 'index.html'), 'utf8');
 await writeFile(join(destination, 'index.html'), applyLocaleToHtml(rootIndexHtml, 'en', catalogs.en));
 
 const localeConfigs = {
+    en: {
+        lang: 'en',
+        privacy: {
+            title: 'Privacy Policy — HummingRead',
+            description: 'HummingRead privacy policy — local-first speed reader for books and documents with zero tracking, ads, or account requirements.',
+            canonicalUrl: '__HUMMINGREAD_SITE_URL__privacy.html'
+        },
+        support: {
+            title: 'Support — HummingRead',
+            description: 'HummingRead tester support and troubleshooting guide for local-first book reading.',
+            canonicalUrl: '__HUMMINGREAD_SITE_URL__support.html'
+        },
+        acknowledgements: {
+            title: 'Open-source acknowledgements · HummingRead',
+            description: 'Open-source software acknowledgements and third-party notices for HummingRead.',
+            canonicalUrl: '__HUMMINGREAD_SITE_URL__acknowledgements.html'
+        }
+    },
     ru: {
         lang: 'ru',
         index: {
@@ -184,31 +202,146 @@ function transformIndexForLocale(html, config) {
     return adjustRelativePathsForSubdir(out, config.lang);
 }
 
-function transformLegalForLocale(html, pageKey, config) {
-    const pageConfig = config[pageKey];
-    let out = html.replace(/<html lang="[^"]*">/, `<html lang="${config.lang}">`);
-    out = out.replace(/<title>[^<]*<\/title>/, `<title>${pageConfig.title}</title>`);
-    out = out.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${pageConfig.description}">`);
-    out = out.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${pageConfig.canonicalUrl}">`);
-    return adjustRelativePathsForSubdir(out, config.lang);
+export function transformLegalForLocale(html, pageKey, config) {
+    const pageConfig = config ? config[pageKey] : null;
+    const lang = config ? config.lang : 'en';
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+
+    document.documentElement.lang = lang;
+
+    if (pageConfig) {
+        const titleEl = document.querySelector('title');
+        if (titleEl) titleEl.textContent = pageConfig.title;
+
+        const descEl = document.querySelector('meta[name="description"]');
+        if (descEl) descEl.setAttribute('content', pageConfig.description);
+
+        const canonicalEl = document.querySelector('link[rel="canonical"]');
+        if (canonicalEl) canonicalEl.setAttribute('href', pageConfig.canonicalUrl);
+    }
+
+    const articles = Array.from(document.querySelectorAll('article.legal-card'));
+    for (const article of articles) {
+        const articleLang = article.getAttribute('lang') || 'en';
+        if (articleLang === lang) {
+            article.setAttribute('lang', lang);
+            if (lang !== 'en') {
+                const noticesLink = article.querySelector('a[href="THIRD_PARTY_NOTICES.txt"]');
+                if (noticesLink) {
+                    noticesLink.setAttribute('href', '../THIRD_PARTY_NOTICES.txt');
+                }
+            }
+        } else {
+            article.remove();
+        }
+    }
+
+    const docFile = `${pageKey}.html`;
+    const backText = {
+        en: '← Back to HummingRead',
+        ru: '← На главную HummingRead',
+        es: '← Volver a HummingRead'
+    }[lang] || '← Back to HummingRead';
+
+    function getRelativeLegalUrl(targetLang) {
+        if (lang === targetLang) {
+            return docFile;
+        }
+        if (lang === 'en') {
+            return `${targetLang}/${docFile}`;
+        }
+        if (targetLang === 'en') {
+            return `../${docFile}`;
+        }
+        return `../${targetLang}/${docFile}`;
+    }
+
+    const localeLinks = [
+        { code: 'en', label: 'English' },
+        { code: 'ru', label: 'Русский' },
+        { code: 'es', label: 'Español' }
+    ];
+
+    function createLocaleNav() {
+        const nav = document.createElement('nav');
+        nav.className = 'legal-locale-nav';
+        nav.setAttribute('aria-label', 'Language navigation');
+
+        for (const loc of localeLinks) {
+            const a = document.createElement('a');
+            a.className = 'legal-locale-link' + (loc.code === lang ? ' active' : '');
+            a.href = getRelativeLegalUrl(loc.code);
+            a.setAttribute('lang', loc.code);
+            a.setAttribute('hreflang', loc.code);
+            a.setAttribute('data-language', loc.code);
+            if (loc.code === lang) {
+                a.setAttribute('aria-current', 'page');
+            }
+            a.textContent = loc.label;
+            nav.appendChild(a);
+        }
+        return nav;
+    }
+
+    const main = document.querySelector('main.legal-page');
+    if (main) {
+        let backBtn = main.querySelector('.legal-back');
+        if (backBtn) {
+            backBtn.textContent = backText;
+            backBtn.href = 'index.html';
+        }
+
+        let navHeader = main.querySelector('.legal-nav-header');
+        if (!navHeader) {
+            navHeader = document.createElement('header');
+            navHeader.className = 'legal-nav-header';
+            if (backBtn) {
+                main.insertBefore(navHeader, backBtn);
+                navHeader.appendChild(backBtn);
+            } else {
+                main.insertBefore(navHeader, main.firstChild);
+            }
+        }
+
+        const existingNavHeaderNav = navHeader.querySelector('.legal-locale-nav');
+        if (existingNavHeaderNav) existingNavHeaderNav.remove();
+        navHeader.appendChild(createLocaleNav());
+
+        let footer = main.querySelector('.legal-footer');
+        if (!footer) {
+            footer = document.createElement('footer');
+            footer.className = 'legal-footer';
+            main.appendChild(footer);
+        } else {
+            footer.innerHTML = '';
+        }
+        footer.appendChild(createLocaleNav());
+    }
+
+    let out = dom.serialize().replace(/^<!DOCTYPE html>/i, '<!doctype html>');
+    return adjustRelativePathsForSubdir(out, lang === 'en' ? null : lang);
 }
 
 // Generate locale directories
 for (const [locale, config] of Object.entries(localeConfigs)) {
-    const localeDir = join(destination, locale);
-    await mkdir(localeDir, { recursive: true });
+    const isRoot = locale === 'en';
+    const targetDir = isRoot ? destination : join(destination, locale);
+    await mkdir(targetDir, { recursive: true });
 
-    const indexHtml = await readFile(join(root, 'index.html'), 'utf8');
-    await writeFile(join(localeDir, 'index.html'), transformIndexForLocale(indexHtml, config));
+    if (!isRoot) {
+        const indexHtml = await readFile(join(root, 'index.html'), 'utf8');
+        await writeFile(join(targetDir, 'index.html'), transformIndexForLocale(indexHtml, config));
+    }
 
     const privacyHtml = await readFile(join(root, 'privacy.html'), 'utf8');
-    await writeFile(join(localeDir, 'privacy.html'), transformLegalForLocale(privacyHtml, 'privacy', config));
+    await writeFile(join(targetDir, 'privacy.html'), transformLegalForLocale(privacyHtml, 'privacy', config));
 
     const supportHtml = await readFile(join(root, 'support.html'), 'utf8');
-    await writeFile(join(localeDir, 'support.html'), transformLegalForLocale(supportHtml, 'support', config));
+    await writeFile(join(targetDir, 'support.html'), transformLegalForLocale(supportHtml, 'support', config));
 
     const ackHtml = await readFile(join(root, 'acknowledgements.html'), 'utf8');
-    await writeFile(join(localeDir, 'acknowledgements.html'), transformLegalForLocale(ackHtml, 'acknowledgements', config));
+    await writeFile(join(targetDir, 'acknowledgements.html'), transformLegalForLocale(ackHtml, 'acknowledgements', config));
 }
 
 // Configure web text for all HTML files, robots.txt, and sitemap.xml

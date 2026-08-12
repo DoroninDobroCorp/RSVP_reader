@@ -2632,42 +2632,65 @@ test.describe('production reader regressions', () => {
     const privacyRes = await request.get('/privacy.html');
     expect(privacyRes.status()).toBe(200);
     const privacyHtml = await privacyRes.text();
-    expect(privacyHtml).toContain('<article class="app-panel legal-card">');
-    expect(privacyHtml).toContain('<article class="app-panel legal-card" lang="ru">');
-    expect(privacyHtml).toContain('<article class="app-panel legal-card" lang="es">');
-    expect(privacyHtml).toContain('Política de privacidad');
-    expect(privacyHtml).toContain('Uso de la red');
+    expect(privacyHtml).toContain('<article class="app-panel legal-card" lang="en">');
+    expect(privacyHtml).not.toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(privacyHtml).not.toContain('<article class="app-panel legal-card" lang="es">');
+    expect(privacyHtml).toContain('Privacy Policy');
+
+    const ruPrivacyRes = await request.get('/ru/privacy.html');
+    expect(ruPrivacyRes.status()).toBe(200);
+    const ruPrivacyHtml = await ruPrivacyRes.text();
+    expect(ruPrivacyHtml).toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(ruPrivacyHtml).not.toContain('<article class="app-panel legal-card" lang="es">');
+    expect(ruPrivacyHtml).toContain('Политика конфиденциальности');
+
+    const esPrivacyRes = await request.get('/es/privacy.html');
+    expect(esPrivacyRes.status()).toBe(200);
+    const esPrivacyHtml = await esPrivacyRes.text();
+    expect(esPrivacyHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(esPrivacyHtml).not.toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(esPrivacyHtml).toContain('Política de privacidad');
+    expect(esPrivacyHtml).toContain('Uso de la red');
 
     const supportRes = await request.get('/support.html');
     expect(supportRes.status()).toBe(200);
     const supportHtml = await supportRes.text();
-    expect(supportHtml).toContain('<article class="app-panel legal-card">');
-    expect(supportHtml).toContain('<article class="app-panel legal-card" lang="ru">');
-    expect(supportHtml).toContain('<article class="app-panel legal-card" lang="es">');
-    expect(supportHtml).toContain('Soporte');
-    expect(supportHtml).toContain('Incluir en un informe');
+    expect(supportHtml).toContain('<article class="app-panel legal-card" lang="en">');
+    expect(supportHtml).not.toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(supportHtml).not.toContain('<article class="app-panel legal-card" lang="es">');
+    expect(supportHtml).toContain('Support');
 
-    const ackRes = await request.get('/acknowledgements.html');
-    expect(ackRes.status()).toBe(200);
-    const ackHtml = await ackRes.text();
-    expect(ackHtml).toContain('<article class="app-panel legal-card">');
-    expect(ackHtml).toContain('<article class="app-panel legal-card" lang="ru">');
-    expect(ackHtml).toContain('<article class="app-panel legal-card" lang="es">');
-    expect(ackHtml).toContain('RECONOCIMIENTOS DE CÓDIGO ABIERTO');
-    expect(ackHtml).toContain('Capacitor');
-    expect(ackHtml).toContain('Mozilla Readability');
-    expect(ackHtml).toContain('href="THIRD_PARTY_NOTICES.txt"');
+    const esSupportRes = await request.get('/es/support.html');
+    expect(esSupportRes.status()).toBe(200);
+    const esSupportHtml = await esSupportRes.text();
+    expect(esSupportHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(esSupportHtml).toContain('Soporte');
+    expect(esSupportHtml).toContain('Incluir en un informe');
 
-    await page.goto('/privacy.html');
+    const esAckRes = await request.get('/es/acknowledgements.html');
+    expect(esAckRes.status()).toBe(200);
+    const esAckHtml = await esAckRes.text();
+    expect(esAckHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(esAckHtml).toContain('RECONOCIMIENTOS DE CÓDIGO ABIERTO');
+    expect(esAckHtml).toContain('Capacitor');
+    expect(esAckHtml).toContain('Mozilla Readability');
+    expect(esAckHtml).toContain('href="../THIRD_PARTY_NOTICES.txt"');
+
+    await page.goto('/es/privacy.html');
     await expect(page.locator('a.legal-back')).toHaveAttribute('href', 'index.html');
     await page.locator('article[lang="es"] a[href="support.html"]').click();
-    await expect(page).toHaveURL(/\/support\.html$/);
+    await expect(page).toHaveURL(/\/es\/support\.html$/);
     await page.locator('article[lang="es"] a[href="privacy.html"]').click();
+    await expect(page).toHaveURL(/\/es\/privacy\.html$/);
+
+    await page.locator('.legal-nav-header a.legal-locale-link[hreflang="ru"]').click();
+    await expect(page).toHaveURL(/\/ru\/privacy\.html$/);
+    await page.locator('.legal-nav-header a.legal-locale-link[hreflang="en"]').click();
     await expect(page).toHaveURL(/\/privacy\.html$/);
 
     // VAL-INFO-05: Verify 320px viewport horizontal fit and touch target sizing
     await page.setViewportSize({ width: 320, height: 568 });
-    for (const infoPage of ['/privacy.html', '/support.html', '/acknowledgements.html']) {
+    for (const infoPage of ['/privacy.html', '/ru/privacy.html', '/es/privacy.html', '/support.html', '/acknowledgements.html']) {
       await page.goto(infoPage);
       const metrics = await page.evaluate(() => ({
         docScrollWidth: document.documentElement.scrollWidth,
