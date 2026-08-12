@@ -1,0 +1,176 @@
+{
+  "actionTitle": {
+    "message": "Leer localmente con HummingRead"
+  },
+  "backToPopup": {
+    "message": "Elegir otro texto"
+  },
+  "commandDescription": {
+    "message": "Leer la selección o la página actual localmente"
+  },
+  "contextPage": {
+    "message": "Extraer y leer esta página localmente"
+  },
+  "contextSelection": {
+    "message": "Leer selección localmente con HummingRead"
+  },
+  "couldNotRead": {
+    "message": "Esta página no se pudo leer localmente"
+  },
+  "extensionDescription": {
+    "message": "Lee texto seleccionado, extraído o pegado de forma local con un lector RSVP privado."
+  },
+  "extensionName": {
+    "message": "HummingRead: lector rápido local"
+  },
+  "faster": {
+    "message": "Aumentar la velocidad en 20 PPM"
+  },
+  "gentleError": {
+    "message": "DESVÍO SUAVE"
+  },
+  "keyboardShortcuts": {
+    "message": "Atajos de teclado"
+  },
+  "localBadge": {
+    "message": "LOCAL · EN ESTE DISPOSITIVO"
+  },
+  "localReaderLabel": {
+    "message": "LECTOR RSVP LOCAL"
+  },
+  "noSavedText": {
+    "message": "No hay texto local guardado. Abre el menú flotante de HummingRead y elige una selección, página o texto pegado."
+  },
+  "openedStatus": {
+    "message": "Lector local abierto."
+  },
+  "pasteDetectedStatus": {
+    "message": "Pegado localmente. Pulsa Leer cuando estés listo."
+  },
+  "pastePlaceholder": {
+    "message": "Pega o edita el texto…"
+  },
+  "pasteTitle": {
+    "message": "O pega texto"
+  },
+  "pastedLocally": {
+    "message": "Pegado localmente"
+  },
+  "pastedTextTitle": {
+    "message": "Texto pegado"
+  },
+  "pause": {
+    "message": "Pausar"
+  },
+  "play": {
+    "message": "Reproducir"
+  },
+  "popupTagline": {
+    "message": "Pico mantiene tu mirada fija mientras las palabras despegan."
+  },
+  "preparingReader": {
+    "message": "Pico está preparando las palabras…"
+  },
+  "preparingReaderHint": {
+    "message": "Los pasajes largos se preparan en pequeños lotes cancelables."
+  },
+  "preparingStatus": {
+    "message": "Preparando el lector local…"
+  },
+  "progress": {
+    "message": "Progreso"
+  },
+  "quickSendButton": {
+    "message": "Envío rápido de texto pegado"
+  },
+  "quickSendFailed": {
+    "message": "Envío rápido no pudo abrir la vista previa web."
+  },
+  "quickSendHint": {
+    "message": "Esto sale de la extensión y abre el sitio web de pruebas configurado. El texto pegado se transfiere solo al pulsar el botón."
+  },
+  "quickSendNeedsText": {
+    "message": "Pega texto antes de usar Envío rápido."
+  },
+  "quickSendOpened": {
+    "message": "Vista previa web abierta tras tu acción explícita."
+  },
+  "quickSendOpening": {
+    "message": "Abriendo la vista previa web configurada…"
+  },
+  "quickSendReader": {
+    "message": "Enviar rápido este texto a la vista previa web ↗"
+  },
+  "quickSendSummary": {
+    "message": "Envío rápido opcional a la vista previa web"
+  },
+  "readFailed": {
+    "message": "HummingRead no pudo leer este contenido."
+  },
+  "readHere": {
+    "message": "Leer aquí"
+  },
+  "readPage": {
+    "message": "Extraer esta página localmente"
+  },
+  "readSelection": {
+    "message": "Leer texto seleccionado localmente"
+  },
+  "readText": {
+    "message": "Leer texto pegado localmente"
+  },
+  "readerLinkExpired": {
+    "message": "Este enlace del lector local ha caducado. Elige de nuevo el texto desde el menú flotante."
+  },
+  "readerLinkInvalid": {
+    "message": "Este enlace del lector local no es válido."
+  },
+  "readerPrivateStatus": {
+    "message": "El texto y el progreso se quedan en el almacenamiento de la extensión."
+  },
+  "readingControls": {
+    "message": "Controles de lectura"
+  },
+  "readingSpeed": {
+    "message": "Velocidad de lectura"
+  },
+  "readingWithPico": {
+    "message": "LEYENDO CON PICO"
+  },
+  "readyStatus": {
+    "message": "La lectura independiente se mantiene dentro de esta extensión."
+  },
+  "rewindTen": {
+    "message": "Rebobinar 10 palabras"
+  },
+  "shortcutHint": {
+    "message": "Alt+Shift+R lee la selección —o la página— localmente."
+  },
+  "shortcutPlay": {
+    "message": "reproducir / pausar"
+  },
+  "shortcutRewind": {
+    "message": "rebobinar 10"
+  },
+  "shortcutSpeed": {
+    "message": "velocidad"
+  },
+  "skipToReader": {
+    "message": "Saltar al lector"
+  },
+  "slower": {
+    "message": "Disminuir la velocidad en 20 PPM"
+  },
+  "themeDark": {
+    "message": "Oscuro"
+  },
+  "themeLabel": {
+    "message": "Tema"
+  },
+  "themeLight": {
+    "message": "Claro"
+  },
+  "themeSystem": {
+    "message": "Sistema"
+  }
+}

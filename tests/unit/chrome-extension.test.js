@@ -77,6 +77,26 @@ test('Manifest V3 standalone source uses minimal interaction permissions and no 
   assert.equal(fs.existsSync(path.join(extensionRoot, 'reader.js')), true);
   assert.doesNotThrow(() => JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/en/messages.json'), 'utf8')));
   assert.doesNotThrow(() => JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/ru/messages.json'), 'utf8')));
+  assert.doesNotThrow(() => JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/es/messages.json'), 'utf8')));
+});
+
+test('Chrome extension locale catalogs (en, ru, es) have 100% key parity and non-blank values', () => {
+  const en = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/en/messages.json'), 'utf8'));
+  const ru = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/ru/messages.json'), 'utf8'));
+  const es = JSON.parse(fs.readFileSync(path.join(extensionRoot, '_locales/es/messages.json'), 'utf8'));
+
+  const enKeys = Object.keys(en).sort();
+  const ruKeys = Object.keys(ru).sort();
+  const esKeys = Object.keys(es).sort();
+
+  assert.deepEqual(ruKeys, enKeys, 'RU catalog keys must match EN catalog keys exactly');
+  assert.deepEqual(esKeys, enKeys, 'ES catalog keys must match EN catalog keys exactly');
+
+  for (const key of enKeys) {
+    assert.ok(typeof en[key]?.message === 'string' && en[key].message.trim().length > 0, `EN key "${key}" must not be blank`);
+    assert.ok(typeof ru[key]?.message === 'string' && ru[key].message.trim().length > 0, `RU key "${key}" must not be blank`);
+    assert.ok(typeof es[key]?.message === 'string' && es[key].message.trim().length > 0, `ES key "${key}" must not be blank`);
+  }
 });
 
 test('standalone tokenization yields for large text, supports cancellation, and anchors the focus letter', async () => {

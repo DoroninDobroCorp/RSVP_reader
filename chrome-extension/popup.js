@@ -9,8 +9,15 @@ function message(key, substitutions) {
   return chrome.i18n.getMessage(key, substitutions) || key;
 }
 
+function detectLocale() {
+  const uiLang = (chrome.i18n.getUILanguage() || 'en').toLowerCase();
+  if (uiLang.startsWith('ru')) return 'ru';
+  if (uiLang.startsWith('es')) return 'es';
+  return 'en';
+}
+
 function localize() {
-  document.documentElement.lang = chrome.i18n.getUILanguage().toLowerCase().startsWith('ru') ? 'ru' : 'en';
+  document.documentElement.lang = detectLocale();
   document.querySelectorAll('[data-i18n]').forEach((element) => {
     element.textContent = message(element.dataset.i18n);
   });

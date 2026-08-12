@@ -24,6 +24,7 @@ const requiredFiles = [
     'assets/pico-quick-send.png',
     '_locales/en/messages.json',
     '_locales/ru/messages.json',
+    '_locales/es/messages.json',
     'icons/icon-16.png',
     'icons/icon-32.png',
     'icons/icon-48.png',

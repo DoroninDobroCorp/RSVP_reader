@@ -129,7 +129,8 @@ async function openLocalReader(rawPayload) {
 
 async function openReaderError(message) {
   const url = new URL(chrome.runtime.getURL('reader.html'));
-  url.searchParams.set('error', String(message || 'This page could not be read locally.').slice(0, 500));
+  const defaultError = chrome.i18n.getMessage('couldNotRead') || 'This page could not be read locally.';
+  url.searchParams.set('error', String(message || defaultError).slice(0, 500));
   await chrome.tabs.create({ active: true, url: url.href });
 }
 
@@ -260,6 +261,6 @@ async function handleMessage(message, sender) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
-    .catch((error) => sendResponse({ ok: false, error: error.message || 'HummingRead could not complete this action.' }));
+    .catch((error) => sendResponse({ ok: false, error: error.message || chrome.i18n.getMessage('readFailed') || 'HummingRead could not complete this action.' }));
   return true;
 });

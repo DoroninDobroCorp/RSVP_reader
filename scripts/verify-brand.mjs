@@ -17,6 +17,7 @@ const userFacingFiles = [
     'chrome-extension/reader.html',
     'chrome-extension/_locales/en/messages.json',
     'chrome-extension/_locales/ru/messages.json',
+    'chrome-extension/_locales/es/messages.json',
     'docs/APP_STORE_COPY.md',
     'docs/APP_STORE_CHECKLIST.md',
     'docs/CHROME_EXTENSION.md',
