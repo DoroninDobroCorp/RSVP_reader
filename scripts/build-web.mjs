@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { JSDOM } from 'jsdom';
 import { buildChromeExtension } from './build-chrome-extension.mjs';
 import { configureWebText, productConfig } from './product-config.mjs';
 
@@ -28,9 +29,65 @@ const files = [
 await rm(destination, { recursive: true, force: true });
 await mkdir(destination, { recursive: true });
 
+const catalogs = {
+    en: JSON.parse(await readFile(join(root, 'i18n', 'locales', 'en.json'), 'utf8')),
+    ru: JSON.parse(await readFile(join(root, 'i18n', 'locales', 'ru.json'), 'utf8')),
+    es: JSON.parse(await readFile(join(root, 'i18n', 'locales', 'es.json'), 'utf8'))
+};
+
+function applyLocaleToHtml(html, lang, catalog) {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    document.documentElement.lang = lang;
+
+    if (catalog) {
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+            const key = el.getAttribute('data-i18n');
+            if (catalog[key] !== undefined) {
+                el.textContent = catalog[key];
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('placeholder', catalog[key]);
+            }
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-title');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('title', catalog[key]);
+            }
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-aria');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('aria-label', catalog[key]);
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-language]').forEach((el) => {
+        const isActive = el.dataset.language === lang;
+        if (isActive) {
+            el.classList.add('active');
+            el.setAttribute('aria-pressed', 'true');
+        } else {
+            el.classList.remove('active');
+            el.setAttribute('aria-pressed', 'false');
+        }
+    });
+
+    return dom.serialize().replace(/^<!DOCTYPE html>/i, '<!doctype html>');
+}
+
 for (const file of files) {
     await cp(join(root, file), join(destination, file));
 }
+
+// Pre-render English static body and active language button for root index.html
+const rootIndexHtml = await readFile(join(root, 'index.html'), 'utf8');
+await writeFile(join(destination, 'index.html'), applyLocaleToHtml(rootIndexHtml, 'en', catalogs.en));
 
 const localeConfigs = {
     ru: {
@@ -94,6 +151,7 @@ const localeConfigs = {
 function adjustRelativePathsForSubdir(html) {
     return html
         .replace(/href="manifest\.json(\?[^"]*)?"/g, 'href="../manifest.json$1"')
+        .replace(/href="manifest\.webmanifest(\?[^"]*)?"/g, 'href="../manifest.webmanifest$1"')
         .replace(/href="style\.css(\?[^"]*)?"/g, 'href="../style.css$1"')
         .replace(/href="assets\//g, 'href="../assets/')
         .replace(/src="assets\//g, 'src="../assets/')
@@ -101,11 +159,12 @@ function adjustRelativePathsForSubdir(html) {
         .replace(/src="i18n\.js(\?[^"]*)?"/g, 'src="../i18n.js$1"')
         .replace(/src="app\.js(\?[^"]*)?"/g, 'src="../app.js$1"')
         .replace(/src="epub-parser\.js(\?[^"]*)?"/g, 'src="../epub-parser.js$1"')
+        .replace(/href="downloads\//g, 'href="../downloads/')
         .replace(/href="THIRD_PARTY_NOTICES\.txt"/g, 'href="../THIRD_PARTY_NOTICES.txt"');
 }
 
 function transformIndexForLocale(html, config) {
-    let out = html.replace(/<html lang="[^"]*">/, `<html lang="${config.lang}">`);
+    let out = applyLocaleToHtml(html, config.lang, catalogs[config.lang]);
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${config.index.title}</title>`);
     out = out.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${config.index.description}">`);
     out = out.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${config.index.ogTitle}">`);

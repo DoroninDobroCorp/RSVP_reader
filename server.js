@@ -10,7 +10,9 @@ const { JSDOM } = require('jsdom');
 const { Readability } = require('@mozilla/readability');
 
 const PORT = Number(process.env.PORT || 8081);
-const ROOT = __dirname;
+const ROOT = fs.existsSync(path.join(__dirname, 'dist', 'index.html'))
+  ? path.join(__dirname, 'dist')
+  : __dirname;
 const TEST_MARKER = String(process.env.HUMMINGREAD_TEST_MARKER || '');
 const MAX_ARTICLE_REQUEST_BYTES = 16 * 1024;
 const MAX_ARTICLE_SOURCE_BYTES = 5 * 1024 * 1024;
@@ -30,17 +32,31 @@ const PUBLIC_FILES = new Set([
   'privacy.html',
   'support.html',
   'acknowledgements.html',
+  'ru/index.html',
+  'ru/privacy.html',
+  'ru/support.html',
+  'ru/acknowledgements.html',
+  'es/index.html',
+  'es/privacy.html',
+  'es/support.html',
+  'es/acknowledgements.html',
   'style.css',
   'i18n.js',
   'app.js',
   'epub-parser.js',
   'service-worker.js',
   'manifest.json',
+  'ru/manifest.json',
+  'es/manifest.json',
+  'manifest.webmanifest',
+  'ru/manifest.webmanifest',
+  'es/manifest.webmanifest',
   'sample_text.txt',
   'sample_text_ru.txt',
   'sample_text_es.txt',
   'robots.txt',
-  'sitemap.xml'
+  'sitemap.xml',
+  'downloads/hummingread-tester.zip'
 ]);
 const PUBLIC_DIRECTORIES = ['assets/', 'vendor/'];
 
@@ -491,9 +507,29 @@ function sendStatic(request, response, url) {
   }
 
   const relativePath = relativeToRoot.split(path.sep).join('/');
+  const fileExt = path.extname(relativePath).toLowerCase();
+  const isAsset = Boolean(fileExt) && !['.html', ''].includes(fileExt);
+
   const isPublic = PUBLIC_FILES.has(relativePath)
     || PUBLIC_DIRECTORIES.some((directory) => relativePath.startsWith(directory));
+
   if (!isPublic) {
+    if (!isAsset) {
+      const fallbackPath = path.resolve(ROOT, 'index.html');
+      fs.readFile(fallbackPath, (fallbackError, data) => {
+        if (fallbackError) {
+          response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          response.end('Not found');
+          return;
+        }
+        response.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache'
+        });
+        response.end(data);
+      });
+      return;
+    }
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Not found');
     return;
@@ -504,6 +540,22 @@ function sendStatic(request, response, url) {
 
     fs.readFile(finalPath, (readError, data) => {
       if (readError) {
+        if (!isAsset) {
+          const fallbackPath = path.resolve(ROOT, 'index.html');
+          fs.readFile(fallbackPath, (fbErr, data) => {
+            if (fbErr) {
+              response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+              response.end('Not found');
+              return;
+            }
+            response.writeHead(200, {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-cache'
+            });
+            response.end(data);
+          });
+          return;
+        }
         response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         response.end('Not found');
         return;

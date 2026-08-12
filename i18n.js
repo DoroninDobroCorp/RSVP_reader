@@ -705,9 +705,38 @@
 
     class PaceFlowI18n {
         constructor() {
+            const routeLanguage = this.detectRouteLanguage();
             const stored = global.localStorage ? global.localStorage.getItem('paceflow_language') : null;
             const browserLanguage = (global.navigator && global.navigator.language || 'en').toLowerCase();
-            this.language = this.normalizeLanguage(stored) || this.detectBrowserLanguage(browserLanguage) || 'en';
+            
+            this.language = routeLanguage
+                || this.normalizeLanguage(stored)
+                || this.detectBrowserLanguage(browserLanguage)
+                || 'en';
+
+            if (routeLanguage && global.localStorage) {
+                try {
+                    global.localStorage.setItem('paceflow_language', this.language);
+                } catch (e) {
+                    // Ignore storage quota or security error
+                }
+            }
+        }
+
+        detectRouteLanguage() {
+            try {
+                const pathname = global.location ? global.location.pathname : '';
+                if (!pathname) return null;
+                const segments = pathname.toLowerCase().split('/').filter(Boolean);
+                for (const seg of segments) {
+                    if (seg === 'ru') return 'ru';
+                    if (seg === 'es') return 'es';
+                    if (seg === 'en') return 'en';
+                }
+            } catch (e) {
+                // Ignore location access error
+            }
+            return null;
         }
 
         normalizeLanguage(lang) {

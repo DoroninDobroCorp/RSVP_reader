@@ -2,9 +2,58 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { JSDOM } from 'jsdom';
 import { configureFinalSeoText, configureWebText } from './product-config.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const enCatalog = JSON.parse(await readFile(join(root, 'i18n', 'locales', 'en.json'), 'utf8'));
+
+function applyLocaleToHtml(html, lang, catalog) {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    document.documentElement.lang = lang;
+
+    if (catalog) {
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+            const key = el.getAttribute('data-i18n');
+            if (catalog[key] !== undefined) {
+                el.textContent = catalog[key];
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('placeholder', catalog[key]);
+            }
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-title');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('title', catalog[key]);
+            }
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-aria');
+            if (catalog[key] !== undefined) {
+                el.setAttribute('aria-label', catalog[key]);
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-language]').forEach((el) => {
+        const isActive = el.dataset.language === lang;
+        if (isActive) {
+            el.classList.add('active');
+            el.setAttribute('aria-pressed', 'true');
+        } else {
+            el.classList.remove('active');
+            el.setAttribute('aria-pressed', 'false');
+        }
+    });
+
+    return dom.serialize().replace(/^<!DOCTYPE html>/i, '<!doctype html>');
+}
+
 const configuredTextFiles = new Set(['index.html', 'privacy.html', 'support.html', 'acknowledgements.html', 'robots.txt']);
 const webPackagedFiles = [
     'index.html',
@@ -52,9 +101,15 @@ function pngMetadata(buffer) {
 
 for (const file of webPackagedFiles) {
     const source = await readFile(join(root, file));
-    const expected = configuredTextFiles.has(file)
-        ? Buffer.from(configureWebText(source.toString('utf8')))
-        : source;
+    let expected = source;
+    if (configuredTextFiles.has(file)) {
+        let text = source.toString('utf8');
+        if (file === 'index.html') {
+            text = applyLocaleToHtml(text, 'en', enCatalog);
+        }
+        text = configureWebText(text);
+        expected = Buffer.from(text);
+    }
     const web = await readFile(join(root, 'dist', file));
     if (digest(web) !== digest(expected)) {
         throw new Error(`Web packaged asset differs from configured source: ${file}`);

@@ -6536,8 +6536,34 @@ class RSVPReader {
         }
     }
 
+    getLocaleRoutePath(language) {
+        try {
+            const currentPathname = window.location.pathname || '/';
+            let basePath = '/';
+            if (currentPathname.startsWith('/rsvp/')) {
+                basePath = '/rsvp/';
+            }
+            let subPath = '';
+            if (language === 'ru') subPath = 'ru/';
+            else if (language === 'es') subPath = 'es/';
+            return `${basePath}${subPath}`;
+        } catch (e) {
+            return '/';
+        }
+    }
+
     setLanguage(language) {
         this.i18n.setLanguage(language);
+        if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+            try {
+                const newPath = this.getLocaleRoutePath(language);
+                if (window.location.pathname !== newPath && window.location.pathname !== `${newPath}index.html`) {
+                    window.history.pushState(null, '', newPath + window.location.search + window.location.hash);
+                }
+            } catch (e) {
+                // Ignore history API errors
+            }
+        }
         this.loadSettingsToForm();
         this.updatePlaybackControls();
         this.updateSpeedControls();
