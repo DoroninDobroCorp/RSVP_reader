@@ -177,21 +177,25 @@ if (!previewIndex.includes('content="noindex,nofollow,noarchive"')
     throw new Error('Tester-preview SEO output is not consistently noindex/disallow.');
 }
 
-for (const [doc, lang, canonicalPath] of [
-    [previewIndex, 'en', ''],
-    [previewRuIndex, 'ru', 'ru/'],
-    [previewEsIndex, 'es', 'es/']
+for (const [doc, lang] of [
+    [previewIndex, 'en'],
+    [previewRuIndex, 'ru'],
+    [previewEsIndex, 'es']
 ]) {
     if (!doc.includes(`<html lang="${lang}">`)) {
         throw new Error(`Locale doc missing static <html lang="${lang}">.`);
     }
-    if (!doc.includes(`rel="canonical" href="https://145.239.82.124.sslip.io/rsvp/${canonicalPath}"`)) {
-        throw new Error(`Locale doc ${lang} missing self-referencing canonical URL.`);
+    if (doc.includes('rel="canonical"')) {
+        throw new Error(`Tester-preview locale doc ${lang} must not contain canonical URL.`);
     }
-    for (const hreflangCode of ['en', 'ru', 'es', 'x-default']) {
-        if (!doc.includes(`hreflang="${hreflangCode}"`)) {
-            throw new Error(`Locale doc ${lang} missing hreflang="${hreflangCode}".`);
-        }
+    if (doc.includes('hreflang=')) {
+        throw new Error(`Tester-preview locale doc ${lang} must not contain hreflang tags.`);
+    }
+    if (doc.includes('application/ld+json')) {
+        throw new Error(`Tester-preview locale doc ${lang} must not contain JSON-LD structured data.`);
+    }
+    if (doc.includes('sslip.io') || doc.includes('example.invalid')) {
+        throw new Error(`Tester-preview locale doc ${lang} leaks temporary domain metadata.`);
     }
 }
 

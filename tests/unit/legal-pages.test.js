@@ -140,13 +140,19 @@ test('VAL-WEB-LEGAL-006: Direct loading of any localized legal page URL returns 
     assert.equal(document.querySelector('title').textContent, item.title, `${item.page} title must match`);
     assert.ok(document.querySelector('meta[name="description"]').getAttribute('content').length > 0, `${item.page} must have meta description`);
 
-    const canonical = document.querySelector('link[rel="canonical"]');
-    assert.ok(canonical, `${item.page} must have canonical link`);
-    assert.ok(canonical.getAttribute('href').includes(item.page), `${item.page} canonical must self-reference`);
+    const productConfig = JSON.parse(fs.readFileSync(path.join(root, 'product.config.json'), 'utf8'));
+    if (productConfig.release.channel === 'production') {
+      const canonical = document.querySelector('link[rel="canonical"]');
+      assert.ok(canonical, `${item.page} must have canonical link`);
+      assert.ok(canonical.getAttribute('href').includes(item.page), `${item.page} canonical must self-reference`);
 
-    const hreflangs = ['en', 'ru', 'es', 'x-default'];
-    for (const h of hreflangs) {
-      assert.ok(document.querySelector(`link[rel="alternate"][hreflang="${h}"]`), `${item.page} must have hreflang="${h}"`);
+      const hreflangs = ['en', 'ru', 'es', 'x-default'];
+      for (const h of hreflangs) {
+        assert.ok(document.querySelector(`link[rel="alternate"][hreflang="${h}"]`), `${item.page} must have hreflang="${h}"`);
+      }
+    } else {
+      assert.equal(document.querySelector('link[rel="canonical"]'), null, `${item.page} must omit canonical in tester-preview`);
+      assert.equal(document.querySelectorAll('link[rel="alternate"][hreflang]').length, 0, `${item.page} must omit hreflang in tester-preview`);
     }
   }
 });

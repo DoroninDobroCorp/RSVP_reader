@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const JSZip = require('jszip');
 const http = require('node:http');
+const productConfig = require('../product.config.json');
 
 // App-shell caching is covered by the dedicated offline suite. Blocking it here
 // avoids a newly installed worker reloading the page in the middle of an upload.
@@ -2486,9 +2487,16 @@ test.describe('production reader regressions', () => {
     const healthResponse = await request.get('/index.html');
     expect(healthResponse.status()).toBe(200);
 
-    for (const publicPath of ['/acknowledgements.html', '/robots.txt', '/sitemap.xml']) {
+    const publicPaths = productConfig.release.channel === 'production'
+      ? ['/acknowledgements.html', '/robots.txt', '/sitemap.xml']
+      : ['/acknowledgements.html', '/robots.txt'];
+    for (const publicPath of publicPaths) {
       const publicResponse = await request.get(publicPath);
       expect(publicResponse.status(), publicPath).toBe(200);
+    }
+    if (productConfig.release.channel === 'tester-preview') {
+      const sitemapResponse = await request.get('/sitemap.xml');
+      expect(sitemapResponse.status(), '/sitemap.xml').toBe(404);
     }
     const webpResponse = await request.get('/assets/brand/pico-hero-640.webp');
     expect(webpResponse.status()).toBe(200);

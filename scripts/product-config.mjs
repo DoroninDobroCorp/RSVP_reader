@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { JSDOM } from 'jsdom';
 
 export const root = dirname(dirname(fileURLToPath(import.meta.url)));
 export const productConfig = JSON.parse(
@@ -73,22 +74,49 @@ export function configureFinalSeoText(source, siteUrl = productConfig.urls.marke
         .replaceAll('__HUMMINGREAD_OG_IMAGE_URL__', `${normalized}assets/brand/hummingread-og.png`);
 }
 
-export function configureWebText(source) {
-    if (productConfig.release.channel === 'production') {
-        assertProductionConfiguration();
-        return configureFinalSeoText(source);
+function stripPreviewSeoFromHtml(html) {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (!robotsMeta) {
+        robotsMeta = document.createElement('meta');
+        robotsMeta.setAttribute('name', 'robots');
+        if (document.head) document.head.appendChild(robotsMeta);
     }
-    if (productConfig.release.channel !== 'tester-preview') {
-        throw new Error(`Unsupported release channel: ${productConfig.release.channel}`);
+    robotsMeta.setAttribute('content', 'noindex,nofollow,noarchive');
+
+    document.querySelectorAll('link[rel="canonical"]').forEach((el) => el.remove());
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
+    document.querySelectorAll('script[type="application/ld+json"]').forEach((el) => el.remove());
+
+    document.querySelectorAll('meta').forEach((el) => {
+        const content = el.getAttribute('content') || '';
+        if (content.includes('__HUMMINGREAD_SITE_URL__') || content.includes('sslip.io') || content.includes('example.invalid')) {
+            el.remove();
+        }
+    });
+
+    return dom.serialize().replace(/^<!DOCTYPE html>/i, '<!doctype html>');
+}
+
+export function configureWebText(source, channel = productConfig.release.channel, siteUrl = productConfig.urls.marketingSite) {
+    if (channel === 'production') {
+        if (channel === productConfig.release.channel) {
+            assertProductionConfiguration();
+        }
+        return configureFinalSeoText(source, siteUrl);
+    }
+    if (channel !== 'tester-preview') {
+        throw new Error(`Unsupported release channel: ${channel}`);
     }
 
     if (/^User-agent:/u.test(source)) return 'User-agent: *\nDisallow: /\n';
 
-    const configured = configureFinalSeoText(source);
-    if (!configured.includes('<!doctype html>')) return configured;
-    return configured
-        .replace(
-            /<meta name="robots" content="[^"]*">/u,
-            '<meta name="robots" content="noindex,nofollow,noarchive">'
-        );
+    if (!source.includes('<!doctype html>') && !source.includes('<!DOCTYPE html>')) {
+        return configureFinalSeoText(source, siteUrl);
+    }
+
+    const configured = configureFinalSeoText(source, siteUrl);
+    return stripPreviewSeoFromHtml(configured);
 }

@@ -192,7 +192,11 @@ function transformIndexForLocale(html, config) {
     // Structured data JSON-LD update
     out = out.replace(
         /"url":\s*"__HUMMINGREAD_SITE_URL__"/,
-        `"url": "${config.index.canonicalUrl}",\n      "inLanguage": "${config.lang}"`
+        `"url": "${config.index.canonicalUrl}"`
+    );
+    out = out.replace(
+        /"inLanguage":\s*"en"/,
+        `"inLanguage": "${config.lang}"`
     );
     out = out.replace(
         /"description":\s*"A local-first RSVP speed reader[^"]*"/,
