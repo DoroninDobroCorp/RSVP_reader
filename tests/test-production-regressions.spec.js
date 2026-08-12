@@ -2613,4 +2613,53 @@ test.describe('production reader regressions', () => {
       await page.locator('#closeSettingsBtn').click();
     }
   });
+
+  test('VAL-WEB-007 & VAL-CROSS-004: Spanish sample text loading (sample_text_es.txt) when Spanish is active', async ({ page }) => {
+    await openReader(page);
+    await page.evaluate(() => window.rsvpReader.setLanguage('es'));
+    await page.locator('#tryDemoBtn').click();
+    await expect(page.locator('#rsvpReadingSection')).toBeVisible();
+    const loadedText = await page.evaluate(() => window.rsvpReader.textInput.value);
+    expect(loadedText).toContain('Capítulo uno: Una mañana tranquila');
+    expect(loadedText).toContain('Capítulo dos: Encontrar el ritmo');
+    expect(loadedText).toContain('Capítulo tres: Mantener el lugar');
+  });
+
+  test('VAL-INFO-01, VAL-INFO-02, VAL-INFO-03, VAL-INFO-04, VAL-INFO-05, VAL-INFO-06: Legal & info pages trilingual articles, navigation integrity, and license preservation', async ({ page, request }) => {
+    const privacyRes = await request.get('/privacy.html');
+    expect(privacyRes.status()).toBe(200);
+    const privacyHtml = await privacyRes.text();
+    expect(privacyHtml).toContain('<article class="app-panel legal-card">');
+    expect(privacyHtml).toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(privacyHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(privacyHtml).toContain('Política de privacidad');
+    expect(privacyHtml).toContain('Uso de la red');
+
+    const supportRes = await request.get('/support.html');
+    expect(supportRes.status()).toBe(200);
+    const supportHtml = await supportRes.text();
+    expect(supportHtml).toContain('<article class="app-panel legal-card">');
+    expect(supportHtml).toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(supportHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(supportHtml).toContain('Soporte');
+    expect(supportHtml).toContain('Incluir en un informe');
+
+    const ackRes = await request.get('/acknowledgements.html');
+    expect(ackRes.status()).toBe(200);
+    const ackHtml = await ackRes.text();
+    expect(ackHtml).toContain('<article class="app-panel legal-card">');
+    expect(ackHtml).toContain('<article class="app-panel legal-card" lang="ru">');
+    expect(ackHtml).toContain('<article class="app-panel legal-card" lang="es">');
+    expect(ackHtml).toContain('RECONOCIMIENTOS DE CÓDIGO ABIERTO');
+    expect(ackHtml).toContain('Capacitor');
+    expect(ackHtml).toContain('Mozilla Readability');
+    expect(ackHtml).toContain('href="THIRD_PARTY_NOTICES.txt"');
+
+    await page.goto('/privacy.html');
+    await expect(page.locator('a.legal-back')).toHaveAttribute('href', 'index.html');
+    await page.locator('article[lang="es"] a[href="support.html"]').click();
+    await expect(page).toHaveURL(/\/support\.html$/);
+    await page.locator('article[lang="es"] a[href="privacy.html"]').click();
+    await expect(page).toHaveURL(/\/privacy\.html$/);
+  });
 });

@@ -74,6 +74,10 @@ privacy = privacy
         /<h2>Использование сети<\/h2>[\s\S]*?(?=<h2>Экспорт и удаление<\/h2>)/u,
         '<h2>Использование сети</h2>\n            <p>Приложение iOS читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.</p>\n            '
     )
+    .replace(
+        /<h2>Uso de la red<\/h2>[\s\S]*?(?=<h2>Exportación y eliminación<\/h2>)/u,
+        '<h2>Uso de la red</h2>\n            <p>La aplicación para iOS lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.</p>\n            '
+    )
     .replaceAll(
         'The native iOS app has no article importer or content-service endpoint and its full reading workflow works offline.',
         'The iOS app reads local books, documents and pasted text offline and does not send reading content to the developer.'
@@ -81,6 +85,10 @@ privacy = privacy
     .replaceAll(
         'В нативном приложении iOS нет импорта статьи или адреса сервиса контента; весь сценарий чтения работает офлайн.',
         'Приложение iOS читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.'
+    )
+    .replaceAll(
+        'La aplicación nativa para iOS no tiene importador de artículos ni punto de enlace de servicio de contenido y todo su flujo de lectura funciona sin conexión.',
+        'La aplicación para iOS lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.'
     );
 await writeFile(privacyPath, privacy);
 

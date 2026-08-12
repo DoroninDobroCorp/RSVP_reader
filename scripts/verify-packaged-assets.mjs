@@ -21,6 +21,7 @@ const webPackagedFiles = [
     'robots.txt',
     'sample_text.txt',
     'sample_text_ru.txt',
+    'sample_text_es.txt',
     'assets/brand/pico-hero.png',
     'assets/brand/pico-quick-send.png',
     'assets/brand/pico-hero-640.webp',

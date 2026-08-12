@@ -11,7 +11,10 @@ const required = [
     './support.html',
     './acknowledgements.html',
     './assets/brand/pico-hero-640.webp',
-    './assets/brand/pico-quick-send-640.webp'
+    './assets/brand/pico-quick-send-640.webp',
+    './sample_text.txt',
+    './sample_text_ru.txt',
+    './sample_text_es.txt'
 ];
 
 for (const asset of required) {

@@ -20,6 +20,7 @@ const files = [
     'service-worker.js',
     'sample_text.txt',
     'sample_text_ru.txt',
+    'sample_text_es.txt',
     'robots.txt',
     ...(productConfig.release.channel === 'production' ? ['sitemap.xml'] : [])
 ];

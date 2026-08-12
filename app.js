@@ -2657,7 +2657,7 @@ class RSVPReader {
         }
 
         try {
-            const demoFile = this.i18n.language === 'ru' ? 'sample_text_ru.txt' : 'sample_text.txt';
+            const demoFile = this.i18n.language === 'ru' ? 'sample_text_ru.txt' : (this.i18n.language === 'es' ? 'sample_text_es.txt' : 'sample_text.txt');
             const response = await fetch(demoFile);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const text = (await response.text()).trim();

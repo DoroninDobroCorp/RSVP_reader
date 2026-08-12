@@ -38,6 +38,7 @@ const PUBLIC_FILES = new Set([
   'manifest.json',
   'sample_text.txt',
   'sample_text_ru.txt',
+  'sample_text_es.txt',
   'robots.txt',
   'sitemap.xml'
 ]);

@@ -21,7 +21,8 @@ const APP_SHELL = [
   './assets/brand/pico-quick-send-640.webp',
   './assets/brand/pico-mark-1024.png',
   './sample_text.txt',
-  './sample_text_ru.txt'
+  './sample_text_ru.txt',
+  './sample_text_es.txt'
 ];
 
 self.addEventListener('install', (event) => {
