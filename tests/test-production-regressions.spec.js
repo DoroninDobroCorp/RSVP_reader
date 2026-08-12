@@ -2062,9 +2062,9 @@ test.describe('production reader regressions', () => {
     const nonce = '0123456789abcdef0123456789abcdef';
     await page.goto(`/?hummingread-extension-import=${nonce}`);
     await page.evaluate(() => window.rsvpReader.ready);
-    await expect(page.locator('#chromeExtensionDownload')).toHaveAttribute(
+    await expect(page.locator('#extensionDownloadLink, #chromeExtensionDownload')).toHaveAttribute(
       'href',
-      'downloads/hummingread-tester.zip'
+      /\/downloads\/hummingread-tester\.zip$/
     );
 
     const ignoredText = 'This payload has the wrong nonce and must remain ignored by the HummingRead import bridge.';
@@ -2615,8 +2615,11 @@ test.describe('production reader regressions', () => {
   });
 
   test('VAL-WEB-007 & VAL-CROSS-004: Spanish sample text loading (sample_text_es.txt) when Spanish is active', async ({ page }) => {
-    await openReader(page);
-    await page.evaluate(() => window.rsvpReader.setLanguage('es'));
+    await openReader(page, 'es');
+    await page.evaluate(() => {
+      window.rsvpReader.setTextInputValue('');
+      window.rsvpReader.hasUnsavedTextInput = false;
+    });
     await page.locator('#tryDemoBtn').click();
     await expect(page.locator('#rsvpReadingSection')).toBeVisible();
     const loadedText = await page.evaluate(() => window.rsvpReader.textInput.value);

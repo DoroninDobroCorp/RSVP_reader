@@ -181,6 +181,10 @@ class RSVPReader {
         this.importArticleBtn = document.getElementById('importArticleBtn');
         this.articleImportStatus = document.getElementById('articleImportStatus');
         this.chromeExtensionPanel = document.getElementById('chromeExtensionPanel');
+        this.extensionDownloadLink = document.getElementById('extensionDownloadLink') || document.getElementById('chromeExtensionDownload');
+        if (this.extensionDownloadLink && typeof window !== 'undefined' && window.resolveAppPath) {
+            this.extensionDownloadLink.setAttribute('href', window.resolveAppPath('downloads/hummingread-tester.zip'));
+        }
         this.addToLibraryBtn = document.getElementById('addToLibraryBtn');
         this.libraryBtn = document.getElementById('libraryBtn');
         this.bookNameInput = document.getElementById('bookNameInput');
@@ -2658,7 +2662,8 @@ class RSVPReader {
 
         try {
             const demoFile = this.i18n.language === 'ru' ? 'sample_text_ru.txt' : (this.i18n.language === 'es' ? 'sample_text_es.txt' : 'sample_text.txt');
-            const response = await fetch(demoFile);
+            const demoUrl = typeof window !== 'undefined' && window.resolveAppPath ? window.resolveAppPath(demoFile) : demoFile;
+            const response = await fetch(demoUrl);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const text = (await response.text()).trim();
             this.assertTextTokenSafety(text, { requireReadable: true });
@@ -2766,6 +2771,9 @@ class RSVPReader {
 
     resolveArticleImportEndpoint() {
         if (this.isNativePlatform()) return null;
+        if (typeof window !== 'undefined' && window.resolveAppPath) {
+            return window.resolveAppPath('api/article');
+        }
         return new URL('api/article', window.location.href).href;
     }
 
@@ -6484,7 +6492,10 @@ class RSVPReader {
                 window.location.reload();
             });
 
-            const registration = await navigator.serviceWorker.register('./service-worker.js', {
+            const swPath = typeof window !== 'undefined' && window.resolveAppPath ? window.resolveAppPath('service-worker.js') : '/service-worker.js';
+            const swScope = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '/';
+            const registration = await navigator.serviceWorker.register(swPath, {
+                scope: swScope,
                 updateViaCache: 'none'
             });
 
@@ -6685,7 +6696,8 @@ async function resetRuntimeCacheIfRequested() {
 
     try {
         if ('serviceWorker' in navigator) {
-            const registration = await navigator.serviceWorker.getRegistration('./');
+            const swScope = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '/';
+            const registration = await navigator.serviceWorker.getRegistration(swScope);
             if (registration) await registration.unregister();
         }
 

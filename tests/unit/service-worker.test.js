@@ -18,7 +18,7 @@ test('service worker returns the cached app shell when navigation receives HTTP 
     },
     caches: {
       async match(key) {
-        return key === './index.html' ? cachedShell : null;
+        return (key === '/index.html' || key === './index.html') ? cachedShell : null;
       },
       async open() {
         return { async put() {} };

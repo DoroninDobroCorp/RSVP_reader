@@ -41,6 +41,7 @@ const PUBLIC_FILES = new Set([
   'es/support.html',
   'es/acknowledgements.html',
   'style.css',
+  'app-base-url.js',
   'i18n.js',
   'app.js',
   'epub-parser.js',
@@ -54,6 +55,7 @@ const PUBLIC_FILES = new Set([
   'sample_text.txt',
   'sample_text_ru.txt',
   'sample_text_es.txt',
+  'sample_text_en.txt',
   'robots.txt',
   'sitemap.xml',
   'downloads/hummingread-tester.zip'
@@ -588,6 +590,11 @@ const server = http.createServer(async (request, response) => {
 
   if (url.pathname === '/api/article' || url.pathname === '/rsvp/api/article') {
     await handleArticleImport(request, response);
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/rsvp/api/')) {
+    sendJson(response, 404, { error: 'Not found' });
     return;
   }
 

@@ -14,6 +14,7 @@ const files = [
     'acknowledgements.html',
     'THIRD_PARTY_NOTICES.txt',
     'style.css',
+    'app-base-url.js',
     'i18n.js',
     'app.js',
     'epub-parser.js',
@@ -84,6 +85,7 @@ function applyLocaleToHtml(html, lang, catalog) {
 for (const file of files) {
     await cp(join(root, file), join(destination, file));
 }
+await cp(join(root, 'sample_text.txt'), join(destination, 'sample_text_en.txt'));
 
 // Pre-render English static body and active language button for root index.html
 const rootIndexHtml = await readFile(join(root, 'index.html'), 'utf8');
@@ -148,19 +150,14 @@ const localeConfigs = {
     }
 };
 
-function adjustRelativePathsForSubdir(html) {
-    return html
-        .replace(/href="manifest\.json(\?[^"]*)?"/g, 'href="../manifest.json$1"')
-        .replace(/href="manifest\.webmanifest(\?[^"]*)?"/g, 'href="../manifest.webmanifest$1"')
-        .replace(/href="style\.css(\?[^"]*)?"/g, 'href="../style.css$1"')
-        .replace(/href="assets\//g, 'href="../assets/')
-        .replace(/src="assets\//g, 'src="../assets/')
-        .replace(/src="vendor\//g, 'src="../vendor/')
-        .replace(/src="i18n\.js(\?[^"]*)?"/g, 'src="../i18n.js$1"')
-        .replace(/src="app\.js(\?[^"]*)?"/g, 'src="../app.js$1"')
-        .replace(/src="epub-parser\.js(\?[^"]*)?"/g, 'src="../epub-parser.js$1"')
-        .replace(/href="downloads\//g, 'href="../downloads/')
-        .replace(/href="THIRD_PARTY_NOTICES\.txt"/g, 'href="../THIRD_PARTY_NOTICES.txt"');
+function adjustRelativePathsForSubdir(html, lang) {
+    let out = html;
+    if (lang) {
+        out = out.replace(/href="\/manifest\.webmanifest"/g, `href="/${lang}/manifest.webmanifest"`);
+        out = out.replace(/href="manifest\.webmanifest"/g, `href="/${lang}/manifest.webmanifest"`);
+        out = out.replace(/href="manifest\.json(\?[^"]*)?"/g, `href="/${lang}/manifest.webmanifest"`);
+    }
+    return out;
 }
 
 function transformIndexForLocale(html, config) {
@@ -184,7 +181,7 @@ function transformIndexForLocale(html, config) {
         `"description": "${config.index.jsonLdDescription}"`
     );
 
-    return adjustRelativePathsForSubdir(out);
+    return adjustRelativePathsForSubdir(out, config.lang);
 }
 
 function transformLegalForLocale(html, pageKey, config) {
@@ -193,7 +190,7 @@ function transformLegalForLocale(html, pageKey, config) {
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${pageConfig.title}</title>`);
     out = out.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${pageConfig.description}">`);
     out = out.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${pageConfig.canonicalUrl}">`);
-    return adjustRelativePathsForSubdir(out);
+    return adjustRelativePathsForSubdir(out, config.lang);
 }
 
 // Generate locale directories

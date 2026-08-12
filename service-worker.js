@@ -1,28 +1,43 @@
 const CACHE_NAME = 'hummingread-reader-v49';
 const ASSET_VERSION = 'v=49';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './privacy.html',
-  './support.html',
-  './acknowledgements.html',
-  `./style.css?${ASSET_VERSION}`,
-  `./i18n.js?${ASSET_VERSION}`,
-  `./app.js?${ASSET_VERSION}`,
-  `./epub-parser.js?${ASSET_VERSION}`,
-  `./vendor/jszip.min.js?${ASSET_VERSION}`,
-  `./manifest.json?${ASSET_VERSION}`,
-  './assets/icons/app-icon-32.png',
-  './assets/icons/app-icon-64.png',
-  './assets/icons/app-icon-180.png',
-  './assets/icons/app-icon-192.png',
-  './assets/icons/app-icon-512.png',
-  './assets/brand/pico-hero-640.webp',
-  './assets/brand/pico-quick-send-640.webp',
-  './assets/brand/pico-mark-1024.png',
-  './sample_text.txt',
-  './sample_text_ru.txt',
-  './sample_text_es.txt'
+  '/',
+  '/index.html',
+  '/privacy.html',
+  '/support.html',
+  '/acknowledgements.html',
+  '/ru/',
+  '/ru/index.html',
+  '/ru/privacy.html',
+  '/ru/support.html',
+  '/ru/acknowledgements.html',
+  '/es/',
+  '/es/index.html',
+  '/es/privacy.html',
+  '/es/support.html',
+  '/es/acknowledgements.html',
+  `/style.css?${ASSET_VERSION}`,
+  `/app-base-url.js?${ASSET_VERSION}`,
+  `/i18n.js?${ASSET_VERSION}`,
+  `/app.js?${ASSET_VERSION}`,
+  `/epub-parser.js?${ASSET_VERSION}`,
+  `/vendor/jszip.min.js?${ASSET_VERSION}`,
+  `/manifest.json?${ASSET_VERSION}`,
+  '/manifest.webmanifest',
+  '/ru/manifest.webmanifest',
+  '/es/manifest.webmanifest',
+  '/assets/icons/app-icon-32.png',
+  '/assets/icons/app-icon-64.png',
+  '/assets/icons/app-icon-180.png',
+  '/assets/icons/app-icon-192.png',
+  '/assets/icons/app-icon-512.png',
+  '/assets/brand/pico-hero-640.webp',
+  '/assets/brand/pico-quick-send-640.webp',
+  '/assets/brand/pico-mark-1024.png',
+  '/sample_text.txt',
+  '/sample_text_ru.txt',
+  '/sample_text_es.txt',
+  '/sample_text_en.txt'
 ];
 
 self.addEventListener('install', (event) => {
@@ -90,17 +105,17 @@ async function handleNavigation(request) {
     const response = await fetch(request);
     const responseType = response.headers.get('content-type') || '';
     if (response.status >= 500 && isAppShellNavigation(request.url)) {
-      const cachedShell = await caches.match('./index.html', { ignoreSearch: true });
+      const cachedShell = await caches.match('/index.html', { ignoreSearch: true });
       if (cachedShell) return cachedShell;
     }
     if (response.ok && responseType.includes('text/html') && isAppShellNavigation(request.url)) {
       const cache = await caches.open(CACHE_NAME);
-      await cache.put('./index.html', response.clone());
+      await cache.put('/index.html', response.clone());
     }
     return response;
   } catch (error) {
     return caches.match(request, { ignoreSearch: true })
-      .then((cached) => cached || caches.match('./index.html', { ignoreSearch: true }));
+      .then((cached) => cached || caches.match('/index.html', { ignoreSearch: true }));
   }
 }
 
