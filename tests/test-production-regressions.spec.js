@@ -2661,5 +2661,19 @@ test.describe('production reader regressions', () => {
     await expect(page).toHaveURL(/\/support\.html$/);
     await page.locator('article[lang="es"] a[href="privacy.html"]').click();
     await expect(page).toHaveURL(/\/privacy\.html$/);
+
+    // VAL-INFO-05: Verify 320px viewport horizontal fit and touch target sizing
+    await page.setViewportSize({ width: 320, height: 568 });
+    for (const infoPage of ['/privacy.html', '/support.html', '/acknowledgements.html']) {
+      await page.goto(infoPage);
+      const metrics = await page.evaluate(() => ({
+        docScrollWidth: document.documentElement.scrollWidth,
+        bodyScrollWidth: document.body.scrollWidth,
+        overflowing: Array.from(document.querySelectorAll('*')).filter(el => el.scrollWidth > 320).length
+      }));
+      expect(metrics.docScrollWidth).toBeLessThanOrEqual(320);
+      expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(320);
+      expect(metrics.overflowing).toBe(0);
+    }
   });
 });

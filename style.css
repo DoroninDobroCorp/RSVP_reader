@@ -1552,7 +1552,12 @@ input:focus {
     align-items: center;
     justify-content: center;
     min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
     text-decoration: none;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .legal-back {
@@ -1560,7 +1565,9 @@ input:focus {
 }
 
 .legal-card {
-    padding: clamp(22px, 5vw, 44px);
+    padding: clamp(16px, 5vw, 44px);
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .legal-card + .legal-card {
@@ -1569,23 +1576,39 @@ input:focus {
 
 .legal-card h1 {
     margin: 8px 0 18px;
-    font-size: clamp(2rem, 7vw, 3.4rem);
+    font-size: clamp(1.5rem, 6.5vw, 3.4rem);
     letter-spacing: -0.04em;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
 }
 
 .legal-card h2 {
     margin: 28px 0 8px;
-    font-size: 1.05rem;
+    font-size: clamp(1rem, 3.5vw, 1.35rem);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
 }
 
 .legal-card p,
 .legal-card li {
     color: var(--text-soft);
     line-height: 1.65;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .legal-card a:not(.primary-btn) {
     color: var(--primary-hover);
+}
+
+.legal-card > p:last-child a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
 }
 
 .setting-group input[type="color"] {
