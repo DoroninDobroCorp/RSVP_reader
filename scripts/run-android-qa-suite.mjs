@@ -181,7 +181,12 @@ async function launchAVDIfNeeded(avdName) {
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
     const emuLogFd = openSync(emuLogPath, 'w');
 
-    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot', '-gpu', 'auto'];
+    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot'];
+    if (process.platform === 'linux') {
+        emuArgs.push('-gpu', 'swiftshader_indirect');
+    } else {
+        emuArgs.push('-gpu', 'host');
+    }
 
     const emuProc = spawn(emulatorBin, emuArgs, {
         detached: true,
