@@ -3063,6 +3063,8 @@ class RSVPReader {
             case 'rtf':
                 text = this.extractTextFromRTF(await this.readArrayBuffer(file));
                 break;
+            case 'pdf':
+                return this.validateParsedBook(await this.extractBookFromPDF(file));
             case 'txt': {
                 const buffer = await this.readArrayBuffer(file);
                 text = this.readTextWithEncoding(buffer);
@@ -3182,7 +3184,7 @@ class RSVPReader {
     }
 
     assertSourceFormatSafe(file, extension) {
-        const directlyParsedFormats = new Set(['fb2', 'xml', 'html', 'htm', 'txt', 'md', 'markdown', 'rtf']);
+        const directlyParsedFormats = new Set(['fb2', 'xml', 'html', 'htm', 'txt', 'md', 'markdown', 'rtf', 'pdf']);
         if (directlyParsedFormats.has(String(extension || '').toLowerCase())
             && Number.isFinite(file?.size)
             && file.size > this.importLimits.maxEntryBytes) {
@@ -3823,8 +3825,74 @@ class RSVPReader {
         return cleaned;
     }
 
+    async extractBookFromPDF(file) {
+        const buffer = await this.readArrayBuffer(file);
+        const text = this.extractTextFromPDFStream(buffer);
+        if (!text || !text.trim()) {
+            throw new Error(this.t('emptyPdf') || this.t('noReadableText'));
+        }
+        const chapters = this.detectChaptersFromText(text);
+        return { text, chapters };
+    }
+
+    extractTextFromPDFStream(arrayBuffer) {
+        const bytes = new Uint8Array(arrayBuffer);
+        let binaryStr = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binaryStr += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+        }
+
+        const textParts = [];
+
+        // 1. Extract text from BT ... ET blocks
+        const btEtRegex = /BT[\s\S]*?ET/g;
+        let match;
+        while ((match = btEtRegex.exec(binaryStr)) !== null) {
+            const block = match[0];
+            const strRegex = /\(([^()\\]*(?:\\.[^()\\]*)*)\)/g;
+            let strMatch;
+            while ((strMatch = strRegex.exec(block)) !== null) {
+                let cleaned = strMatch[1]
+                    .replace(/\\([0-7]{1,3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8)))
+                    .replace(/\\(.)/g, '$1');
+                if (cleaned.trim()) {
+                    textParts.push(cleaned);
+                }
+            }
+        }
+
+        // 2. Fallback: match string literals followed by Tj or TJ
+        if (textParts.length === 0) {
+            const strRegex = /\(([^()\\]*(?:\\.[^()\\]*)*)\)\s*(?:Tj|TJ)/g;
+            let strMatch;
+            while ((strMatch = strRegex.exec(binaryStr)) !== null) {
+                let cleaned = strMatch[1]
+                    .replace(/\\([0-7]{1,3})/g, (_, oct) => String.fromCharCode(parseInt(oct, 8)))
+                    .replace(/\\(.)/g, '$1');
+                if (cleaned.trim()) {
+                    textParts.push(cleaned);
+                }
+            }
+        }
+
+        // 3. Fallback: plain text / stream extraction
+        if (textParts.length === 0) {
+            const lines = binaryStr.split(/[\r\n]+/);
+            for (const line of lines) {
+                if (line.includes('stream') || line.includes('endstream') || line.includes('xref') || line.startsWith('%PDF')) continue;
+                const printable = line.replace(/[^\x20-\x7E\xA0-\xFF\u0400-\u04FF]/g, ' ').trim();
+                if (printable.length > 5 && /\w+/.test(printable)) {
+                    textParts.push(printable);
+                }
+            }
+        }
+
+        return textParts.join('\n\n').replace(/[ \t]+/g, ' ').trim();
+    }
+
     nameFromFile(fileName) {
-        return fileName.replace(/\.(txt|epub|fb2|fb2\.zip|zip|xml|docx|html|htm|md|markdown|rtf)$/i, '').replace(/[_-]+/g, ' ').trim();
+        return fileName.replace(/\.(txt|epub|fb2|fb2\.zip|zip|xml|docx|html|htm|md|markdown|rtf|pdf)$/i, '').replace(/[_-]+/g, ' ').trim();
     }
 
     async startNormalReading() {
@@ -6151,7 +6219,48 @@ class RSVPReader {
             books: this.library
         };
 
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const jsonString = JSON.stringify(payload, null, 2);
+
+        if (this.isNativePlatform()) {
+            const filesystem = this.nativeFilesystem();
+            const sharePlugin = window.Capacitor?.Plugins?.Share;
+            if (filesystem && sharePlugin) {
+                const fileName = 'hummingread-backup.json';
+                try {
+                    await filesystem.writeFile({
+                        path: fileName,
+                        data: jsonString,
+                        directory: 'CACHE',
+                        encoding: 'utf8'
+                    });
+                    const uriResult = await filesystem.getUri({
+                        path: fileName,
+                        directory: 'CACHE'
+                    });
+                    await sharePlugin.share({
+                        title: this.t('exportLibrary') || 'HummingRead Backup',
+                        text: 'HummingRead Library Backup',
+                        url: uriResult.uri,
+                        dialogTitle: this.t('exportLibrary') || 'Export Backup'
+                    });
+                } catch (error) {
+                    console.error('Native backup export failed:', error);
+                    this.showToast(this.t('exportFailed') || 'Export failed', 'error');
+                } finally {
+                    try {
+                        await filesystem.deleteFile({
+                            path: fileName,
+                            directory: 'CACHE'
+                        });
+                    } catch (cleanupError) {
+                        // Temporary export file in cacheDir is deleted post-share (VAL-AND-DATA-004)
+                    }
+                }
+                return;
+            }
+        }
+
+        const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;

@@ -1,7 +1,7 @@
 {
   "appId": "team.ibet.paceflow",
   "appName": "HummingRead",
-  "webDir": "dist-native",
+  "webDir": "dist-native/android",
   "server": {
     "iosScheme": "capacitor"
   },

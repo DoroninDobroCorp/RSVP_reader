@@ -31,6 +31,9 @@ if (!pkg.dependencies['@capacitor/android'] || !pkg.dependencies['@capacitor/and
 if (!pkg.dependencies['@capacitor/app']) {
     throw new Error('@capacitor/app must be present in package.json.');
 }
+if (!pkg.dependencies['@capacitor/share']) {
+    throw new Error('@capacitor/share must be present in package.json.');
+}
 
 // 2. Verify top-level android/build.gradle AGP
 const topGradle = await readFile(join(root, 'android', 'build.gradle'), 'utf8');
