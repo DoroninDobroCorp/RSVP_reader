@@ -132,12 +132,13 @@ async function runPackageAudit() {
 
     // 6. VAL-R2-VERIFY-004 & VAL-R2-ARTIFACT-001/002: APK & AAB Existence & SHA-256 Checksum Verification Gate
     console.log('6. Checking VAL-R2-VERIFY-004: APK & AAB Existence and SHA-256 Checksum Validation...');
+    const r3Apk = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-debug.apk');
     const primaryApk = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
     const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    const targetApk = existsSync(primaryApk) ? primaryApk : (existsSync(buildApk) ? buildApk : null);
+    const targetApk = existsSync(r3Apk) ? r3Apk : (existsSync(primaryApk) ? primaryApk : (existsSync(buildApk) ? buildApk : null));
 
     if (!targetApk) {
-        throw new Error('VAL-R2-VERIFY-004 Failed: APK file missing. Expected at artifacts/android-r2/HummingRead-R2-debug.apk or android/app/build/outputs/apk/debug/app-debug.apk. Run build first.');
+        throw new Error('VAL-R2-VERIFY-004 Failed: APK file missing. Expected at artifacts/android-r3/HummingRead-R3-debug.apk, artifacts/android-r2/HummingRead-R2-debug.apk or android/app/build/outputs/apk/debug/app-debug.apk. Run build first.');
     }
 
     const apkBuffer = await readFile(targetApk);
@@ -145,12 +146,13 @@ async function runPackageAudit() {
     console.log(`   Target APK located: ${targetApk}`);
     console.log(`   Computed APK SHA-256: ${actualSha256}`);
 
+    const r3Aab = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const primaryAab = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const buildAab = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
-    const targetAab = existsSync(primaryAab) ? primaryAab : (existsSync(buildAab) ? buildAab : null);
+    const targetAab = existsSync(r3Aab) ? r3Aab : (existsSync(primaryAab) ? primaryAab : (existsSync(buildAab) ? buildAab : null));
 
     if (!targetAab) {
-        throw new Error('VAL-R2-ARTIFACT-002 Failed: Release AAB file missing. Expected at artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab or android/app/build/outputs/bundle/release/app-release.aab.');
+        throw new Error('VAL-R2-ARTIFACT-002 Failed: Release AAB file missing. Expected at artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab, artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab or android/app/build/outputs/bundle/release/app-release.aab.');
     }
 
     const aabBuffer = await readFile(targetAab);
@@ -160,6 +162,7 @@ async function runPackageAudit() {
 
     // Check evidence-summary.json
     const summaryPaths = [
+        join(root, 'artifacts', 'android-r3', 'evidence-summary.json'),
         join(root, 'artifacts', 'android-r2', 'evidence-summary.json'),
         join(root, 'evidence', 'android', 'evidence-summary.json'),
         join(root, 'evidence-summary.json')
@@ -187,14 +190,16 @@ async function runPackageAudit() {
         }
     }
 
-    const checksumPath = join(root, 'artifacts', 'android-r2', 'checksums.sha256');
-    if (existsSync(checksumPath)) {
+    const r3ChecksumPath = join(root, 'artifacts', 'android-r3', 'checksums.sha256');
+    const r2ChecksumPath = join(root, 'artifacts', 'android-r2', 'checksums.sha256');
+    const checksumPath = existsSync(r3ChecksumPath) ? r3ChecksumPath : (existsSync(r2ChecksumPath) ? r2ChecksumPath : null);
+    if (checksumPath) {
         const checksumContent = await readFile(checksumPath, 'utf8');
         if (!checksumContent.includes(actualSha256)) {
-            throw new Error(`VAL-R2-VERIFY-004 Failed: Built APK SHA-256 (${actualSha256}) not found in artifacts/android-r2/checksums.sha256`);
+            throw new Error(`VAL-R2-VERIFY-004 Failed: Built APK SHA-256 (${actualSha256}) not found in ${checksumPath}`);
         }
         if (!checksumContent.includes(aabSha256)) {
-            throw new Error(`VAL-R2-ARTIFACT-003 Failed: Built AAB SHA-256 (${aabSha256}) not found in artifacts/android-r2/checksums.sha256`);
+            throw new Error(`VAL-R2-ARTIFACT-003 Failed: Built AAB SHA-256 (${aabSha256}) not found in ${checksumPath}`);
         }
     }
 

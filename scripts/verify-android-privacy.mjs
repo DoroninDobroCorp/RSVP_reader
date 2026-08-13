@@ -19,16 +19,19 @@ async function runPrivacyAudit() {
     }
 
     // Determine APK Location
+    const r3ApkPath = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-debug.apk');
     const primaryApkPath = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
     const fallbackApkPath = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
     let apkPath = null;
 
-    if (existsSync(primaryApkPath)) {
+    if (existsSync(r3ApkPath)) {
+        apkPath = r3ApkPath;
+    } else if (existsSync(primaryApkPath)) {
         apkPath = primaryApkPath;
     } else if (existsSync(fallbackApkPath)) {
         apkPath = fallbackApkPath;
     } else {
-        throw new Error(`Android privacy audit failed: APK file missing. Expected at ${primaryApkPath} or ${fallbackApkPath}. Compile APK first.`);
+        throw new Error(`Android privacy audit failed: APK file missing. Expected at ${r3ApkPath}, ${primaryApkPath} or ${fallbackApkPath}. Compile APK first.`);
     }
 
     // 1. VAL-R2-PRIV-001 & VAL-R2-PRIV-002: Zero Dangerous Permissions & Network Permission Audit Invariant

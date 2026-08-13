@@ -19,8 +19,8 @@ const ANDROID_SDK_CANDIDATE_PATHS = [
     '/opt/android-sdk'
 ].filter(Boolean);
 
-function findExecutable(name, searchDirs = []) {
-    const pathDirs = (process.env.PATH || '').split(':');
+function findExecutable(name, searchDirs = [], customEnv = process.env) {
+    const pathDirs = (customEnv.PATH || '').split(':');
     for (const dir of [...searchDirs, ...pathDirs]) {
         if (!dir) continue;
         const fullPath = join(dir, name);
@@ -80,10 +80,18 @@ export function resolveToolchain(options = {}) {
     let javaHome = customEnv.JAVA_HOME;
     let javaBin = null;
 
+    const jdkCandidatePaths = options.env ? [customEnv.JAVA_HOME].filter(Boolean) : [
+        customEnv.JAVA_HOME,
+        '/usr/lib/jvm/java-21-openjdk-amd64',
+        '/usr/lib/jvm/java-21-openjdk-arm64',
+        '/usr/lib/jvm/java-21-openjdk',
+        '/usr/lib/jvm/default-java'
+    ].filter(Boolean);
+
     if (javaHome && existsSync(join(javaHome, 'bin', 'java'))) {
         javaBin = join(javaHome, 'bin', 'java');
     } else {
-        for (const cand of JDK21_CANDIDATE_PATHS) {
+        for (const cand of jdkCandidatePaths) {
             const testBin = join(cand, 'bin', 'java');
             if (existsSync(testBin)) {
                 javaHome = cand;
@@ -92,7 +100,7 @@ export function resolveToolchain(options = {}) {
             }
         }
         if (!javaBin) {
-            javaBin = findExecutable('java');
+            javaBin = findExecutable('java', [], customEnv);
         }
     }
 
@@ -111,8 +119,14 @@ export function resolveToolchain(options = {}) {
 
     // 2. Validate Android SDK 36
     let androidHome = customEnv.ANDROID_SDK_ROOT || customEnv.ANDROID_HOME;
+    const sdkCandidatePaths = options.env ? [customEnv.ANDROID_SDK_ROOT, customEnv.ANDROID_HOME].filter(Boolean) : [
+        customEnv.ANDROID_SDK_ROOT,
+        customEnv.ANDROID_HOME,
+        '/opt/android-sdk'
+    ].filter(Boolean);
+
     if (!androidHome || !existsSync(androidHome)) {
-        for (const cand of ANDROID_SDK_CANDIDATE_PATHS) {
+        for (const cand of sdkCandidatePaths) {
             if (existsSync(cand)) {
                 androidHome = cand;
                 break;
@@ -142,7 +156,7 @@ export function resolveToolchain(options = {}) {
         join(androidHome, 'tools')
     ] : [];
 
-    const extraDirs = [
+    const extraDirs = options.env ? [] : [
         '/usr/local/bin',
         '/usr/bin',
         '/bin'
@@ -150,7 +164,7 @@ export function resolveToolchain(options = {}) {
     const searchDirs = [...sdkDirs, ...extraDirs];
 
     // 3. Validate adb
-    const adbBin = findExecutable('adb', searchDirs);
+    const adbBin = findExecutable('adb', searchDirs, customEnv);
     if (!adbBin) {
         errors.push('adb tool not found in PATH or Android SDK platform-tools.');
     } else {
@@ -164,7 +178,7 @@ export function resolveToolchain(options = {}) {
     }
 
     // 4. Validate emulator
-    const emulatorBin = findExecutable('emulator', searchDirs);
+    const emulatorBin = findExecutable('emulator', searchDirs, customEnv);
     if (!emulatorBin) {
         errors.push('emulator tool not found in PATH or Android SDK emulator directory.');
     } else {
@@ -178,7 +192,7 @@ export function resolveToolchain(options = {}) {
     }
 
     // 5. Validate aapt2
-    const aapt2Bin = findExecutable('aapt2', searchDirs);
+    const aapt2Bin = findExecutable('aapt2', searchDirs, customEnv);
     if (!aapt2Bin) {
         errors.push('aapt2 tool not found in PATH or Android SDK build-tools 36.0.0.');
     } else {
@@ -192,7 +206,7 @@ export function resolveToolchain(options = {}) {
     }
 
     // 6. Validate avdmanager
-    const avdmanagerBin = findExecutable('avdmanager', searchDirs);
+    const avdmanagerBin = findExecutable('avdmanager', searchDirs, customEnv);
     if (!avdmanagerBin) {
         errors.push('avdmanager tool not found in PATH or Android SDK cmdline-tools.');
     } else {
