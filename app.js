@@ -348,8 +348,21 @@ class RSVPReader {
         if (this.themeDayBtn) {
             this.themeDayBtn.addEventListener('click', () => this.setTheme('day'));
         }
-        this.currentTheme = localStorage.getItem('rsvp_theme') || 'night';
+        this.currentTheme = localStorage.getItem('rsvp_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'day' : 'night');
         this.applyTheme(this.currentTheme);
+        if (typeof window !== 'undefined' && window.matchMedia) {
+            const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleSystemThemeChange = (e) => {
+                if (!localStorage.getItem('rsvp_theme')) {
+                    this.applyTheme(e.matches ? 'night' : 'day');
+                }
+            };
+            if (colorSchemeQuery.addEventListener) {
+                colorSchemeQuery.addEventListener('change', handleSystemThemeChange);
+            } else if (colorSchemeQuery.addListener) {
+                colorSchemeQuery.addListener(handleSystemThemeChange);
+            }
+        }
         this.startRSVPBtn.addEventListener('click', () => this.startRSVP());
         this.tocBtn.addEventListener('click', (event) => this.openToc(event.currentTarget));
         this.rsvpTocBtn.addEventListener('click', (event) => this.openToc(event.currentTarget));
@@ -4394,6 +4407,7 @@ class RSVPReader {
 
     rewindReadableWords(count = 10) {
         if (!this.words.length) return;
+        this.triggerHaptic('light');
         const currentOrdinal = this.wordOrdinalAtIndex(this.currentIndex);
         const targetOrdinal = Math.max(0, currentOrdinal - Math.max(1, Number(count) || 10));
         this.setCurrentWordIndex(this.tokenIndexForWordOrdinal(targetOrdinal), { scroll: false });
@@ -5809,6 +5823,7 @@ class RSVPReader {
 
     async addBookmarkAtCurrentPosition() {
         await this.ready;
+        this.triggerHaptic('light');
 
         if (this.words.length === 0) {
             const text = this.textInput.value.trim();
@@ -6645,6 +6660,10 @@ class RSVPReader {
 
     applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', theme === 'day' ? '#f8fafc' : '#101529');
+        }
         if (this.themeToggleBtn) {
             this.themeToggleBtn.textContent = theme === 'day' ? this.t('day') : this.t('night');
         }
