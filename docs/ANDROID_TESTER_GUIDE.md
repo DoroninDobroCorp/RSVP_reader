@@ -1,32 +1,33 @@
-# HummingRead Android Tester Guide (R2 Audit Release)
+# HummingRead Android Tester Guide (R3 Truthful Server Proof Release)
 
-This guide provides complete instructions for installing, testing, and verifying the HummingRead Android R2 Audit Release on physical Android devices or API 36 emulators.
+This HummingRead Android Tester Guide provides complete instructions for installing, testing, and verifying the HummingRead Android R3 Truthful Server Proof Release (and historical `artifacts/android-r2/checksums.sha256` R2 release) on physical Android devices or API 36 emulators.
 
 ---
 
 ## 1. Release Artifacts & Checksum Verification
 
-Release artifacts are stored on the server under `artifacts/android-r2/`:
+Release artifacts are stored on the server under `artifacts/android-r3/`:
 
 | Artifact | Location | Description |
 | --- | --- | --- |
-| **Debug Tester APK** | `artifacts/android-r2/HummingRead-R2-debug.apk` | Installable tester APK targeting API Level 36 |
-| **Unsigned Review AAB** | `artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab` | Unsigned Android App Bundle review candidate |
-| **SHA-256 Checksums** | `artifacts/android-r2/checksums.sha256` | Checksum manifest for compiled binaries |
-| **Evidence Summary** | `artifacts/android-r2/evidence-summary.json` | Machine-readable evidence summary with git SHA |
+| **Debug Tester APK** | `artifacts/android-r3/HummingRead-R3-debug.apk` | Installable tester APK targeting API Level 36 |
+| **Unsigned Review AAB** | `artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab` | Unsigned Android App Bundle review candidate |
+| **SHA-256 Checksums** | `artifacts/android-r3/checksums.sha256` | Checksum manifest for compiled binaries |
+| **Evidence Summary** | `artifacts/android-r3/evidence-summary.json` | Machine-readable evidence summary with git SHA |
+| **Validation State** | `artifacts/android-r3/validation-state.json` | 100% assertions passed validation state |
 
 ### Verifying SHA-256 Checksums
 
 Before installing, verify artifact integrity:
 
 ```bash
-sha256sum -c artifacts/android-r2/checksums.sha256
+cd artifacts/android-r3 && sha256sum -c checksums.sha256
 ```
 
 Expected output:
 ```
-HummingRead-R2-debug.apk: OK
-HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab: OK
+HummingRead-R3-debug.apk: OK
+HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab: OK
 ```
 
 ---
@@ -42,7 +43,7 @@ HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab: OK
    ```
 3. Install the debug APK:
    ```bash
-   adb install -r artifacts/android-r2/HummingRead-R2-debug.apk
+   adb install -r artifacts/android-r3/HummingRead-R3-debug.apk
    ```
 
 ---

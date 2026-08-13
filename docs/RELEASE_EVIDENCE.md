@@ -1,8 +1,37 @@
-# HummingRead R2 release evidence — 2026-08-13
+# HummingRead R3 Truthful Server Proof Release Evidence — 2026-08-13
 
-This packet records the final server and environment checks for the HummingRead Android R2 Audit Corrections Release and tester release.
+This packet records the final server proof and environment checks for the HummingRead Android R3 Truthful Server Proof and Release.
 
-## Android R2 Audit Corrections Evidence (2026-08-13)
+## Android R3 Truthful Server Proof Evidence (2026-08-13)
+
+- **Toolchain Doctor Diagnostic (`scripts/toolchain-doctor.mjs`)**: Verified persistent OpenJDK 21 (`JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`), Android SDK 36 (`ANDROID_HOME=/opt/android-sdk`), `adb`, `emulator`, `aapt2`, `avdmanager`, and `./gradlew` execution with 0 errors (`VAL-R3-ENV-001..003`).
+- **Hermetic & Built-Output Test Suites**: `npm run test:unit` runs 100% hermetically executing 84 subtests across 15 files with 84 passed, 0 failed, and 0 skipped. `npm run test:web-built` tests static HTML output under root `/` and subpath `/rsvp/` (`VAL-R3-HERMETIC-001`).
+- **Base-Aware PWA Subpath Deployment**: Dynamic base URL helper `getAppBaseUrl()` resolves root `/` and subpath `/rsvp/` cleanly. Service worker registers with scope `${getAppBaseUrl()}/` and uses scope-relative APP_SHELL precache assets (`VAL-R3-PWA-001..004`).
+- **Chrome 3-Locale Extension E2E**: Chrome extension E2E runner tested unpacked MV3 extension across 3 isolated browser profiles (`--lang=en-US`, `--lang=ru-RU`, `--lang=es-ES`) verifying localized popups, context menus, `chrome.i18n.getUILanguage()`, and error messages (`VAL-R3-EXT-001..002`).
+- **Android Security & Permission Hardening**: Verified `AndroidManifest.xml` contains zero dangerous runtime permissions and zero `INTERNET` permission via `aapt2` and bytecode analysis. FileProvider scope is restricted to app-private cache `<cache-path name="backup_share" path="backups/" />`. Enforced `applicationIdApproved: false` throw gate (`VAL-R3-SEC-001..003`).
+- **Reproducible Remote SHA Build & Release Packaging**: Built clean binaries from live remote SHA in a temporary validation clone via `./gradlew clean testDebugUnitTest lintDebug assembleDebug bundleRelease` (`VAL-R3-BUILD-001..004`).
+- **Fail-Closed Negative Self-Tests (`verify-all.mjs`)**: 18 negative test cases executed in `tests/unit/negative-self-tests.test.js` proving fail-closed behavior across toolchain, permission, dirty tree, checksum mismatch, and log provenance scenarios (`VAL-R3-NEG-001..002`).
+- **Real Phone & Tablet API 36 Emulator QA**: Automated QA suite executed on real API 36 Phone AVD (`test_avd_api36`) and Tablet AVD (`test_tablet_api36`). Verified cold launch (<3s), guided demo in EN/RU/ES, real SAF document picker import (7 formats: EPUB, FB2, DOCX, TXT, HTML, MD, RTF) via DocumentsUI, screen rotation, Back gesture, process kill survival, Delete All confirmation dialog, Airplane mode offline cutoff, and real upgrade install data preservation (`VAL-R3-EMU-001..012`).
+- **Truthful Visual Screenshot Matrix & 44px Touch Target Gate**: Captured 58 distinct PNG screenshots with measured physical pixel dimensions (`sharp`), matching 1:1 sidecar JSON metadata manifests (`<filename>.png.json`), hash deduplication filter (zero duplicate workflow screenshots), zero black/blank frames, and 100% 44x44 CSS px touch target & ARIA label accessibility compliance (`VAL-R3-SCREEN-001..004`, `VAL-R3-A11Y-001..002`).
+- **Validation State & Evidence Summary**: Generated `artifacts/android-r3/validation-state.json` recording 100% (40/40) contract assertions as passed and `artifacts/android-r3/evidence-summary.json` (`VAL-R3-ARTIFACT-001..002`).
+- **Git Push & SHA Verification**: Verified local branch commit SHA matches live remote `origin/mission/android-r3-server-proof-20260813` HEAD SHA via `git ls-remote` (`VAL-R3-ARTIFACT-003`).
+
+## Durably Stored Server Release Artifacts (artifacts/android-r3/)
+
+- **Debug Tester APK**: `artifacts/android-r3/HummingRead-R3-debug.apk`
+- **Unsigned Review AAB**: `artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab`
+- **SHA-256 Checksums**: `artifacts/android-r3/checksums.sha256`
+- **Evidence Summary**: `artifacts/android-r3/evidence-summary.json`
+- **Validation State**: `artifacts/android-r3/validation-state.json`
+
+## Review artifact checksums
+
+| Artifact | Location | SHA-256 |
+| --- | --- | --- |
+| Debug Tester APK | `artifacts/android-r3/HummingRead-R3-debug.apk` | `47ab3b7e946039327316983d10ed4006e15f903da4e032a65e0ef52021094f1b` |
+| Unsigned Review AAB | `artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab` | `a35e7c2a482d0d7077bcf11cb4e7159d5a7c7b0913bb65a98f0866826210e36b` |
+
+## Historical Android R2 Release Evidence (2026-08-13)
 
 - **Toolchain Doctor Diagnostic (`scripts/toolchain-doctor.mjs`)**: Verified OpenJDK 21 (`JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`), Android SDK 36 (`ANDROID_HOME=/opt/homebrew/share/android-commandlinetools`), `adb` v36.0.2, `emulator` v36.3.10, `aapt2`, `avdmanager`, and `./gradlew` execution.
 - **Fail-Closed Verifiers & Negative Self-Tests (`verify-all.mjs`)**: Enforced strict fail-closed execution without warning fallbacks. Negative self-tests confirmed that simulated missing tools or corrupted APKs fail fast with non-zero exit codes (`VAL-R2-VERIFY-001..006`).

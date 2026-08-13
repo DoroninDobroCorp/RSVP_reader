@@ -70,28 +70,30 @@ npm run build:native
 npm run build:extension
 ```
 
-### Android R2 Gradle Build & Release Packaging Commands
+### Android R3 Gradle Build & Release Packaging Commands
 
 ```sh
 # Build Debug APK (API Level 36)
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export ANDROID_HOME=/opt/android-sdk
 cd android && ./gradlew assembleDebug
 
 # Build Unsigned Review Release AAB (Google Play bundle)
 cd android && ./gradlew bundleRelease
 
 # Assemble Durably Stored Server Release Artifacts & Evidence Summary
-node scripts/package-release-r2.mjs
+node scripts/package-release-r3.mjs
 
 # Verify Artifact SHA-256 Checksums
-sha256sum -c artifacts/android-r2/checksums.sha256
+sha256sum -c artifacts/android-r3/checksums.sha256
 ```
 
-The server release package outputs durably stored binaries and evidence summaries under `artifacts/android-r2/`:
-- `artifacts/android-r2/HummingRead-R2-debug.apk` (Debug Tester APK)
-- `artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab` (Unsigned Review AAB)
-- `artifacts/android-r2/checksums.sha256` (SHA-256 Checksum Manifest)
-- `artifacts/android-r2/evidence-summary.json` (Machine-readable evidence package with Git HEAD SHA)
+The server release package outputs durably stored binaries and evidence summaries under `artifacts/android-r3/` (and historical `artifacts/android-r2/HummingRead-R2-debug.apk` built via `package-release-r2.mjs`):
+- `artifacts/android-r3/HummingRead-R3-debug.apk` (Debug Tester APK)
+- `artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab` (Unsigned Review AAB)
+- `artifacts/android-r3/checksums.sha256` (SHA-256 Checksum Manifest)
+- `artifacts/android-r3/evidence-summary.json` (Machine-readable evidence package with Git HEAD SHA)
+- `artifacts/android-r3/validation-state.json` (100% assertions passed validation state)
 
 ## Testing and verification commands
 
@@ -159,11 +161,11 @@ Deployment is not automatic. The current tester preview was activated through `d
 - Brand decision and visual rules: `docs/BRAND_DECISION.md`, `docs/BRAND_SYSTEM.md`
 - Editable artwork and provenance: `assets/brand/`, `docs/ASSET_PROVENANCE.md`
 - Chrome source and store notes: `chrome-extension/`, `docs/CHROME_EXTENSION.md`
-- Android R2 Architecture: `docs/ANDROID_ARCHITECTURE.md`
-- Android R2 Tester Guide: `docs/ANDROID_TESTER_GUIDE.md`
+- Android R3 Architecture: `docs/ANDROID_ARCHITECTURE.md`
+- Android R3 Tester Guide: `docs/ANDROID_TESTER_GUIDE.md`
 - iOS store copy and owner gates: `docs/APP_STORE_COPY.md`, `docs/APP_STORE_CHECKLIST.md`
 - Google Play Store copy & Data Safety draft: `docs/GOOGLE_PLAY_COPY.md`
-- Android package & privacy verifiers: `scripts/verify-android-package.mjs`, `scripts/verify-android-privacy.mjs`, `scripts/package-release-r2.mjs`
+- Android package & privacy verifiers: `scripts/verify-android-package.mjs`, `scripts/verify-android-privacy.mjs`, `scripts/package-release-r3.mjs`
 - Website, unpacked Chrome, iOS, and Android tester workflow: `docs/TESTER_GUIDE.md`
 - Licenses: `docs/THIRD_PARTY_NOTICES.md`, `acknowledgements.html`
 - Release evidence, checksums, and verification summary: `docs/RELEASE_EVIDENCE.md`

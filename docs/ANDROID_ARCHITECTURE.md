@@ -1,12 +1,14 @@
-# HummingRead Android Architecture (R2 Audit Corrections Release)
+# HummingRead Android Architecture (R3 Truthful Server Proof Release)
+
+HummingRead R3 Android Architecture builds upon the verified HummingRead R2 Android Architecture baseline.
 
 ## 1. System Overview
 
-HummingRead Android is a calm, local-first RSVP (Rapid Serial Visual Presentation) speed reader for Android devices (targeting API Level 36, Android 16). The Android application shell is built on Capacitor 8.5.0 (`@capacitor/android@8.5.0` pinned), compiled with Java 21 OpenJDK and Android Gradle Plugin (AGP) 8.5.0.
+HummingRead Android is a calm, local-first RSVP (Rapid Serial Visual Presentation) speed reader for Android devices (targeting API Level 36, Android 16). The Android application shell is built on Capacitor 8.5.0 (`@capacitor/android@8.5.0` pinned), compiled with Java 21 OpenJDK and Android Gradle Plugin (AGP) 8.5.0. Historical R2 artifacts remain at `artifacts/android-r2/`. R3 release binaries and evidence packages are stored at `artifacts/android-r3/`.
 
 ```
 +-----------------------------------------------------------------------------------+
-|                        HummingRead R2 Android Architecture                       |
+|                        HummingRead R3 Android Architecture                       |
 +-----------------------------------------------------------------------------------+
 
                          +-----------------------------------+
@@ -25,7 +27,7 @@ HummingRead Android is a calm, local-first RSVP (Rapid Serial Visual Presentatio
                  v                                                   v
 +----------------------------------+               +----------------------------------+
 | Fail-Closed Verifier Pipeline    |               | Real API 36 Emulator QA Suite    |
-| (Zero warnings, checksum gates)  |               | (Phone & Tablet AVDs + UI Taps)  |
+| (18 Negative Tests, verify-all)  |               | (Phone & Tablet AVDs + SAF UI)   |
 +----------------+-----------------+               +----------------+-----------------+
                  |                                                   |
                  +-------------------------+-------------------------+
@@ -33,7 +35,7 @@ HummingRead Android is a calm, local-first RSVP (Rapid Serial Visual Presentatio
                                            v
                          +-----------------------------------+
                          |  Durably Stored Server Artifacts  |
-                         |  (artifacts/android-r2/APK & AAB) |
+                         |  (artifacts/android-r3/APK & AAB) |
                          +-----------------------------------+
 ```
 
