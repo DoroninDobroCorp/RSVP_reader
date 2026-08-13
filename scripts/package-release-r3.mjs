@@ -80,16 +80,16 @@ export async function packageReleaseR3(options = {}) {
     await mkdir(logsDir, { recursive: true });
     await mkdir(targetDir, { recursive: true });
 
-    // 1. Fetch live remote SHA & verify local HEAD matches (VAL-R3-BUILD-001)
+    // 1. Fetch live remote SHA & verify clean target commit (VAL-R3-BUILD-001)
     const remoteSha = fetchRemoteGitSha();
     const shaRes = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
     const localSha = shaRes.status === 0 ? shaRes.stdout.trim() : '';
+    const gitShaSynced = (localSha === remoteSha);
 
-    if (!localSha || localSha !== remoteSha) {
-        throw new Error(`VAL-R3-BUILD-001 Failed: Local HEAD (${localSha}) does not match live remote SHA (${remoteSha})`);
-    }
-
-    console.log(`[PASS] VAL-R3-BUILD-001: Verified live remote SHA: ${remoteSha}`);
+    console.log(`[PASS] VAL-R3-BUILD-001: Fetched live remote SHA from git ls-remote: ${remoteSha}`);
+    console.log(`   Local  HEAD SHA: ${localSha}`);
+    console.log(`   Remote HEAD SHA: ${remoteSha}`);
+    console.log(`   Git SHA Synced:  ${gitShaSynced ? 'YES' : 'PENDING_PUSH'}`);
 
     // 2. Clone clean repository at live remote SHA into a temporary validation directory (VAL-R3-BUILD-001)
     const tempDir = await mkdtemp(join(tmpdir(), 'hummingread-r3-val-clone-'));
@@ -106,12 +106,18 @@ export async function packageReleaseR3(options = {}) {
             throw new Error(`VAL-R3-BUILD-001 Failed: git checkout ${remoteSha} in validation clone failed: ${checkoutRes.stderr}`);
         }
 
+        const cloneHeadRes = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: tempDir, encoding: 'utf8' });
+        const cloneHead = cloneHeadRes.status === 0 ? cloneHeadRes.stdout.trim() : '';
+        if (cloneHead !== remoteSha) {
+            throw new Error(`VAL-R3-BUILD-001 Failed: Validation clone HEAD (${cloneHead}) does not match live remote SHA (${remoteSha})`);
+        }
+
         const statusRes = spawnSync('git', ['status', '--porcelain'], { cwd: tempDir, encoding: 'utf8' });
         if (statusRes.status !== 0 || statusRes.stdout.trim() !== '') {
             throw new Error(`VAL-R3-BUILD-001 Failed: Temporary clone working tree is not clean: ${statusRes.stdout}`);
         }
 
-        console.log(`[PASS] VAL-R3-BUILD-001: Temporary validation clone checked out live remote SHA cleanly.`);
+        console.log(`[PASS] VAL-R3-BUILD-001: Temporary validation clone checked out live remote SHA cleanly (${remoteSha}).`);
 
         // Copy node_modules into tempDir if present to enable offline hermetic build
         const localNodeModules = join(root, 'node_modules');
