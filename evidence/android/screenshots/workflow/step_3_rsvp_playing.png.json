@@ -1,15 +1,19 @@
 {
-  "filename": "evidence/android/screenshots/workflow/step_3_rsvp_playing.png",
-  "gitCommitSha": "9b2788e776149b76ea94312768fcea8893f70f1e",
-  "commitSha": "9b2788e776149b76ea94312768fcea8893f70f1e",
-  "apkSha256": "20d15323067e20832eb23977a308e414cd1f06f08d68794b2d6887fc5ba9cbc3",
+  "filename": "artifacts/android-r3/evidence/screenshots/workflow/step_3_rsvp_playing.png",
+  "gitCommitSha": "f42cb51260cdf8eba11161f73b5b4f7d0b932e01",
+  "commitSha": "f42cb51260cdf8eba11161f73b5b4f7d0b932e01",
+  "apkSha256": "47ab3b7e946039327316983d10ed4006e15f903da4e032a65e0ef52021094f1b",
   "avdName": "test_avd_api36",
   "locale": "en",
+  "measuredDimensions": {
+    "width": 320,
+    "height": 640
+  },
   "viewportDimensions": {
     "width": 390,
     "height": 844
   },
-  "timestamp": "2026-08-13T15:55:43.934Z",
+  "timestamp": "2026-08-13T19:33:49.441Z",
   "appState": "rsvp_playing",
   "packageVersion": "2.0.0",
   "orientation": "portrait",
