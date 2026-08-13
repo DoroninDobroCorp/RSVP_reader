@@ -150,12 +150,13 @@ async function stopAllEmulators() {
     for (const d of devices) {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
-
-    for (let i = 0; i < 30; i++) {
-        const devs = getRunningDevices();
-        if (devs.length === 0) break;
-        await sleep(500);
-    }
+    await sleep(2000);
+    try { execSync('pkill -9 -f qemu 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('pkill -9 -f emulator 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    await sleep(2000);
+    try { execSync('rm -f ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb kill-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb start-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     await sleep(2000);
 }
 
@@ -176,7 +177,7 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const gpuMode = process.platform === 'linux' ? 'swiftshader_indirect' : 'host';
-    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-gpu', gpuMode];
+    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-read-only', '-gpu', gpuMode];
 
     const emuProc = spawn(emulatorBin, emuArgs, {
         detached: true,
