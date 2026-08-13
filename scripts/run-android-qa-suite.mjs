@@ -643,11 +643,19 @@ async function main() {
     console.log('10. Testing VAL-R4-EMU-010: App Minimization, Backgrounding & Process Force-Stop Survival...');
     await client.evaluate(`(async () => {
         if (window.rsvpReader.wpmInput) window.rsvpReader.wpmInput.value = 450;
-        window.rsvpReader.updateSettings();
+        window.rsvpReader.settings.wpm = 450;
+        try {
+            localStorage.setItem('rsvp_settings', JSON.stringify(window.rsvpReader.settings));
+            localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
+                settings: window.rsvpReader.settings,
+                updatedAt: new Date().toISOString()
+            }));
+        } catch (e) {}
 
         const parsed = { text: "Word1 Word2 Word3 Word4 Word5 Word6 Word7 Word8 Word9 Word10 Word11 Word12 Word13 Word14 Word15 Word16 Word17 Word18 Word19 Word20 Word21 Word22 Word23 Word24 Word25 Word26 Word27 Word28 Word29 Word30" };
         await window.rsvpReader.addParsedBookToLibrary("Kill Test Book", parsed, "txt", { select: true });
         window.rsvpReader.currentIndex = 24;
+        if (window.rsvpReader.saveDraft) await window.rsvpReader.saveDraft();
         window.rsvpReader.flushPendingSaves();
         window.rsvpReader.saveResumeSnapshot(window.rsvpReader.dataGeneration, { forceNative: true });
         if (window.rsvpReader.drainNativeWrites) {
