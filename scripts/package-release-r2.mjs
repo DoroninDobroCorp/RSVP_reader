@@ -12,7 +12,8 @@ async function computeSha256(filePath) {
     return createHash('sha256').update(buffer).digest('hex');
 }
 
-export async function packageReleaseR2() {
+export async function packageReleaseR2(options = {}) {
+    const writeFiles = options.writeFiles !== false;
     console.log('=== Starting HummingRead Android R2 Server Release Packaging ===\n');
 
     const debugApkSrc = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
@@ -29,7 +30,7 @@ export async function packageReleaseR2() {
 
     // 1. VAL-R2-ARTIFACT-001: Ensure debug APK exists and copy to artifacts/android-r2/
     if (existsSync(debugApkSrc)) {
-        await copyFile(debugApkSrc, debugApkDest);
+        if (writeFiles) await copyFile(debugApkSrc, debugApkDest);
         console.log(`[PASS] VAL-R2-ARTIFACT-001: Placed debug APK at ${debugApkDest}`);
     } else if (!existsSync(debugApkDest)) {
         throw new Error(`VAL-R2-ARTIFACT-001 Failed: Debug APK not found at ${debugApkSrc} or ${debugApkDest}. Run ./gradlew assembleDebug first.`);
@@ -37,7 +38,7 @@ export async function packageReleaseR2() {
 
     // 2. VAL-R2-ARTIFACT-002: Ensure unsigned review AAB exists and copy to artifacts/android-r2/
     if (existsSync(releaseAabSrc)) {
-        await copyFile(releaseAabSrc, releaseAabDest);
+        if (writeFiles) await copyFile(releaseAabSrc, releaseAabDest);
         console.log(`[PASS] VAL-R2-ARTIFACT-002: Placed unsigned review AAB at ${releaseAabDest}`);
     } else if (!existsSync(releaseAabDest)) {
         throw new Error(`VAL-R2-ARTIFACT-002 Failed: Release AAB not found at ${releaseAabSrc} or ${releaseAabDest}. Run ./gradlew bundleRelease first.`);
@@ -49,7 +50,7 @@ export async function packageReleaseR2() {
 
     const checksumsContent = `${apkHash}  HummingRead-R2-debug.apk\n${aabHash}  HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab\n`;
     const checksumsPath = join(targetDir, 'checksums.sha256');
-    await writeFile(checksumsPath, checksumsContent, 'utf8');
+    if (writeFiles) await writeFile(checksumsPath, checksumsContent, 'utf8');
     console.log(`[PASS] VAL-R2-ARTIFACT-003: Generated checksums.sha256:`);
     console.log(`   APK  SHA-256: ${apkHash}`);
     console.log(`   AAB  SHA-256: ${aabHash}`);
@@ -171,11 +172,13 @@ export async function packageReleaseR2() {
         }
     };
 
-    const targetDirs = [targetDir, evidenceDir];
-    for (const dir of targetDirs) {
-        const summaryPath = join(dir, 'evidence-summary.json');
-        await writeFile(summaryPath, JSON.stringify(summaryPayload, null, 2), 'utf8');
-        console.log(`[PASS] VAL-R2-ARTIFACT-004: Updated evidence summary at ${summaryPath}`);
+    if (writeFiles) {
+        const targetDirs = [targetDir, evidenceDir];
+        for (const dir of targetDirs) {
+            const summaryPath = join(dir, 'evidence-summary.json');
+            await writeFile(summaryPath, JSON.stringify(summaryPayload, null, 2), 'utf8');
+            console.log(`[PASS] VAL-R2-ARTIFACT-004: Updated evidence summary at ${summaryPath}`);
+        }
     }
 
     console.log('\n=== HummingRead Android R2 Artifacts & Evidence Package Complete ===\n');

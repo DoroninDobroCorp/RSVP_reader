@@ -69,7 +69,7 @@ test('VAL-R2-ARTIFACT-001..006: Android R2 Server Artifacts & Evidence Package',
 
     // 6. VAL-R2-ARTIFACT-006: Local vs Remote Git Commit SHA Synchronization Verification Helper
     const { packageReleaseR2 } = await import('../../scripts/package-release-r2.mjs');
-    const result = await packageReleaseR2();
+    const result = await packageReleaseR2({ writeFiles: false });
     assert.ok(result.commitSha, 'packageReleaseR2 result must return commitSha');
     assert.ok(result.apkSha256, 'packageReleaseR2 result must return apkSha256');
     assert.ok(result.aabSha256, 'packageReleaseR2 result must return aabSha256');
