@@ -697,10 +697,14 @@ async function main() {
     client.close();
     client = await setupAdbForwardingAndConnect();
 
-    const restoredState = await client.evaluate(`(() => ({
-        pos: window.rsvpReader.currentIndex || window.rsvpReader.readingPosition || 0,
-        wpm: window.rsvpReader.settings.wpm
-    }))()`);
+    const restoredState = await client.evaluate(`(async () => {
+        if (window.rsvpReader.ready) await window.rsvpReader.ready;
+        await new Promise(r => setTimeout(r, 1500));
+        return {
+            pos: window.rsvpReader.currentIndex || window.rsvpReader.readingPosition || 0,
+            wpm: window.rsvpReader.settings.wpm
+        };
+    })()`);
 
     if (restoredState.wpm !== 450) {
         throw new Error(`VAL-R4-EMU-010 Failed: Process kill survival failed. Restored pos=${restoredState.pos}, wpm=${restoredState.wpm}`);
