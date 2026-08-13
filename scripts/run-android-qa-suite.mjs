@@ -151,11 +151,10 @@ async function stopAllEmulators() {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
 
-    // Wait until qemu process exits completely
     for (let i = 0; i < 30; i++) {
-        const check = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
-        if (!check) break;
-        await sleep(1000);
+        const devs = getRunningDevices();
+        if (devs.length === 0) break;
+        await sleep(500);
     }
     await sleep(2000);
 }
@@ -164,7 +163,7 @@ async function launchAVDIfNeeded(avdName) {
     const devices = getRunningDevices();
     if (devices.length === 1) {
         activeDeviceSerial = devices[0];
-        const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true }).trim();
+        const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 1000 }).trim();
         if (activeAvd === avdName) {
             console.log(`AVD ${avdName} already active on ADB device ${activeDeviceSerial}.`);
             return;
@@ -188,16 +187,19 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 240; i++) {
         await sleep(500);
         const devs = getRunningDevices();
         if (devs.length > 0) {
             activeDeviceSerial = devs[0];
-            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
-            const statusDev = runCmd(`adb shell getprop dev.bootcomplete`, { allowFail: true, timeout: 1000 }).trim();
-            if (statusSys === '1' || statusDev === '1') {
-                booted = true;
-                break;
+            const currentAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 1000 }).trim();
+            if (currentAvd === avdName) {
+                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
+                const statusDev = runCmd(`adb shell getprop dev.bootcomplete`, { allowFail: true, timeout: 1000 }).trim();
+                if (statusSys === '1' || statusDev === '1') {
+                    booted = true;
+                    break;
+                }
             }
         }
     }
@@ -772,7 +774,6 @@ async function main() {
     // PART 2: Tablet AVD QA Suite (test_tablet_api36)
     // ---------------------------------------------------------------------
     console.log('\n13. Testing VAL-R4-EMU-013: Tablet AVD Launch & Multi-Pane Layout Verification...');
-    await stopAllEmulators();
     await launchAVDIfNeeded('test_tablet_api36');
 
     runCmd(`adb install -r "${primaryApk}"`);
