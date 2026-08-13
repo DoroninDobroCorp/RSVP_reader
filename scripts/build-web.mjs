@@ -99,22 +99,22 @@ const localeConfigs = {
             name: 'HummingRead: Speed Reader',
             short_name: 'HummingRead',
             description: 'Read long books and articles in rhythm with Pico, your local-first focus pilot.',
-            start_url: '/',
+            start_url: './',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
             orientation: 'any',
-            id: '/',
+            id: 'hummingread-pwa-app',
             lang: 'en',
             icons: [
                 {
-                    src: '/assets/icons/app-icon-192.png',
+                    src: 'assets/icons/app-icon-192.png',
                     sizes: '192x192',
                     type: 'image/png',
                     purpose: 'any'
                 },
                 {
-                    src: '/assets/icons/app-icon-512.png',
+                    src: 'assets/icons/app-icon-512.png',
                     sizes: '512x512',
                     type: 'image/png',
                     purpose: 'any maskable'
@@ -144,22 +144,22 @@ const localeConfigs = {
             name: 'HummingRead: Скорочиталка',
             short_name: 'HummingRead',
             description: 'HummingRead — спокойная RSVP-скорочиталка для книг, вставленного текста и чтения по одному слову с Пико.',
-            start_url: '/ru/',
+            start_url: './ru/',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
             orientation: 'any',
-            id: '/',
+            id: 'hummingread-pwa-app',
             lang: 'ru',
             icons: [
                 {
-                    src: '/assets/icons/app-icon-192.png',
+                    src: '../assets/icons/app-icon-192.png',
                     sizes: '192x192',
                     type: 'image/png',
                     purpose: 'any'
                 },
                 {
-                    src: '/assets/icons/app-icon-512.png',
+                    src: '../assets/icons/app-icon-512.png',
                     sizes: '512x512',
                     type: 'image/png',
                     purpose: 'any maskable'
@@ -199,22 +199,22 @@ const localeConfigs = {
             name: 'HummingRead: Lector de velocidad',
             short_name: 'HummingRead',
             description: 'HummingRead es un lector de velocidad RSVP para libros, texto pegado y lectura enfocada palabra por palabra con Pico.',
-            start_url: '/es/',
+            start_url: './es/',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
             orientation: 'any',
-            id: '/',
+            id: 'hummingread-pwa-app',
             lang: 'es',
             icons: [
                 {
-                    src: '/assets/icons/app-icon-192.png',
+                    src: '../assets/icons/app-icon-192.png',
                     sizes: '192x192',
                     type: 'image/png',
                     purpose: 'any'
                 },
                 {
-                    src: '/assets/icons/app-icon-512.png',
+                    src: '../assets/icons/app-icon-512.png',
                     sizes: '512x512',
                     type: 'image/png',
                     purpose: 'any maskable'
@@ -253,12 +253,18 @@ const localeConfigs = {
 function adjustRelativePathsForSubdir(html, lang) {
     let out = html;
     if (lang) {
-        out = out.replace(/href="\/manifest\.webmanifest"/g, `href="/${lang}/manifest.webmanifest"`);
-        out = out.replace(/href="manifest\.webmanifest"/g, `href="/${lang}/manifest.webmanifest"`);
-        out = out.replace(/href="manifest\.json(\?[^"]*)?"/g, `href="/${lang}/manifest.webmanifest"`);
-    }
-    if (out.includes('src="assets/brand/pico-hero-640.webp"')) {
-        out = out.replace(/src="assets\/brand\/pico-hero-640\.webp"/g, 'src="/assets/brand/pico-hero-640.webp"');
+        out = out.replace(/href="manifest\.webmanifest"/g, 'href="manifest.webmanifest"');
+        out = out.replace(/href="\/manifest\.webmanifest"/g, 'href="manifest.webmanifest"');
+        out = out.replace(/href="manifest\.json(\?[^"]*)?"/g, 'href="manifest.webmanifest"');
+        out = out.replace(/href="style\.css/g, 'href="../style.css');
+        out = out.replace(/href="assets\//g, 'href="../assets/');
+        out = out.replace(/href="downloads\//g, 'href="../downloads/');
+        out = out.replace(/src="assets\//g, 'src="../assets/');
+        out = out.replace(/src="app-base-url\.js/g, 'src="../app-base-url.js');
+        out = out.replace(/src="i18n\.js/g, 'src="../i18n.js');
+        out = out.replace(/src="vendor\//g, 'src="../vendor/');
+        out = out.replace(/src="epub-parser\.js/g, 'src="../epub-parser.js');
+        out = out.replace(/src="app\.js/g, 'src="../app.js');
     }
     return out;
 }

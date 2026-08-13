@@ -11,14 +11,15 @@ test('service worker returns the cached app shell when navigation receives HTTP 
     Promise,
     console,
     self: {
-      location: { origin: 'https://reader.example' },
+      location: { origin: 'https://reader.example', href: 'https://reader.example/service-worker.js' },
       addEventListener() {},
       skipWaiting() {},
       clients: { claim() {} }
     },
     caches: {
       async match(key) {
-        return (key === '/index.html' || key === './index.html') ? cachedShell : null;
+        const urlStr = typeof key === 'string' ? key : (key && key.url ? key.url : '');
+        return (urlStr === '/index.html' || urlStr === './index.html' || urlStr === 'https://reader.example/' || urlStr === 'https://reader.example/index.html') ? cachedShell : null;
       },
       async open() {
         return { async put() {} };

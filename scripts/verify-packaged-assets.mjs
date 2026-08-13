@@ -186,8 +186,8 @@ for (const [doc, lang] of [
     if (!doc.includes(`<html lang="${lang}">`)) {
         throw new Error(`Locale doc missing static <html lang="${lang}">.`);
     }
-    if (!doc.includes('src="/assets/brand/pico-hero-640.webp"')) {
-        throw new Error(`Locale doc ${lang} missing root-relative src="/assets/brand/pico-hero-640.webp".`);
+    if (!doc.includes('src="assets/brand/pico-hero-640.webp"') && !doc.includes('src="../assets/brand/pico-hero-640.webp"')) {
+        throw new Error(`Locale doc ${lang} missing relative src for pico-hero-640.webp.`);
     }
     if (doc.includes('rel="canonical"')) {
         throw new Error(`Tester-preview locale doc ${lang} must not contain canonical URL.`);

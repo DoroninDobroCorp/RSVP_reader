@@ -201,7 +201,7 @@ test('Directory routing: curl requests for /es and /es/ resolve directly to dist
   }
 });
 
-test('VAL-WEB-PATH-006: pico-hero-640 img tag src attribute starts with leading slash /assets/brand/pico-hero-640.webp in index.html, /ru/index.html, and /es/index.html', async (t) => {
+test('VAL-WEB-PATH-006: pico-hero-640 img tag src attribute uses relative asset path in index.html, /ru/index.html, and /es/index.html', async (t) => {
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 
@@ -209,22 +209,22 @@ test('VAL-WEB-PATH-006: pico-hero-640 img tag src attribute starts with leading 
     const enRes = await fetchServerPath(testServer, '/index.html');
     assert.equal(enRes.statusCode, 200);
     assert.ok(
-      enRes.body.includes('src="/assets/brand/pico-hero-640.webp"'),
-      '/index.html pico-hero-640 img tag must have leading slash: src="/assets/brand/pico-hero-640.webp"'
+      enRes.body.includes('src="assets/brand/pico-hero-640.webp"'),
+      '/index.html pico-hero-640 img tag must have relative src: src="assets/brand/pico-hero-640.webp"'
     );
 
     const ruRes = await fetchServerPath(testServer, '/ru/index.html');
     assert.equal(ruRes.statusCode, 200);
     assert.ok(
-      ruRes.body.includes('src="/assets/brand/pico-hero-640.webp"'),
-      '/ru/index.html pico-hero-640 img tag must have leading slash: src="/assets/brand/pico-hero-640.webp"'
+      ruRes.body.includes('src="../assets/brand/pico-hero-640.webp"'),
+      '/ru/index.html pico-hero-640 img tag must have relative src: src="../assets/brand/pico-hero-640.webp"'
     );
 
     const esRes = await fetchServerPath(testServer, '/es/index.html');
     assert.equal(esRes.statusCode, 200);
     assert.ok(
-      esRes.body.includes('src="/assets/brand/pico-hero-640.webp"'),
-      '/es/index.html pico-hero-640 img tag must have leading slash: src="/assets/brand/pico-hero-640.webp"'
+      esRes.body.includes('src="../assets/brand/pico-hero-640.webp"'),
+      '/es/index.html pico-hero-640 img tag must have relative src: src="../assets/brand/pico-hero-640.webp"'
     );
 
     const imgRes = await fetchServerPath(testServer, '/assets/brand/pico-hero-640.webp');

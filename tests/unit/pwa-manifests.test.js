@@ -25,21 +25,21 @@ test('VAL-WEB-PWA-001: Localized manifest files generated for /, /ru/, and /es/'
     assert.match(esManifest.description, /lector de velocidad RSVP/i);
 });
 
-// VAL-WEB-PWA-002: Stable PWA Application Identity (id & start_url) Across Locales
-test('VAL-WEB-PWA-002: Stable PWA Application Identity (id) across all localized manifests', async () => {
+// VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests
+test('VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests', async () => {
     const enManifest = JSON.parse(await readFile(join(root, 'dist', 'manifest.webmanifest'), 'utf8'));
     const ruManifest = JSON.parse(await readFile(join(root, 'dist', 'ru', 'manifest.webmanifest'), 'utf8'));
     const esManifest = JSON.parse(await readFile(join(root, 'dist', 'es', 'manifest.webmanifest'), 'utf8'));
 
-    assert.equal(enManifest.id, '/');
-    assert.equal(ruManifest.id, '/');
-    assert.equal(esManifest.id, '/');
+    assert.equal(enManifest.id, 'hummingread-pwa-app');
+    assert.equal(ruManifest.id, 'hummingread-pwa-app');
+    assert.equal(esManifest.id, 'hummingread-pwa-app');
     assert.equal(enManifest.id, ruManifest.id);
     assert.equal(ruManifest.id, esManifest.id);
 
-    assert.equal(enManifest.start_url, '/');
-    assert.equal(ruManifest.start_url, '/ru/');
-    assert.equal(esManifest.start_url, '/es/');
+    assert.equal(enManifest.start_url, './');
+    assert.equal(ruManifest.start_url, './ru/');
+    assert.equal(esManifest.start_url, './es/');
 });
 
 // VAL-WEB-PWA-003: HTML Manifest Link References per Locale Route
@@ -48,29 +48,29 @@ test('VAL-WEB-PWA-003: HTML landing pages link to corresponding localized webman
     const ruHtml = await readFile(join(root, 'dist', 'ru', 'index.html'), 'utf8');
     const esHtml = await readFile(join(root, 'dist', 'es', 'index.html'), 'utf8');
 
-    assert.match(enHtml, /<link rel="manifest" href="\/manifest\.webmanifest">/);
-    assert.match(ruHtml, /<link rel="manifest" href="\/ru\/manifest\.webmanifest">/);
-    assert.match(esHtml, /<link rel="manifest" href="\/es\/manifest\.webmanifest">/);
+    assert.match(enHtml, /<link rel="manifest" href="manifest\.webmanifest">/);
+    assert.match(ruHtml, /<link rel="manifest" href="manifest\.webmanifest">/);
+    assert.match(esHtml, /<link rel="manifest" href="manifest\.webmanifest">/);
 });
 
-// VAL-WEB-PWA-004: Service Worker Offline Precache for Multilingual Routes & Assets
-test('VAL-WEB-PWA-004: Service Worker precaches all static HTML locale routes and localized sample text files', async () => {
+// VAL-WEB-PWA-004 / VAL-R2-PWA-003: Service Worker Offline Precache for Multilingual Routes & Assets
+test('VAL-WEB-PWA-004 / VAL-R2-PWA-003: Service Worker precaches all static HTML locale routes and localized sample text files', async () => {
     const swContent = await readFile(join(root, 'service-worker.js'), 'utf8');
 
     const requiredShellAssets = [
-        '/',
-        '/index.html',
-        '/ru/',
-        '/ru/index.html',
-        '/es/',
-        '/es/index.html',
-        '/manifest.webmanifest',
-        '/ru/manifest.webmanifest',
-        '/es/manifest.webmanifest',
-        '/sample_text.txt',
-        '/sample_text_ru.txt',
-        '/sample_text_es.txt',
-        '/sample_text_en.txt'
+        './',
+        './index.html',
+        './ru/',
+        './ru/index.html',
+        './es/',
+        './es/index.html',
+        './manifest.webmanifest',
+        './ru/manifest.webmanifest',
+        './es/manifest.webmanifest',
+        './sample_text.txt',
+        './sample_text_ru.txt',
+        './sample_text_es.txt',
+        './sample_text_en.txt'
     ];
 
     for (const asset of requiredShellAssets) {
