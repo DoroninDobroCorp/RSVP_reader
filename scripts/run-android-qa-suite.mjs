@@ -182,12 +182,13 @@ async function launchAVDIfNeeded(avdName) {
     const emuCmd = `nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim </dev/null >"${emuLogPath}" 2>&1 &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
-    await sleep(2000);
+    console.log(`Waiting 5s for ${avdName} to initialize KVM...`);
+    await sleep(5000);
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 360; i++) {
-        await sleep(500);
+    for (let i = 0; i < 90; i++) {
+        await sleep(2000);
         const devs = getRunningDevices();
         if (devs.length > 0) {
             activeDeviceSerial = devs[0];
