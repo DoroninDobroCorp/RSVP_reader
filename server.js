@@ -498,6 +498,8 @@ function sendStatic(request, response, url) {
   }
   if (pathname.startsWith('/rsvp/')) pathname = pathname.slice('/rsvp'.length);
   if (pathname === '/' || pathname === '') pathname = '/index.html';
+  if (pathname === '/ru' || pathname === '/ru/') pathname = '/ru/index.html';
+  if (pathname === '/es' || pathname === '/es/') pathname = '/es/index.html';
 
   const requestedRelativePath = pathname.replace(/^\/+/, '');
   const filePath = path.resolve(ROOT, requestedRelativePath);

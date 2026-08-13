@@ -1,10 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { execFile } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
+const util = require('node:util');
 const vm = require('node:vm');
 const { server } = require('../../server.js');
+
+const execFileAsync = util.promisify(execFile);
 
 const root = path.resolve(__dirname, '../../');
 const i18nSource = fs.readFileSync(path.join(root, 'i18n.js'), 'utf8');
@@ -151,6 +155,47 @@ test('VAL-WEB-LOC-008: Non-existent or unsupported subpaths fall back to default
     const invalidRes = await fetchServerPath(testServer, '/invalid-route/');
     assert.equal(invalidRes.statusCode, 200, '/invalid-route/ must fall back to HTTP 200');
     assert.ok(invalidRes.body.includes('<html lang="en">'), '/invalid-route/ fallback must return index.html');
+  } finally {
+    await new Promise((res) => testServer.close(res));
+  }
+});
+
+// Directory routing: automated curl unit tests for /ru, /ru/, /es, /es/
+test('Directory routing: curl requests for /ru and /ru/ resolve directly to dist/ru/index.html with HTTP 200', async (t) => {
+  const testServer = http.createServer((req, res) => server.emit('request', req, res));
+  await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
+  const port = testServer.address().port;
+
+  try {
+    const { stdout: ruBody } = await execFileAsync('curl', ['-s', '-w', '\nHTTP_STATUS:%{http_code}', `http://127.0.0.1:${port}/ru`]);
+    assert.ok(ruBody.includes('HTTP_STATUS:200'), '/ru must return HTTP 200');
+    assert.ok(ruBody.includes('<html lang="ru">'), '/ru must return Russian HTML');
+    assert.ok(ruBody.includes('Пико · ваш штурман по тексту') || ruBody.includes('Скорочиталка'), '/ru must contain Russian text from dist/ru/index.html');
+
+    const { stdout: ruSlashBody } = await execFileAsync('curl', ['-s', '-w', '\nHTTP_STATUS:%{http_code}', `http://127.0.0.1:${port}/ru/`]);
+    assert.ok(ruSlashBody.includes('HTTP_STATUS:200'), '/ru/ must return HTTP 200');
+    assert.ok(ruSlashBody.includes('<html lang="ru">'), '/ru/ must return Russian HTML');
+    assert.ok(ruSlashBody.includes('Пико · ваш штурман по тексту') || ruSlashBody.includes('Скорочиталка'), '/ru/ must contain Russian text from dist/ru/index.html');
+  } finally {
+    await new Promise((res) => testServer.close(res));
+  }
+});
+
+test('Directory routing: curl requests for /es and /es/ resolve directly to dist/es/index.html with HTTP 200', async (t) => {
+  const testServer = http.createServer((req, res) => server.emit('request', req, res));
+  await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
+  const port = testServer.address().port;
+
+  try {
+    const { stdout: esBody } = await execFileAsync('curl', ['-s', '-w', '\nHTTP_STATUS:%{http_code}', `http://127.0.0.1:${port}/es`]);
+    assert.ok(esBody.includes('HTTP_STATUS:200'), '/es must return HTTP 200');
+    assert.ok(esBody.includes('<html lang="es">'), '/es must return Spanish HTML');
+    assert.ok(esBody.includes('Conoce a Pico · tu copiloto de lectura') || esBody.includes('Lector de velocidad'), '/es must contain Spanish text from dist/es/index.html');
+
+    const { stdout: esSlashBody } = await execFileAsync('curl', ['-s', '-w', '\nHTTP_STATUS:%{http_code}', `http://127.0.0.1:${port}/es/`]);
+    assert.ok(esSlashBody.includes('HTTP_STATUS:200'), '/es/ must return HTTP 200');
+    assert.ok(esSlashBody.includes('<html lang="es">'), '/es/ must return Spanish HTML');
+    assert.ok(esSlashBody.includes('Conoce a Pico · tu copiloto de lectura') || esSlashBody.includes('Lector de velocidad'), '/es/ must contain Spanish text from dist/es/index.html');
   } finally {
     await new Promise((res) => testServer.close(res));
   }
