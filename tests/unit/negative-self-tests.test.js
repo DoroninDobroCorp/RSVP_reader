@@ -19,13 +19,14 @@ import {
     verifySidecarCommitSha,
     verifyQaResults,
     verifyExecutionRecord,
-    verifyExecutedAssertions
+    verifyExecutedAssertions,
+    verifyNoCdpSubstitution
 } from '../../scripts/verify-all.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// 1. Missing JDK (VAL-R3-NEG-002 / Scenario 1)
-test('VAL-R3-NEG-002 / NEG-01: missing JDK fails closed', () => {
+// 1. Missing JDK (VAL-R4-NEG-002 / Scenario 1)
+test('VAL-R4-NEG-002 / NEG-01: missing JDK fails closed', () => {
     const res = resolveToolchain({
         env: {
             JAVA_HOME: '/nonexistent/jdk/path',
@@ -36,8 +37,8 @@ test('VAL-R3-NEG-002 / NEG-01: missing JDK fails closed', () => {
     assert.ok(res.errors.some(e => e.includes('Java') || e.includes('JDK')), 'Error message must identify missing Java/JDK');
 });
 
-// 2. Wrong JDK Major Version (VAL-R3-NEG-002 / Scenario 2)
-test('VAL-R3-NEG-002 / NEG-02: wrong JDK major version fails closed', async () => {
+// 2. Wrong JDK Major Version (VAL-R4-NEG-002 / Scenario 2)
+test('VAL-R4-NEG-002 / NEG-02: wrong JDK major version fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-jdk-'));
     try {
         const binDir = join(tempDir, 'bin');
@@ -58,8 +59,8 @@ test('VAL-R3-NEG-002 / NEG-02: wrong JDK major version fails closed', async () =
     }
 });
 
-// 3. Missing SDK 36 Platform (VAL-R3-NEG-002 / Scenario 3)
-test('VAL-R3-NEG-002 / NEG-03: missing SDK 36 platform fails closed', async () => {
+// 3. Missing SDK 36 Platform (VAL-R4-NEG-002 / Scenario 3)
+test('VAL-R4-NEG-002 / NEG-03: missing SDK 36 platform fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-sdk-'));
     try {
         const res = resolveToolchain({
@@ -76,8 +77,8 @@ test('VAL-R3-NEG-002 / NEG-03: missing SDK 36 platform fails closed', async () =
     }
 });
 
-// 4. Missing APK (VAL-R3-NEG-002 / Scenario 4)
-test('VAL-R3-NEG-002 / NEG-04: missing APK fails closed', async () => {
+// 4. Missing APK (VAL-R4-NEG-002 / Scenario 4)
+test('VAL-R4-NEG-002 / NEG-04: missing APK fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-apk-missing-'));
     try {
         assert.throws(() => {
@@ -88,11 +89,11 @@ test('VAL-R3-NEG-002 / NEG-04: missing APK fails closed', async () => {
     }
 });
 
-// 5. Stale APK Created Before Build Run (VAL-R3-NEG-002 / Scenario 5)
-test('VAL-R3-NEG-002 / NEG-05: stale APK created before build run fails closed', async () => {
+// 5. Stale APK Created Before Build Run (VAL-R4-NEG-002 / Scenario 5)
+test('VAL-R4-NEG-002 / NEG-05: stale APK created before build run fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-apk-stale-'));
     try {
-        const apkPath = join(tempDir, 'HummingRead-R3-debug.apk');
+        const apkPath = join(tempDir, 'HummingRead-R4-debug.apk');
         await writeFile(apkPath, 'DUMMY_STALE_APK', 'utf8');
         const pastTime = new Date(Date.now() - 3600000);
         await utimes(apkPath, pastTime, pastTime);
@@ -106,8 +107,8 @@ test('VAL-R3-NEG-002 / NEG-05: stale APK created before build run fails closed',
     }
 });
 
-// 6. APK Checksum Mismatch (VAL-R3-NEG-002 / Scenario 6)
-test('VAL-R3-NEG-002 / NEG-06: APK checksum mismatch fails closed', async () => {
+// 6. APK Checksum Mismatch (VAL-R4-NEG-002 / Scenario 6)
+test('VAL-R4-NEG-002 / NEG-06: APK checksum mismatch fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-checksum-'));
     try {
         const apkPath = join(tempDir, 'test.apk');
@@ -122,8 +123,8 @@ test('VAL-R3-NEG-002 / NEG-06: APK checksum mismatch fails closed', async () => 
     }
 });
 
-// 7. Unexpected INTERNET Permission (VAL-R3-NEG-002 / Scenario 7)
-test('VAL-R3-NEG-002 / NEG-07: unexpected INTERNET permission fails closed', () => {
+// 7. Unexpected INTERNET Permission (VAL-R4-NEG-002 / Scenario 7)
+test('VAL-R4-NEG-002 / NEG-07: unexpected INTERNET permission fails closed', () => {
     const badManifest = `
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -135,8 +136,8 @@ test('VAL-R3-NEG-002 / NEG-07: unexpected INTERNET permission fails closed', () 
     }, /contains forbidden permission android\.permission\.INTERNET/);
 });
 
-// 8. Broad FileProvider Path (VAL-R3-NEG-002 / Scenario 8)
-test('VAL-R3-NEG-002 / NEG-08: broad FileProvider path fails closed', () => {
+// 8. Broad FileProvider Path (VAL-R4-NEG-002 / Scenario 8)
+test('VAL-R4-NEG-002 / NEG-08: broad FileProvider path fails closed', () => {
     const badFilePaths = `
         <paths xmlns:android="http://schemas.android.com/apk/res/android">
             <external-path name="external_files" path="." />
@@ -147,8 +148,8 @@ test('VAL-R3-NEG-002 / NEG-08: broad FileProvider path fails closed', () => {
     }, /contains broad external-path/);
 });
 
-// 9. Dirty Source Worktree Check (VAL-R3-NEG-002 / Scenario 9)
-test('VAL-R3-NEG-002 / NEG-09: dirty source worktree fails closed', async () => {
+// 9. Dirty Source Worktree Check (VAL-R4-NEG-002 / Scenario 9)
+test('VAL-R4-NEG-002 / NEG-09: dirty source worktree fails closed', async () => {
     const tempFile = join(root, '.tmp-negative-test-dirty.tmp');
     await writeFile(tempFile, 'dirty_test_content', 'utf8');
     try {
@@ -166,8 +167,8 @@ test('VAL-R3-NEG-002 / NEG-09: dirty source worktree fails closed', async () => 
     }
 });
 
-// 10. Local/Remote SHA Mismatch (VAL-R3-NEG-002 / Scenario 10)
-test('VAL-R3-NEG-002 / NEG-10: local/remote SHA mismatch fails closed', () => {
+// 10. Local/Remote SHA Mismatch (VAL-R4-NEG-002 / Scenario 10)
+test('VAL-R4-NEG-002 / NEG-10: local/remote SHA mismatch fails closed', () => {
     const localSha = '1111111111111111111111111111111111111111';
     const remoteSha = '2222222222222222222222222222222222222222';
     assert.throws(() => {
@@ -175,28 +176,28 @@ test('VAL-R3-NEG-002 / NEG-10: local/remote SHA mismatch fails closed', () => {
     }, /Git SHA mismatch/);
 });
 
-// 11. Unavailable git ls-remote with No Local-Ref Fallback (VAL-R3-NEG-002 / Scenario 11)
-test('VAL-R3-NEG-002 / NEG-11: unavailable git ls-remote with no local-ref fallback fails closed', () => {
+// 11. Unavailable git ls-remote with No Local-Ref Fallback (VAL-R4-NEG-002 / Scenario 11)
+test('VAL-R4-NEG-002 / NEG-11: unavailable git ls-remote with no local-ref fallback fails closed', () => {
     assert.throws(() => {
         fetchRemoteGitSha({ remoteUrl: 'https://invalid-nonexistent-domain.test/repo.git', branch: 'mission' });
     }, /Failed to fetch remote Git SHA/);
 });
 
-// 12. Absent Validation Log for Claimed Assertion (VAL-R3-NEG-002 / Scenario 12)
-test('VAL-R3-NEG-002 / NEG-12: absent validation log for claimed assertion fails closed', async () => {
+// 12. Absent Validation Log for Claimed Assertion (VAL-R4-NEG-002 / Scenario 12)
+test('VAL-R4-NEG-002 / NEG-12: absent validation log for claimed assertion fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-log-'));
     try {
-        const assertions = { 'VAL-R3-ENV-001': 'PASSED' };
+        const assertions = { 'VAL-R4-ENV-001': 'PASSED' };
         assert.throws(() => {
             verifyLogProvenance(assertions, tempDir);
-        }, /Claimed assertion VAL-R3-ENV-001 has no matching validation log/);
+        }, /Claimed assertion VAL-R4-ENV-001 has no matching validation log/);
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }
 });
 
-// 13. Duplicate Workflow Screenshots (VAL-R3-NEG-002 / Scenario 13)
-test('VAL-R3-NEG-002 / NEG-13: duplicate workflow screenshots fail closed', () => {
+// 13. Duplicate Workflow Screenshots (VAL-R4-NEG-002 / Scenario 13)
+test('VAL-R4-NEG-002 / NEG-13: duplicate workflow screenshots fail closed', () => {
     const hashes = {
         'step_1_landing.png': 'abc123hash',
         'step_3_rsvp_playing.png': 'abc123hash'
@@ -206,33 +207,38 @@ test('VAL-R3-NEG-002 / NEG-13: duplicate workflow screenshots fail closed', () =
     }, /Duplicate workflow screenshot detected/);
 });
 
-// 14. PNG/Sidecar Dimension Mismatch (VAL-R3-NEG-002 / Scenario 14)
-test('VAL-R3-NEG-002 / NEG-14: PNG/sidecar dimension mismatch fails closed', () => {
+// 14. PNG/Sidecar Dimension Mismatch (VAL-R4-NEG-002 / Scenario 14)
+test('VAL-R4-NEG-002 / NEG-14: PNG/sidecar dimension mismatch fails closed', () => {
     assert.throws(() => {
         verifySidecarDimensions(320, 640, 390, 844);
     }, /PNG\/sidecar dimension mismatch/);
 });
 
-// 15. Sidecar Source SHA Mismatch (VAL-R3-NEG-002 / Scenario 15)
-test('VAL-R3-NEG-002 / NEG-15: sidecar source SHA mismatch fails closed', () => {
+// 15. Sidecar Source SHA Mismatch (VAL-R4-NEG-002 / Scenario 15)
+test('VAL-R4-NEG-002 / NEG-15: sidecar source SHA mismatch fails closed', () => {
     assert.throws(() => {
         verifySidecarCommitSha('old_commit_sha_123', 'current_commit_sha_456');
     }, /Sidecar source SHA mismatch/);
 });
 
-// 16. Skipped Required Emulator Scenario (VAL-R3-NEG-002 / Scenario 16)
-test('VAL-R3-NEG-002 / NEG-16: skipped required emulator scenario fails closed', () => {
+// 16. CDP Substitution for Native QA (VAL-R4-NEG-002 / Scenario 16)
+test('VAL-R4-NEG-002 / NEG-16: CDP substitution for native QA fails closed', () => {
+    const cdpScenario = { id: 'VAL-R4-EMU-004', name: 'Real SAF document import', status: 'PASSED', usedCdp: true };
+    assert.throws(() => {
+        verifyNoCdpSubstitution(cdpScenario);
+    }, /CDP substitution detected for native QA scenario/);
+
     const scenarios = [
-        { id: 'VAL-R3-EMU-001', status: 'PASSED' },
-        { id: 'VAL-R3-EMU-004', status: 'SKIPPED' }
+        { id: 'VAL-R4-EMU-001', status: 'PASSED' },
+        { id: 'VAL-R4-EMU-004', status: 'PASSED', cdpSubstituted: true }
     ];
     assert.throws(() => {
         verifyQaResults(scenarios);
-    }, /Required QA scenario failed or skipped/);
+    }, /CDP substitution/);
 });
 
-// 17. An allowFail Platform Command Used as Proof (VAL-R3-NEG-002 / Scenario 17)
-test('VAL-R3-NEG-002 / NEG-17: allowFail platform command used as proof fails closed', () => {
+// 17. An allowFail Platform Command Used as Proof (VAL-R4-NEG-002 / Scenario 17)
+test('VAL-R4-NEG-002 / NEG-17: allowFail platform command used as proof fails closed', () => {
     const record = {
         id: 'step-01',
         name: 'Emulator Run',
@@ -245,13 +251,13 @@ test('VAL-R3-NEG-002 / NEG-17: allowFail platform command used as proof fails cl
     }, /Execution record uses allowFail: true/);
 });
 
-// 18. Hard-Coded PASSED Assertion Without an Executed Check Record (VAL-R3-NEG-002 / Scenario 18)
-test('VAL-R3-NEG-002 / NEG-18: hard-coded PASSED assertion without executed check record fails closed', () => {
-    const assertions = { 'VAL-R3-EMU-001': 'PASSED' };
+// 18. Hard-Coded PASSED Assertion Without an Executed Check Record (VAL-R4-NEG-002 / Scenario 18)
+test('VAL-R4-NEG-002 / NEG-18: hard-coded PASSED assertion without executed check record fails closed', () => {
+    const assertions = { 'VAL-R4-EMU-001': 'PASSED' };
     const executedChecks = [
-        { id: 'step-01-toolchain-doctor', status: 'PASS', assertions: ['VAL-R3-ENV-001'] }
+        { id: 'step-01-toolchain-doctor', status: 'PASS', assertions: ['VAL-R4-ENV-001'] }
     ];
     assert.throws(() => {
         verifyExecutedAssertions(assertions, executedChecks);
-    }, /Hard-coded PASSED assertion without an executed check record: VAL-R3-EMU-001/);
+    }, /Hard-coded PASSED assertion without an executed check record: VAL-R4-EMU-001/);
 });
