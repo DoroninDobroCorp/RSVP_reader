@@ -130,8 +130,8 @@ async function runPackageAudit() {
         }
     }
 
-    // 6. VAL-R2-VERIFY-004: APK Existence & SHA-256 Checksum Verification Gate
-    console.log('6. Checking VAL-R2-VERIFY-004: APK Existence and SHA-256 Checksum Validation...');
+    // 6. VAL-R2-VERIFY-004 & VAL-R2-ARTIFACT-001/002: APK & AAB Existence & SHA-256 Checksum Verification Gate
+    console.log('6. Checking VAL-R2-VERIFY-004: APK & AAB Existence and SHA-256 Checksum Validation...');
     const primaryApk = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
     const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
     const targetApk = existsSync(primaryApk) ? primaryApk : (existsSync(buildApk) ? buildApk : null);
@@ -143,7 +143,20 @@ async function runPackageAudit() {
     const apkBuffer = await readFile(targetApk);
     const actualSha256 = createHash('sha256').update(apkBuffer).digest('hex');
     console.log(`   Target APK located: ${targetApk}`);
-    console.log(`   Computed SHA-256:  ${actualSha256}`);
+    console.log(`   Computed APK SHA-256: ${actualSha256}`);
+
+    const primaryAab = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
+    const buildAab = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
+    const targetAab = existsSync(primaryAab) ? primaryAab : (existsSync(buildAab) ? buildAab : null);
+
+    if (!targetAab) {
+        throw new Error('VAL-R2-ARTIFACT-002 Failed: Release AAB file missing. Expected at artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab or android/app/build/outputs/bundle/release/app-release.aab.');
+    }
+
+    const aabBuffer = await readFile(targetAab);
+    const aabSha256 = createHash('sha256').update(aabBuffer).digest('hex');
+    console.log(`   Target AAB located: ${targetAab}`);
+    console.log(`   Computed AAB SHA-256: ${aabSha256}`);
 
     // Check evidence-summary.json
     const summaryPaths = [
@@ -169,6 +182,9 @@ async function runPackageAudit() {
         if (expectedSha256 && expectedSha256 !== actualSha256) {
             throw new Error(`VAL-R2-VERIFY-004 Failed: Built APK SHA-256 (${actualSha256}) does not match declared SHA-256 in evidence-summary.json (${expectedSha256}).`);
         }
+        if (summaryData.aabSha256 && summaryData.aabSha256 !== aabSha256) {
+            throw new Error(`VAL-R2-ARTIFACT-002 Failed: Built AAB SHA-256 (${aabSha256}) does not match declared AAB SHA-256 in evidence-summary.json (${summaryData.aabSha256}).`);
+        }
     }
 
     const checksumPath = join(root, 'artifacts', 'android-r2', 'checksums.sha256');
@@ -177,9 +193,12 @@ async function runPackageAudit() {
         if (!checksumContent.includes(actualSha256)) {
             throw new Error(`VAL-R2-VERIFY-004 Failed: Built APK SHA-256 (${actualSha256}) not found in artifacts/android-r2/checksums.sha256`);
         }
+        if (!checksumContent.includes(aabSha256)) {
+            throw new Error(`VAL-R2-ARTIFACT-003 Failed: Built AAB SHA-256 (${aabSha256}) not found in artifacts/android-r2/checksums.sha256`);
+        }
     }
 
-    console.log('Android package verification PASSED: SDK 36, AGP 8.5, Java 21, zero dangerous permissions, clean native asset stripping, APK SHA-256 verified.\n');
+    console.log('Android package verification PASSED: SDK 36, AGP 8.5, Java 21, zero dangerous permissions, clean native asset stripping, APK & AAB SHA-256 verified.\n');
 }
 
 runPackageAudit().catch((err) => {

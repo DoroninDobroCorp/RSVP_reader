@@ -70,32 +70,44 @@ npm run build:native
 npm run build:extension
 ```
 
-### Android Gradle Build Commands
+### Android R2 Gradle Build & Release Packaging Commands
 
 ```sh
-# Build Debug APK
+# Build Debug APK (API Level 36)
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
 cd android && ./gradlew assembleDebug
 
-# Build Release AAB (Google Play bundle)
+# Build Unsigned Review Release AAB (Google Play bundle)
 cd android && ./gradlew bundleRelease
+
+# Assemble Durably Stored Server Release Artifacts & Evidence Summary
+node scripts/package-release-r2.mjs
+
+# Verify Artifact SHA-256 Checksums
+sha256sum -c artifacts/android-r2/checksums.sha256
 ```
 
-The Debug APK output is located at `android/app/build/outputs/apk/debug/app-debug.apk`.
+The server release package outputs durably stored binaries and evidence summaries under `artifacts/android-r2/`:
+- `artifacts/android-r2/HummingRead-R2-debug.apk` (Debug Tester APK)
+- `artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab` (Unsigned Review AAB)
+- `artifacts/android-r2/checksums.sha256` (SHA-256 Checksum Manifest)
+- `artifacts/android-r2/evidence-summary.json` (Machine-readable evidence package with Git HEAD SHA)
 
 ## Testing and verification commands
 
-- `npm run test:unit`: Run unit test suite (includes Android data & emulator unit tests).
-- `npm run test:extension`: Run end-to-end Chrome extension tests.
-- `npm run test:production`: Run Playwright regression test suite.
+- `npm run test:unit`: Run hermetic unit test suite (no network/SDK dependencies).
+- `npm run test:web-built`: Test compiled web output under root `/` and subpath `/rsvp/`.
+- `npm run android:test:emulator`: Run real API 36 phone & tablet emulator QA suite.
+- `npm run test:extension`: Run end-to-end Chrome extension tests across EN, RU, and ES profiles.
 - `npm run verify:android`: Verify Android package configuration, target SDK 36, Java 21, and zero dangerous permissions.
-- `npm run verify:all`: Execute complete verification suite across brand, notices, web/native packages, android, extension, precache, deployment, determinism, and store copy.
+- `npm run verify:all`: Execute fail-closed master verification suite across all gates.
 
 ```sh
 npm run test:unit
+npm run test:web-built
+npm run android:test:emulator
 npm run test:extension
 npm run test:production
-npm run test:cross-browser
-npm run test:visual
 npm run verify:android
 npm run verify:all
 ```
@@ -147,10 +159,12 @@ Deployment is not automatic. The current tester preview was activated through `d
 - Brand decision and visual rules: `docs/BRAND_DECISION.md`, `docs/BRAND_SYSTEM.md`
 - Editable artwork and provenance: `assets/brand/`, `docs/ASSET_PROVENANCE.md`
 - Chrome source and store notes: `chrome-extension/`, `docs/CHROME_EXTENSION.md`
+- Android R2 Architecture: `docs/ANDROID_ARCHITECTURE.md`
+- Android R2 Tester Guide: `docs/ANDROID_TESTER_GUIDE.md`
 - iOS store copy and owner gates: `docs/APP_STORE_COPY.md`, `docs/APP_STORE_CHECKLIST.md`
 - Google Play Store copy & Data Safety draft: `docs/GOOGLE_PLAY_COPY.md`
-- Android package & privacy verifiers: `scripts/verify-android-package.mjs`, `scripts/verify-android-privacy.mjs`
+- Android package & privacy verifiers: `scripts/verify-android-package.mjs`, `scripts/verify-android-privacy.mjs`, `scripts/package-release-r2.mjs`
 - Website, unpacked Chrome, iOS, and Android tester workflow: `docs/TESTER_GUIDE.md`
 - Licenses: `docs/THIRD_PARTY_NOTICES.md`, `acknowledgements.html`
-- Final local test counts, checksums, and external gates: `docs/RELEASE_EVIDENCE.md`
+- Release evidence, checksums, and verification summary: `docs/RELEASE_EVIDENCE.md`
 - Baseline and reconciliation: `docs/MISSION_BASELINE.md`, `docs/INTEGRATION_LEDGER.md`
