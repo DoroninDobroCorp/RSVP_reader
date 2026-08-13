@@ -644,11 +644,14 @@ async function main() {
     await client.evaluate(`(async () => {
         if (window.rsvpReader.wpmInput) window.rsvpReader.wpmInput.value = 450;
         window.rsvpReader.settings.wpm = 450;
+        window.rsvpReader.settings.settingsVersion = 8;
+        window.rsvpReader.settingsUpdatedAt = new Date().toISOString();
         try {
             localStorage.setItem('rsvp_settings', JSON.stringify(window.rsvpReader.settings));
+            localStorage.setItem('rsvp_settings_updated_at', window.rsvpReader.settingsUpdatedAt);
             localStorage.setItem('paceflow_settings_envelope', JSON.stringify({
                 settings: window.rsvpReader.settings,
-                updatedAt: new Date().toISOString()
+                updatedAt: window.rsvpReader.settingsUpdatedAt
             }));
         } catch (e) {}
 
