@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "npm run build:web",
+    "android:test:emulator": "node scripts/run-android-qa-suite.mjs",
     "assets:generate": "node scripts/generate-raster-assets.mjs",
     "notices:generate": "node scripts/generate-third-party-notices.mjs",
     "build:web": "npm run notices:generate && node scripts/build-web.mjs",

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 import { JSDOM } from 'jsdom';
 import { configureFinalSeoText, configureWebText } from './product-config.mjs';
 import { transformLegalForLocale } from './build-web.mjs';
@@ -221,7 +222,7 @@ const nativeRoot = join(root, 'dist-native');
 const iosRoot = join(root, 'ios', 'App', 'App', 'public');
 const androidRoot = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
 const nativeFiles = (await listFiles(nativeRoot)).filter((file) => !file.startsWith('android/'));
-const iosFiles = (await listFiles(iosRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js'].includes(file));
+const iosFiles = (await listFiles(iosRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js', 'capacitor.config.json'].includes(file));
 if (JSON.stringify(iosFiles.sort()) !== JSON.stringify(nativeFiles.sort())) {
     throw new Error('The iOS public tree has stale or missing files compared with dist-native.');
 }

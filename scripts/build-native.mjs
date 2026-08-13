@@ -173,4 +173,8 @@ const androidAppAssets = join(root, 'android', 'app', 'src', 'main', 'assets', '
 await rm(androidAppAssets, { recursive: true, force: true });
 await cp(androidNativeDir, androidAppAssets, { recursive: true });
 
+await rm(iosDestination, { recursive: true, force: true });
+await cp(destination, iosDestination, { recursive: true });
+await rm(join(iosDestination, 'android'), { recursive: true, force: true });
+
 console.log(`Built filtered native assets in ${destination} and ${androidNativeDir}`);
