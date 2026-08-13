@@ -176,12 +176,14 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
+    const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
+    const emuLogFd = openSync(emuLogPath, 'w');
     const gpuMode = process.platform === 'linux' ? 'swiftshader_indirect' : 'host';
     const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-read-only', '-gpu', gpuMode];
 
     const emuProc = spawn(emulatorBin, emuArgs, {
         detached: true,
-        stdio: 'ignore',
+        stdio: ['ignore', emuLogFd, emuLogFd],
         env: process.env
     });
     emuProc.unref();
