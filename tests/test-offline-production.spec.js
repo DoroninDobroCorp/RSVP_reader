@@ -51,7 +51,7 @@ test('navigating to a text asset cannot poison the cached offline app shell', as
   }
 });
 
-test('VAL-R3-PWA-002: Service worker registers with trailing slash scope under /rsvp/ without SecurityError', async ({ page }) => {
+test('VAL-R3-PWA-002 / VAL-R4-PWA-002: Service worker registers with trailing slash scope under /rsvp/ without SecurityError', async ({ page }) => {
   await page.goto(`/rsvp/?offline-subpath-sw=${Date.now()}`);
   await page.waitForFunction(() => Boolean(window.rsvpReader));
   await page.evaluate(async () => {
@@ -76,7 +76,7 @@ test('VAL-R3-PWA-002: Service worker registers with trailing slash scope under /
   expect(hasController).toBe(true);
 });
 
-test('VAL-R3-PWA-003: Offline PWA navigation under subpath /rsvp/ renders app shell', async ({ page, context }) => {
+test('VAL-R3-PWA-003 / VAL-R4-PWA-003: Offline PWA navigation under subpath /rsvp/ renders app shell', async ({ page, context }) => {
   await page.goto(`/rsvp/?offline-subpath-app=${Date.now()}`);
   await page.waitForFunction(() => Boolean(window.rsvpReader));
   await page.evaluate(async () => {
@@ -99,7 +99,7 @@ test('VAL-R3-PWA-003: Offline PWA navigation under subpath /rsvp/ renders app sh
   }
 });
 
-test('VAL-R3-PWA-003: Localized legal content renders offline under root /', async ({ page, context }) => {
+test('VAL-R3-PWA-003 / VAL-R4-PWA-003: Localized legal content renders offline under root /', async ({ page, context }) => {
   await page.goto(`/?offline-legal-install=${Date.now()}`);
   await page.waitForFunction(() => Boolean(window.rsvpReader));
   await page.evaluate(async () => {
@@ -127,7 +127,7 @@ test('VAL-R3-PWA-003: Localized legal content renders offline under root /', asy
   }
 });
 
-test('VAL-R3-PWA-003: Localized legal content renders offline under subpath /rsvp/', async ({ page, context }) => {
+test('VAL-R3-PWA-003 / VAL-R4-PWA-003: Localized legal content renders offline under subpath /rsvp/', async ({ page, context }) => {
   await page.goto(`/rsvp/?offline-subpath-legal=${Date.now()}`);
   await page.waitForFunction(() => Boolean(window.rsvpReader));
   await page.evaluate(async () => {

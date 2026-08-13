@@ -8,7 +8,7 @@ import '../../app-base-url.js';
 const { getAppBaseUrl, resolveAppPath } = globalThis;
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-test('VAL-R2-PWA-001 / VAL-R3-PWA-001: Dynamic Base URL Path Resolution (getAppBaseUrl) across Root / and Subpath /rsvp/', () => {
+test('VAL-R2-PWA-001 / VAL-R3-PWA-001 / VAL-R4-PWA-001: Dynamic Base URL Path Resolution (getAppBaseUrl) across Root / and Subpath /rsvp/', () => {
     assert.equal(getAppBaseUrl('http://localhost:3100/'), '');
     assert.equal(getAppBaseUrl('http://localhost:3100/index.html'), '');
     assert.equal(getAppBaseUrl('http://localhost:3100/ru/'), '');
@@ -36,7 +36,7 @@ test('VAL-R2-PWA-001 / VAL-R3-PWA-001: Dynamic Base URL Path Resolution (getAppB
     assert.equal(resolveAppPath('service-worker.js', 'http://localhost:3100/rsvp/ru/'), '/rsvp/service-worker.js');
 });
 
-test('VAL-R2-PWA-002 / VAL-R3-PWA-002: Base-Aware Service Worker Registration & Scope Invariance under / and /rsvp/', () => {
+test('VAL-R2-PWA-002 / VAL-R3-PWA-002 / VAL-R4-PWA-002: Base-Aware Service Worker Registration & Scope Invariance under / and /rsvp/', () => {
     const rootBase = getAppBaseUrl('http://localhost:3100/ru/');
     assert.equal(`${rootBase}/service-worker.js`, '/service-worker.js');
     const rootScope = rootBase ? (rootBase.endsWith('/') ? rootBase : `${rootBase}/`) : '/';
@@ -50,7 +50,7 @@ test('VAL-R2-PWA-002 / VAL-R3-PWA-002: Base-Aware Service Worker Registration & 
     assert.ok(subpathScope.endsWith('/'), 'Subpath scope under /rsvp/ must end with a trailing slash');
 });
 
-test('VAL-R2-SW-SCOPE-001 / VAL-R3-PWA-002: app.js Service Worker Scope Trailing Slash Compliance', async () => {
+test('VAL-R2-SW-SCOPE-001 / VAL-R3-PWA-002 / VAL-R4-PWA-002: app.js Service Worker Scope Trailing Slash Compliance', async () => {
     const appJsContent = await readFile(join(root, 'app.js'), 'utf8');
     assert.match(appJsContent, /registerServiceWorker/);
     const scopeCalculationRegex = /swScope\s*=\s*(?:rawBase\s*\?\s*\(rawBase\.endsWith\(['"]\/['"]\)\s*\?\s*rawBase\s*:\s*`\${rawBase}\/`\)\s*:\s*['"]\/['"]|`\${getAppBaseUrl\(\)}\/`)/;

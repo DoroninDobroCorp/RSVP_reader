@@ -73,7 +73,7 @@ try {
     const mountPath = subpath || '';
     const baseUrl = `http://localhost:${port}${mountPath}`;
 
-    // 1. Verify landing pages return HTTP 200
+    // 1. Verify landing pages return HTTP 200 (VAL-R4-PWA-001)
     for (const route of ['/', '/index.html', '/ru/', '/ru/index.html', '/es/', '/es/index.html', '/privacy.html', '/support.html', '/acknowledgements.html']) {
       const url = `${baseUrl}${route}`;
       const res = await fetch(url);
@@ -82,7 +82,7 @@ try {
       assert.ok(text.includes('<!doctype html>') || text.includes('<!DOCTYPE html>'), `${url} must be HTML`);
     }
 
-    // 2. Verify static assets return HTTP 200
+    // 2. Verify static assets return HTTP 200 (VAL-R4-PWA-001)
     const staticAssets = [
       '/style.css?v=49',
       '/app-base-url.js?v=49',
@@ -109,7 +109,7 @@ try {
       assert.equal(res.status, 200, `Expected 200 for ${url}, got ${res.status}`);
     }
 
-    // 3. Verify webmanifest files and PWA compliance
+    // 3. Verify webmanifest files and PWA compliance (VAL-R4-PWA-004)
     for (const manifestRoute of ['/manifest.webmanifest', '/ru/manifest.webmanifest', '/es/manifest.webmanifest']) {
       const url = `${baseUrl}${manifestRoute}`;
       const res = await fetch(url);
@@ -119,7 +119,7 @@ try {
       assert.ok(json.start_url.startsWith('./'), `Manifest start_url must be scope-relative at ${url}`);
     }
 
-    // 4. Verify Service Worker precache list assets resolve relative to SW location
+    // 4. Verify Service Worker precache list assets resolve relative to SW location (VAL-R4-PWA-001, VAL-R4-PWA-003)
     const swUrl = `${baseUrl}/service-worker.js`;
     const swRes = await fetch(swUrl);
     assert.equal(swRes.status, 200, `Service worker must return 200 at ${swUrl}`);
@@ -136,7 +136,7 @@ try {
       assert.equal(assetRes.status, 200, `SW Precache asset '${relAsset}' resolved to ${resolvedUrl} must return 200 (got ${assetRes.status})`);
     }
 
-    // 5. Verify Service Worker subpath scope trailing slash compliance under /rsvp/
+    // 5. Verify Service Worker subpath scope trailing slash compliance under /rsvp/ (VAL-R4-PWA-002)
     const swScope = mountPath ? (mountPath.endsWith('/') ? mountPath : `${mountPath}/`) : '/';
     assert.ok(swScope.endsWith('/'), `SW scope for path '${mountPath || '/'}' must end with trailing slash: '${swScope}'`);
     if (mountPath === '/rsvp') {

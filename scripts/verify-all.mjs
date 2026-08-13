@@ -249,12 +249,12 @@ export async function runMasterVerificationPipeline(options = {}) {
         { id: 'step-05-verify-android-privacy', name: '05 Android Local Privacy & Permissions Audit', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R3-SEC-001', 'VAL-R3-SEC-002'] },
         { id: 'step-06-verify-android-package', name: '06 Android Package & SHA-256 Checksum Gate', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R3-SEC-003', 'VAL-R3-BUILD-004'] },
         { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R3-EXT-001'] },
-        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R3-PWA-002'] },
-        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R3-PWA-001'] },
+        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R3-PWA-002', 'VAL-R4-PWA-002'] },
+        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R3-PWA-001', 'VAL-R4-PWA-001'] },
         { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R3-BUILD-001', 'VAL-R3-BUILD-002', 'VAL-R3-BUILD-003', 'VAL-R3-BUILD-004'] },
         { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R3-STORE-001'] },
-        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R3-HERMETIC-001'] },
-        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R3-PWA-001', 'VAL-R3-PWA-003'] }
+        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R3-HERMETIC-001', 'VAL-R4-HERMETIC-001', 'VAL-R4-PWA-004'] },
+        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R3-PWA-001', 'VAL-R3-PWA-003', 'VAL-R4-PWA-001', 'VAL-R4-PWA-002', 'VAL-R4-PWA-003', 'VAL-R4-PWA-004'] }
     ];
 
     let overallPassed = true;
