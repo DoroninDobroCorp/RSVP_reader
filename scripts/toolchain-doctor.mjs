@@ -7,7 +7,6 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const JDK21_CANDIDATE_PATHS = [
     process.env.JAVA_HOME,
-    '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home',
     '/usr/lib/jvm/java-21-openjdk-amd64',
     '/usr/lib/jvm/java-21-openjdk-arm64',
     '/usr/lib/jvm/java-21-openjdk',
@@ -17,7 +16,6 @@ const JDK21_CANDIDATE_PATHS = [
 const ANDROID_SDK_CANDIDATE_PATHS = [
     process.env.ANDROID_SDK_ROOT,
     process.env.ANDROID_HOME,
-    '/opt/homebrew/share/android-commandlinetools',
     '/opt/android-sdk'
 ].filter(Boolean);
 
@@ -43,7 +41,7 @@ export function resolveToolchain(options = {}) {
 
     if (shouldCheckHostAndBranch) {
         const canonicalPath = '/srv/RSVP_reader-r2';
-        const canonicalBranch = 'mission/android-r3-server-proof-20260813';
+        const canonicalBranch = customEnv.EXPECTED_BRANCH || options.expectedBranch || 'mission/android-r4-qa-truth-20260813';
 
         let actualPath = root;
         try {

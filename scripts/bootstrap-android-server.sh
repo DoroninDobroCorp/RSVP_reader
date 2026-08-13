@@ -2,7 +2,7 @@
 set -eo pipefail
 
 echo "===================================================="
-echo ">>> HummingRead Android R3 Server Toolchain Bootstrap"
+echo ">>> HummingRead Android R4 Server Toolchain Bootstrap"
 echo "===================================================="
 
 # Path & Host Guards
@@ -16,9 +16,10 @@ if [ "${FORCE_BOOTSTRAP:-0}" != "1" ]; then
         echo "[ERROR] Worktree path is '$REAL_PWD', expected '/srv/RSVP_reader-r2'." >&2
         exit 1
     fi
+    EXPECTED_BRANCH="${EXPECTED_BRANCH:-mission/android-r4-qa-truth-20260813}"
     CURRENT_BRANCH="$(git branch --show-current 2>/dev/null || echo "")"
-    if [ "$CURRENT_BRANCH" != "mission/android-r3-server-proof-20260813" ]; then
-        echo "[ERROR] Git branch is '$CURRENT_BRANCH', expected 'mission/android-r3-server-proof-20260813'." >&2
+    if [ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]; then
+        echo "[ERROR] Git branch is '$CURRENT_BRANCH', expected '$EXPECTED_BRANCH'." >&2
         exit 1
     fi
 fi
@@ -110,6 +111,16 @@ if [ -f "$BASHRC_FILE" ]; then
         echo "# Android SDK & OpenJDK 21" >> "$BASHRC_FILE"
         echo "$ENV_CONTENTS" >> "$BASHRC_FILE"
         echo "Persisted to $BASHRC_FILE"
+    fi
+fi
+
+PROFILE_FILE="$HOME/.profile"
+if [ -f "$PROFILE_FILE" ]; then
+    if ! grep -q "ANDROID_HOME=\"/opt/android-sdk\"" "$PROFILE_FILE" 2>/dev/null; then
+        echo "" >> "$PROFILE_FILE"
+        echo "# Android SDK & OpenJDK 21" >> "$PROFILE_FILE"
+        echo "$ENV_CONTENTS" >> "$PROFILE_FILE"
+        echo "Persisted to $PROFILE_FILE"
     fi
 fi
 
