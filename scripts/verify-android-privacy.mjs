@@ -1,12 +1,34 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import JSZip from 'jszip';
+import { checkToolchain } from './toolchain-doctor.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
 async function runPrivacyAudit() {
     console.log('=== Running Android Local Privacy & Permissions Audit ===\n');
+
+    // 0. Ensure Toolchain Doctor Fast-Fail Gate passes
+    const toolchain = checkToolchain();
+    if (!toolchain.success) {
+        throw new Error(`Toolchain verification failed prior to privacy audit:\n${toolchain.errors.join('\n')}`);
+    }
+
+    // Determine APK Location
+    const primaryApkPath = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
+    const fallbackApkPath = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
+    let apkPath = null;
+
+    if (existsSync(primaryApkPath)) {
+        apkPath = primaryApkPath;
+    } else if (existsSync(fallbackApkPath)) {
+        apkPath = fallbackApkPath;
+    } else {
+        throw new Error(`Android privacy audit failed: APK file missing. Expected at ${primaryApkPath} or ${fallbackApkPath}. Compile APK first.`);
+    }
 
     // 1. VAL-AND-PRIV-001: Zero Dangerous Permissions Invariant
     console.log('1. Checking VAL-AND-PRIV-001: Zero Dangerous Permissions Invariant...');
@@ -39,30 +61,21 @@ async function runPrivacyAudit() {
         }
     }
 
-    const apkPath = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    const androidHome = process.env.ANDROID_HOME || '/opt/homebrew/share/android-commandlinetools';
-    const aapt2 = `${androidHome}/build-tools/36.0.0/aapt2`;
-
-    try {
-        const dump = execSync(`${aapt2} dump permissions ${apkPath}`, { encoding: 'utf8' });
-        for (const perm of dangerousPermissionsList) {
-            if (dump.includes(perm)) {
-                throw new Error(`VAL-AND-PRIV-001 Failed: APK permissions dump includes dangerous permission: ${perm}`);
-            }
+    // Direct aapt2 permissions dump (fail-closed, no warning fallback)
+    const aapt2Bin = toolchain.status.aapt2.path;
+    const dump = execFileSync(aapt2Bin, ['dump', 'permissions', apkPath], { encoding: 'utf8' });
+    for (const perm of dangerousPermissionsList) {
+        if (dump.includes(perm)) {
+            throw new Error(`VAL-AND-PRIV-001 Failed: APK permissions dump includes dangerous permission: ${perm}`);
         }
-        console.log('   [PASS] 0 dangerous permissions requested in APK or manifest.\n');
-    } catch (err) {
-        if (err.message.includes('VAL-AND-PRIV-001 Failed')) throw err;
-        console.warn('   [WARN] Could not run aapt2 directly; fallback manifest check passed.');
     }
+    console.log('   [PASS] 0 dangerous permissions requested in APK or manifest.\n');
 
     // 2. VAL-AND-PRIV-002: Complete Air-Gapped Offline Functionality
     console.log('2. Checking VAL-AND-PRIV-002: Complete Air-Gapped Offline Functionality...');
     const assetsPublicDir = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
-    const appJsContent = await readFile(join(assetsPublicDir, 'app.js'), 'utf8');
     const indexHtmlContent = await readFile(join(assetsPublicDir, 'index.html'), 'utf8');
 
-    // Confirm web-only article importer form is stripped from native HTML
     if (indexHtmlContent.includes('articleImportForm')) {
         throw new Error('VAL-AND-PRIV-002 Failed: Native index.html contains web importer form.');
     }
@@ -120,31 +133,38 @@ async function runPrivacyAudit() {
         }
     }
 
-    try {
-        const dexClasses = execSync(`unzip -p ${apkPath} classes.dex | strings`, { encoding: 'latin1', maxBuffer: 50 * 1024 * 1024 });
-        const trackingPackages = [
-            'com/google/firebase/analytics',
-            'com/google/android/gms/analytics',
-            'com/adjust/sdk',
-            'com/appsflyer',
-            'com/mixpanel',
-            'com/segment/analytics',
-            'com/flurry',
-            'io/sentry',
-            'com/bugsnag',
-            'com/crashlytics',
-            'com/google/android/gms/ads'
-        ];
+    // Fail-closed DEX inspection via JSZip (hermetic, direct buffer inspection)
+    const apkBuffer = await readFile(apkPath);
+    const zip = await JSZip.loadAsync(apkBuffer);
+    const dexFiles = Object.keys(zip.files).filter((f) => f.endsWith('.dex'));
+
+    if (dexFiles.length === 0) {
+        throw new Error(`VAL-AND-PRIV-006 Failed: No .dex files found in APK at ${apkPath}`);
+    }
+
+    const trackingPackages = [
+        'com/google/firebase/analytics',
+        'com/google/android/gms/analytics',
+        'com/adjust/sdk',
+        'com/appsflyer',
+        'com/mixpanel',
+        'com/segment/analytics',
+        'com/flurry',
+        'io/sentry',
+        'com/bugsnag',
+        'com/crashlytics',
+        'com/google/android/gms/ads'
+    ];
+
+    for (const dexFileName of dexFiles) {
+        const dexContent = await zip.files[dexFileName].async('string');
         for (const pkgName of trackingPackages) {
-            if (dexClasses.includes(pkgName)) {
-                throw new Error(`VAL-AND-PRIV-006 Failed: Telemetry SDK package found in classes.dex: ${pkgName}`);
+            if (dexContent.includes(pkgName)) {
+                throw new Error(`VAL-AND-PRIV-006 Failed: Telemetry SDK package found in ${dexFileName}: ${pkgName}`);
             }
         }
-        console.log('   [PASS] Bytecode (classes.dex) & Gradle dependencies confirmed 100% free of tracking/telemetry SDKs.\n');
-    } catch (err) {
-        if (err.message.includes('VAL-AND-PRIV-006 Failed')) throw err;
-        console.warn('   [WARN] Could not inspect DEX bytecode directly; build.gradle scan passed.');
     }
+    console.log('   [PASS] Bytecode (.dex files) & Gradle dependencies confirmed 100% free of tracking/telemetry SDKs.\n');
 
     console.log('====================================================');
     console.log('ALL PRIVACY & PERMISSION ASSERTIONS PASSED (VAL-AND-PRIV-001..006)');
