@@ -31,8 +31,8 @@ async function runPrivacyAudit() {
         throw new Error(`Android privacy audit failed: APK file missing. Expected at ${primaryApkPath} or ${fallbackApkPath}. Compile APK first.`);
     }
 
-    // 1. VAL-AND-PRIV-001: Zero Dangerous Permissions Invariant
-    console.log('1. Checking VAL-AND-PRIV-001: Zero Dangerous Permissions Invariant...');
+    // 1. VAL-R2-PRIV-001 & VAL-R2-PRIV-002: Zero Dangerous Permissions & Network Permission Audit Invariant
+    console.log('1. Checking VAL-R2-PRIV-001 & VAL-R2-PRIV-002: Zero Dangerous Permissions & INTERNET Removal...');
     const manifestPath = join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
     const manifestContent = await readFile(manifestPath, 'utf8');
 
@@ -58,8 +58,12 @@ async function runPrivacyAudit() {
 
     for (const perm of dangerousPermissionsList) {
         if (manifestContent.includes(perm)) {
-            throw new Error(`VAL-AND-PRIV-001 Failed: Manifest contains dangerous permission: ${perm}`);
+            throw new Error(`VAL-R2-PRIV-001 Failed: Manifest contains dangerous permission: ${perm}`);
         }
+    }
+
+    if (manifestContent.includes('android.permission.INTERNET')) {
+        throw new Error('VAL-R2-PRIV-002 Failed: Manifest contains android.permission.INTERNET for local-only build.');
     }
 
     // Direct aapt2 permissions dump (fail-closed, no warning fallback)
@@ -67,10 +71,26 @@ async function runPrivacyAudit() {
     const dump = execFileSync(aapt2Bin, ['dump', 'permissions', apkPath], { encoding: 'utf8' });
     for (const perm of dangerousPermissionsList) {
         if (dump.includes(perm)) {
-            throw new Error(`VAL-AND-PRIV-001 Failed: APK permissions dump includes dangerous permission: ${perm}`);
+            throw new Error(`VAL-R2-PRIV-001 Failed: APK permissions dump includes dangerous permission: ${perm}`);
         }
     }
-    console.log('   [PASS] 0 dangerous permissions requested in APK or manifest.\n');
+    if (dump.includes('android.permission.INTERNET')) {
+        throw new Error('VAL-R2-PRIV-002 Failed: APK permissions dump includes android.permission.INTERNET for local-only build.');
+    }
+    console.log('   [PASS] 0 dangerous permissions and 0 INTERNET permissions requested in APK or manifest.\n');
+
+    // 1b. VAL-R2-PRIV-003: FileProvider Scope Restriction Invariant
+    console.log('1b. Checking VAL-R2-PRIV-003: Restricted App-Private Cache Scope in FileProvider...');
+    const filePathsXmlPath = join(root, 'android', 'app', 'src', 'main', 'res', 'xml', 'file_paths.xml');
+    const filePathsXmlContent = await readFile(filePathsXmlPath, 'utf8');
+
+    if (filePathsXmlContent.includes('external-path')) {
+        throw new Error('VAL-R2-PRIV-003 Failed: file_paths.xml contains external-path.');
+    }
+    if (!filePathsXmlContent.includes('cache-path name="backup_share" path="backups/"')) {
+        throw new Error('VAL-R2-PRIV-003 Failed: file_paths.xml missing <cache-path name="backup_share" path="backups/" />');
+    }
+    console.log('   [PASS] FileProvider scope restricted strictly to app-private cache backups/ directory.\n');
 
     // 2. VAL-AND-PRIV-002: Complete Air-Gapped Offline Functionality
     console.log('2. Checking VAL-AND-PRIV-002: Complete Air-Gapped Offline Functionality...');

@@ -1,21 +1,7 @@
 {
-  "timestamp": "2026-08-13T14:22:45.215Z",
-  "commitSha": "26ced96bf7b6e799074b532eeaff099f345cf02b",
-  "gitSha": "26ced96bf7b6e799074b532eeaff099f345cf02b",
-  "cleanWorkingTree": true,
-  "unitTestStatus": "PASSED",
-  "builtTestStatus": "PASSED",
-  "masterVerificationStatus": "PASSED",
-  "avd": "test_avd_api36",
   "apiLevel": 36,
-  "totalStepsCompleted": 13,
+  "apkSha256": "935a5fa3dcc48519bac058f5da5b011305839712fd788dfddea156371bc44178",
   "assertions": {
-    "VAL-R2-TEST-001": "PASSED",
-    "VAL-R2-TEST-002": "PASSED",
-    "VAL-R2-TEST-003": "PASSED",
-    "VAL-R2-TEST-004": "PASSED",
-    "VAL-R2-TEST-005": "PASSED",
-    "VAL-R2-TEST-006": "PASSED",
     "VAL-CROSS-QA-001": "PASSED",
     "VAL-CROSS-QA-002": "PASSED",
     "VAL-CROSS-QA-003": "PASSED",
@@ -23,7 +9,21 @@
     "VAL-CROSS-QA-005": "PASSED",
     "VAL-CROSS-QA-006": "PASSED",
     "VAL-CROSS-QA-007": "PASSED",
-    "VAL-CROSS-QA-008": "PASSED"
+    "VAL-CROSS-QA-008": "PASSED",
+    "VAL-R2-TEST-001": "PASSED",
+    "VAL-R2-TEST-002": "PASSED",
+    "VAL-R2-TEST-003": "PASSED",
+    "VAL-R2-TEST-004": "PASSED",
+    "VAL-R2-TEST-005": "PASSED",
+    "VAL-R2-TEST-006": "PASSED"
   },
-  "apkSha256": "16dd476e725e2c2821d8f70228894e7b4f8f6aa8eee6b93bfa713c1c721bf46a"
+  "avd": "test_avd_api36",
+  "builtTestStatus": "PASSED",
+  "cleanWorkingTree": true,
+  "commitSha": "c7f41dbf75c953ca05cb6090abd51ef9bfd67582",
+  "gitSha": "c7f41dbf75c953ca05cb6090abd51ef9bfd67582",
+  "masterVerificationStatus": "PASSED",
+  "timestamp": "2026-08-13T14:27:18.487Z",
+  "totalStepsCompleted": 13,
+  "unitTestStatus": "PASSED"
 }

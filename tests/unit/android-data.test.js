@@ -38,8 +38,11 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
     let cacheFileDeleted = false;
 
     const mockFilesystem = {
+        async mkdir({ path, directory }) {
+            return true;
+        },
         async writeFile({ path, directory }) {
-            if (path === 'hummingread-backup.json' && directory === 'CACHE') {
+            if (path === 'backups/hummingread-backup.json' && directory === 'CACHE') {
                 cacheFileWritten = true;
             }
         },
@@ -47,7 +50,7 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
             return { uri: `file:///data/user/0/team.ibet.paceflow/cache/${path}` };
         },
         async deleteFile({ path, directory }) {
-            if (path === 'hummingread-backup.json' && directory === 'CACHE') {
+            if (path === 'backups/hummingread-backup.json' && directory === 'CACHE') {
                 cacheFileDeleted = true;
             }
         }
@@ -56,7 +59,7 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
     const mockShare = {
         async share(options) {
             shareTriggered = true;
-            assert.ok(options.url.includes('hummingread-backup.json'), 'Share URL must point to backup file');
+            assert.ok(options.url.includes('backups/hummingread-backup.json'), 'Share URL must point to backup file in backups/ directory');
         }
     };
 
@@ -87,8 +90,9 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
                 const filesystem = this.nativeFilesystem();
                 const sharePlugin = mockShare;
                 if (filesystem && sharePlugin) {
-                    const fileName = 'hummingread-backup.json';
+                    const fileName = 'backups/hummingread-backup.json';
                     try {
+                        await filesystem.mkdir({ path: 'backups', directory: 'CACHE', recursive: true }).catch(() => {});
                         await filesystem.writeFile({
                             path: fileName,
                             data: jsonString,

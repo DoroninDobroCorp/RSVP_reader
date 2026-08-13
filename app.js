@@ -6244,8 +6244,13 @@ class RSVPReader {
             const filesystem = this.nativeFilesystem();
             const sharePlugin = window.Capacitor?.Plugins?.Share;
             if (filesystem && sharePlugin) {
-                const fileName = 'hummingread-backup.json';
+                const fileName = 'backups/hummingread-backup.json';
                 try {
+                    await filesystem.mkdir({
+                        path: 'backups',
+                        directory: 'CACHE',
+                        recursive: true
+                    }).catch(() => {});
                     await filesystem.writeFile({
                         path: fileName,
                         data: jsonString,
@@ -6272,7 +6277,7 @@ class RSVPReader {
                             directory: 'CACHE'
                         });
                     } catch (cleanupError) {
-                        // Temporary export file in cacheDir is deleted post-share (VAL-AND-DATA-004)
+                        // Temporary export file in cacheDir + /backups/ is deleted post-share (VAL-R2-PRIV-006)
                     }
                 }
                 return;
