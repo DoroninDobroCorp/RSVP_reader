@@ -146,6 +146,7 @@ class RSVPReader {
         // the usable shell is painted before recovery work begins.
         this.ready = this.afterFirstPaint().then(() => this.bootstrap()).then(() => {
             this.setupHardwareControls();
+            this.setupAndroidNavigation();
             this.revealWebOnlySurfaces();
             if (this.settings.cloudSyncEnabled && !this.isNativePlatform()) this.syncSoon(800);
         });
@@ -5902,6 +5903,7 @@ class RSVPReader {
         else if (this.activeModal === this.bookmarksModal) this.closeBookmarks();
         else if (this.activeModal === this.tocModal) this.closeToc();
         else if (this.activeModal === this.actionDialog) this.finishActionDialog(null);
+        else if (this.activeModal) this.closeModal(this.activeModal);
     }
 
     showActionDialog({ title, message = '', inputLabel = '', value = '', confirmLabel, danger = false }) {
@@ -6656,6 +6658,117 @@ class RSVPReader {
                 console.debug(`Media Session action ${action} is unavailable`, error);
             }
         });
+    }
+
+    setupAndroidNavigation() {
+        const handleLayoutChange = () => {
+            if (this.mode === 'rsvp') {
+                this.displayCurrentWord();
+            } else if (this.mode === 'normal' && this.words && this.words.length > 0) {
+                const currentSpan = this.normalTextDisplay?.querySelector('.normal-word-current');
+                if (currentSpan) this.scrollWordWithinReader(currentSpan, false);
+            }
+        };
+        window.addEventListener('orientationchange', handleLayoutChange);
+        if (typeof screen !== 'undefined' && screen.orientation?.addEventListener) {
+            try {
+                screen.orientation.addEventListener('change', handleLayoutChange);
+            } catch (error) {
+                console.debug('screen.orientation change listener unavailable', error);
+            }
+        }
+
+        const appPlugin = window.Capacitor?.Plugins?.App;
+        if (appPlugin?.addListener) {
+            try {
+                appPlugin.addListener('backButton', (data) => {
+                    this.handleBackButton(data);
+                });
+                appPlugin.addListener('pause', () => {
+                    this.handleAppPause();
+                });
+                appPlugin.addListener('resume', () => {
+                    this.handleAppResume();
+                });
+            } catch (error) {
+                console.debug('Capacitor App plugin event listeners unavailable:', error);
+            }
+        }
+    }
+
+    handleBackButton(data = {}) {
+        // 1. Dismiss top modal dialog if visible (VAL-AND-NAV-001)
+        if (this.activeModal) {
+            this.closeActiveModal();
+            return;
+        }
+
+        // 2. Intercept Search View in normal reader or library (VAL-AND-NAV-002)
+        if (this.searchInput && (
+            document.activeElement === this.searchInput ||
+            this.searchInput.value.trim() !== '' ||
+            (this.searchMatches && this.searchMatches.length > 0)
+        )) {
+            this.searchInput.value = '';
+            this.handleSearch();
+            this.searchInput.blur();
+            return;
+        }
+        if (this.librarySearchInput && (
+            document.activeElement === this.librarySearchInput ||
+            this.librarySearchInput.value.trim() !== '' ||
+            this.libraryFilter
+        )) {
+            this.librarySearchInput.value = '';
+            this.libraryFilter = '';
+            this.renderLibrary();
+            this.librarySearchInput.blur();
+            return;
+        }
+
+        // 3. Exit Focus Mode (RSVP) to Normal Reader View (VAL-AND-NAV-002)
+        if (this.mode === 'rsvp') {
+            this.stopRSVP();
+            return;
+        }
+
+        // 4. Return from Normal Reader (or Input) View to Library (VAL-AND-NAV-003)
+        if (this.mode === 'normal' || this.mode === 'input') {
+            this.runAsync(() => this.showLibrary());
+            return;
+        }
+
+        // 5. Root Library Screen Minimization Boundary (VAL-AND-NAV-004)
+        if (this.mode === 'library') {
+            const appPlugin = window.Capacitor?.Plugins?.App;
+            if (appPlugin?.minimizeApp) {
+                appPlugin.minimizeApp();
+            }
+            return;
+        }
+    }
+
+    handleAppPause() {
+        if (this.isDeletingAllData) {
+            this.releaseWakeLock();
+            return;
+        }
+        if (this.isPlaying) {
+            this.pause();
+        }
+        this.flushPendingSaves();
+        this.saveResumeSnapshot(this.dataGeneration, { forceNative: true });
+        this.releaseWakeLock();
+    }
+
+    handleAppResume() {
+        if (this.isDeletingAllData) return;
+        if (this.mode === 'rsvp') {
+            this.displayCurrentWord();
+            this.updatePlaybackControls();
+        } else if (this.mode === 'normal') {
+            this.updateProgress();
+        }
     }
 
     updateMediaSessionState(state) {

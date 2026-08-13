@@ -28,6 +28,9 @@ const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 if (!pkg.dependencies['@capacitor/android'] || !pkg.dependencies['@capacitor/android'].includes('8.5')) {
     throw new Error('@capacitor/android version 8.5.0 must be present in package.json.');
 }
+if (!pkg.dependencies['@capacitor/app']) {
+    throw new Error('@capacitor/app must be present in package.json.');
+}
 
 // 2. Verify top-level android/build.gradle AGP
 const topGradle = await readFile(join(root, 'android', 'build.gradle'), 'utf8');
@@ -103,6 +106,13 @@ for (const dir of [androidNativeDir, androidPublicDir]) {
     for (const [file, content] of [['privacy.html', privacyHtml], ['support.html', supportHtml]]) {
         if (/iOS|Safari/u.test(content)) {
             throw new Error(`Android ${file} in ${dir} contains iOS/Safari text leakage.`);
+        }
+    }
+
+    const appJs = await readFile(join(dir, 'app.js'), 'utf8');
+    for (const navFeature of ['setupAndroidNavigation', 'handleBackButton', 'minimizeApp', 'handleAppPause', 'handleAppResume']) {
+        if (!appJs.includes(navFeature)) {
+            throw new Error(`Android app.js in ${dir} missing required navigation/lifecycle feature: ${navFeature}`);
         }
     }
 }

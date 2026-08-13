@@ -75,25 +75,33 @@ privacy = privacy
     .replace(/<!-- WEB_PRIVACY_START -->[\s\S]*?<!-- WEB_PRIVACY_END -->/gu, '')
     .replace(
         /<h2>Использование сети<\/h2>[\s\S]*?(?=<h2>Экспорт и удаление<\/h2>)/u,
-        '<h2>Использование сети</h2>\n            <p>Приложение iOS читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.</p>\n            '
+        '<h2>Использование сети</h2>\n            <p>Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.</p>\n            '
     )
     .replace(
         /<h2>Uso de la red<\/h2>[\s\S]*?(?=<h2>Exportación y eliminación<\/h2>)/u,
-        '<h2>Uso de la red</h2>\n            <p>La aplicación para iOS lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.</p>\n            '
+        '<h2>Uso de la red</h2>\n            <p>La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.</p>\n            '
     )
     .replaceAll(
         'The native iOS app has no article importer or content-service endpoint and its full reading workflow works offline.',
-        'The iOS app reads local books, documents and pasted text offline and does not send reading content to the developer.'
+        'The app reads local books, documents and pasted text offline and does not send reading content to the developer.'
     )
     .replaceAll(
         'В нативном приложении iOS нет импорта статьи или адреса сервиса контента; весь сценарий чтения работает офлайн.',
-        'Приложение iOS читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.'
+        'Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.'
     )
     .replaceAll(
         'La aplicación nativa para iOS no tiene importador de artículos ni punto de enlace de servicio de contenido y todo su flujo de lectura funciona sin conexión.',
-        'La aplicación para iOS lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.'
+        'La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.'
     );
 await writeFile(privacyPath, privacy);
+
+const supportPath = join(destination, 'support.html');
+let support = await readFile(supportPath, 'utf8');
+support = support
+    .replaceAll('iOS/iPadOS', 'Android')
+    .replaceAll('iOS', 'Android')
+    .replaceAll('Safari', 'Android');
+await writeFile(supportPath, support);
 
 const stylePath = join(destination, 'style.css');
 let style = await readFile(stylePath, 'utf8');
@@ -110,12 +118,8 @@ await cp(iosDestination, androidNativeDir, { recursive: true });
 const androidPrivacyPath = join(androidNativeDir, 'privacy.html');
 let androidPrivacy = await readFile(androidPrivacyPath, 'utf8');
 androidPrivacy = androidPrivacy
-    .replaceAll('Приложение iOS', 'Приложение Android')
-    .replaceAll('нативном приложении iOS', 'нативном приложении Android')
-    .replaceAll('The iOS app', 'The Android app')
-    .replaceAll('The native iOS app', 'The native Android app')
-    .replaceAll('La aplicación para iOS', 'La aplicación para Android')
-    .replaceAll('La aplicación nativa para iOS', 'La aplicación nativa para Android');
+    .replaceAll('iOS', 'Android')
+    .replaceAll('Safari', 'Android');
 await writeFile(androidPrivacyPath, androidPrivacy);
 
 const androidSupportPath = join(androidNativeDir, 'support.html');
