@@ -166,7 +166,7 @@ async function launchAVDIfNeeded(avdName) {
     const devices = getRunningDevices();
     if (devices.length === 1) {
         activeDeviceSerial = devices[0];
-        const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 1000 }).trim();
+        const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 2000 }).trim();
         if (activeAvd === avdName) {
             console.log(`AVD ${avdName} already active on ADB device ${activeDeviceSerial}.`);
             return;
@@ -180,8 +180,7 @@ async function launchAVDIfNeeded(avdName) {
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
     const emuLogFd = openSync(emuLogPath, 'w');
-    const gpuMode = process.platform === 'linux' ? 'swiftshader_indirect' : 'host';
-    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-read-only', '-gpu', gpuMode];
+    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim'];
 
     const emuProc = spawn(emulatorBin, emuArgs, {
         detached: true,
@@ -192,15 +191,15 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 240; i++) {
         await sleep(500);
         const devs = getRunningDevices();
         if (devs.length > 0) {
             activeDeviceSerial = devs[0];
-            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
-            const statusDev = runCmd(`adb shell getprop dev.bootcomplete`, { allowFail: true, timeout: 1000 }).trim();
+            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+            const statusDev = runCmd(`adb shell getprop dev.bootcomplete`, { allowFail: true, timeout: 2000 }).trim();
             if (statusSys === '1' || statusDev === '1') {
-                const currentAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 1000 }).trim();
+                const currentAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 2000 }).trim();
                 if (!currentAvd || currentAvd === avdName) {
                     booted = true;
                     break;
