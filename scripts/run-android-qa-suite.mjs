@@ -159,7 +159,7 @@ async function stopAllEmulators() {
         if (devs.length === 0 && !checkQemu) break;
         await sleep(1000);
     }
-    await sleep(3000);
+    await sleep(6000);
 }
 
 async function launchAVDIfNeeded(avdName) {
