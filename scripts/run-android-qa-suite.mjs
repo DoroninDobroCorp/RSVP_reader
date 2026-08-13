@@ -178,7 +178,7 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
-    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim'];
+    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-read-only'];
 
     const emuProc = spawn(emulatorBin, emuArgs, {
         detached: true,
