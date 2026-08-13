@@ -178,9 +178,16 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
-    const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
-    const emuCmd = `setsid ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim </dev/null >"${emuLogPath}" 2>&1 &`;
-    execSync(emuCmd, { cwd: root, env: process.env, timeout: 5000 });
+    const emuArgs = ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim'];
+
+    const emuProc = spawn(emulatorBin, emuArgs, {
+        detached: true,
+        stdio: 'ignore',
+        env: process.env
+    });
+    emuProc.unref();
+
+    await sleep(2000);
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
