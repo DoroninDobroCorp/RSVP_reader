@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import JSZip from 'jszip';
+import { JSDOM } from 'jsdom';
 import { checkToolchain } from './toolchain-doctor.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -166,8 +167,71 @@ async function runPrivacyAudit() {
     }
     console.log('   [PASS] Bytecode (.dex files) & Gradle dependencies confirmed 100% free of tracking/telemetry SDKs.\n');
 
+    // 7. VAL-R2-LEGAL-001, VAL-R2-LEGAL-002, VAL-R2-LEGAL-006: Native Multi-Locale Legal Assets & Single-Language Isolation
+    console.log('7. Checking VAL-R2-LEGAL-001, 002, 006: Native Multi-Locale Legal Assets & Single-Language Isolation...');
+    const targetDirs = [
+        join(root, 'dist-native', 'android'),
+        join(root, 'android', 'app', 'src', 'main', 'assets', 'public')
+    ];
+
+    const legalChecks = [
+        { file: 'privacy.html', lang: 'en' },
+        { file: 'ru/privacy.html', lang: 'ru' },
+        { file: 'es/privacy.html', lang: 'es' },
+        { file: 'support.html', lang: 'en' },
+        { file: 'ru/support.html', lang: 'ru' },
+        { file: 'es/support.html', lang: 'es' },
+        { file: 'acknowledgements.html', lang: 'en' },
+        { file: 'ru/acknowledgements.html', lang: 'ru' },
+        { file: 'es/acknowledgements.html', lang: 'es' }
+    ];
+
+    for (const dirPath of targetDirs) {
+        for (const check of legalChecks) {
+            const filePath = join(dirPath, check.file);
+            if (!existsSync(filePath)) {
+                throw new Error(`VAL-R2-LEGAL-001 Failed: Native legal file missing at ${filePath}`);
+            }
+
+            const content = await readFile(filePath, 'utf8');
+            if (content.includes('WEB_PRIVACY_START') || content.includes('WEB_ONLY_START')) {
+                throw new Error(`VAL-R2-LEGAL-002 Failed: Web block leaked into native legal file ${check.file}`);
+            }
+
+            if (content.includes('iOS/iPadOS') || content.includes('Safari')) {
+                throw new Error(`VAL-R2-LEGAL-006 Failed: Un-replaced iOS string found in native legal file ${check.file}`);
+            }
+
+            const dom = new JSDOM(content);
+            const document = dom.window.document;
+
+            if (document.documentElement.lang !== check.lang) {
+                throw new Error(`VAL-R2-LEGAL-006 Failed: ${check.file} html lang attribute is "${document.documentElement.lang}", expected "${check.lang}"`);
+            }
+
+            const articles = document.querySelectorAll('article.legal-card');
+            if (articles.length !== 1) {
+                throw new Error(`VAL-R2-LEGAL-002 Failed: ${check.file} must contain exactly 1 article body block, found ${articles.length}`);
+            }
+
+            const articleLang = articles[0].getAttribute('lang') || 'en';
+            if (articleLang !== check.lang) {
+                throw new Error(`VAL-R2-LEGAL-002 Failed: ${check.file} article lang attribute is "${articleLang}", expected "${check.lang}"`);
+            }
+
+            const prohibitedLangs = ['en', 'ru', 'es'].filter((l) => l !== check.lang);
+            for (const prohibited of prohibitedLangs) {
+                const count = document.querySelectorAll(`article[lang="${prohibited}"]`).length;
+                if (count > 0) {
+                    throw new Error(`VAL-R2-LEGAL-002 Failed: ${check.file} contains ${count} prohibited ${prohibited} article blocks.`);
+                }
+            }
+        }
+    }
+    console.log('   [PASS] Native multi-locale legal assets (privacy, support, acknowledgements) verified for EN, RU, ES with single-language isolation.\n');
+
     console.log('====================================================');
-    console.log('ALL PRIVACY & PERMISSION ASSERTIONS PASSED (VAL-AND-PRIV-001..006)');
+    console.log('ALL PRIVACY, PERMISSION & LEGAL ASSERTIONS PASSED');
     console.log('====================================================');
 }
 

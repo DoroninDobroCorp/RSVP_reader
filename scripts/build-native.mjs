@@ -16,8 +16,12 @@ for (const relativePath of [
     'robots.txt',
     'service-worker.js',
     'sitemap.xml',
-    'ru',
-    'es'
+    'ru/index.html',
+    'ru/manifest.json',
+    'ru/manifest.webmanifest',
+    'es/index.html',
+    'es/manifest.json',
+    'es/manifest.webmanifest'
 ]) {
     await rm(join(destination, relativePath), { recursive: true, force: true });
 }
@@ -69,39 +73,52 @@ if (/articleImportForm|chromeExtensionPanel|hummingread-tester\.zip|Chrome Web S
 }
 await writeFile(indexPath, index);
 
-const privacyPath = join(destination, 'privacy.html');
-let privacy = await readFile(privacyPath, 'utf8');
-privacy = privacy
-    .replace(/<!-- WEB_PRIVACY_START -->[\s\S]*?<!-- WEB_PRIVACY_END -->/gu, '')
-    .replace(
-        /<h2>Использование сети<\/h2>[\s\S]*?(?=<h2>Экспорт и удаление<\/h2>)/u,
-        '<h2>Использование сети</h2>\n            <p>Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.</p>\n            '
-    )
-    .replace(
-        /<h2>Uso de la red<\/h2>[\s\S]*?(?=<h2>Exportación y eliminación<\/h2>)/u,
-        '<h2>Uso de la red</h2>\n            <p>La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.</p>\n            '
-    )
-    .replaceAll(
-        'The native iOS app has no article importer or content-service endpoint and its full reading workflow works offline.',
-        'The app reads local books, documents and pasted text offline and does not send reading content to the developer.'
-    )
-    .replaceAll(
-        'В нативном приложении iOS нет импорта статьи или адреса сервиса контента; весь сценарий чтения работает офлайн.',
-        'Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.'
-    )
-    .replaceAll(
-        'La aplicación nativa para iOS no tiene importador de artículos ni punto de enlace de servicio de contenido y todo su flujo de lectura funciona sin conexión.',
-        'La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.'
-    );
-await writeFile(privacyPath, privacy);
+const legalRelativePaths = [
+    'privacy.html',
+    'ru/privacy.html',
+    'es/privacy.html',
+    'support.html',
+    'ru/support.html',
+    'es/support.html',
+    'acknowledgements.html',
+    'ru/acknowledgements.html',
+    'es/acknowledgements.html'
+];
 
-const supportPath = join(destination, 'support.html');
-let support = await readFile(supportPath, 'utf8');
-support = support
-    .replaceAll('iOS/iPadOS', 'Android')
-    .replaceAll('iOS', 'Android')
-    .replaceAll('Safari', 'Android');
-await writeFile(supportPath, support);
+async function cleanNativeLegalFile(filePath, isSubdir) {
+    let content = await readFile(filePath, 'utf8');
+    content = content
+        .replace(/<!-- WEB_PRIVACY_START -->[\s\S]*?<!-- WEB_PRIVACY_END -->/gu, '')
+        .replace(
+            /<h2>Использование сети<\/h2>[\s\S]*?(?=<h2>Экспорт и удаление<\/h2>)/u,
+            '<h2>Использование сети</h2>\n            <p>Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.</p>\n            '
+        )
+        .replace(
+            /<h2>Uso de la red<\/h2>[\s\S]*?(?=<h2>Exportación y eliminación<\/h2>)/u,
+            '<h2>Uso de la red</h2>\n            <p>La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.</p>\n            '
+        )
+        .replaceAll(
+            'The native iOS app has no article importer or content-service endpoint and its full reading workflow works offline.',
+            'The app reads local books, documents and pasted text offline and does not send reading content to the developer.'
+        )
+        .replaceAll(
+            'В нативном приложении iOS нет импорта статьи или адреса сервиса контента; весь сценарий чтения работает офлайн.',
+            'Приложение читает локальные книги, документы и вставленный текст офлайн и не передаёт содержимое чтения разработчику.'
+        )
+        .replaceAll(
+            'La aplicación nativa para iOS no tiene importador de artículos ni punto de enlace de servicio de contenido y todo su flujo de lectura funciona sin conexión.',
+            'La aplicación lee libros locales, documentos y texto pegado sin conexión y no transmite el contenido de lectura al desarrollador.'
+        );
+
+    const targetBackHref = isSubdir ? '../index.html#settings' : 'index.html#settings';
+    content = content.replace(/class="secondary-btn legal-back" href="[^"]*"/u, `class="secondary-btn legal-back" href="${targetBackHref}"`);
+
+    await writeFile(filePath, content);
+}
+
+for (const relPath of legalRelativePaths) {
+    await cleanNativeLegalFile(join(destination, relPath), relPath.includes('/'));
+}
 
 const stylePath = join(destination, 'style.css');
 let style = await readFile(stylePath, 'utf8');
@@ -115,19 +132,15 @@ const androidNativeDir = join(destination, 'android');
 await rm(androidNativeDir, { recursive: true, force: true });
 await cp(iosDestination, androidNativeDir, { recursive: true });
 
-const androidPrivacyPath = join(androidNativeDir, 'privacy.html');
-let androidPrivacy = await readFile(androidPrivacyPath, 'utf8');
-androidPrivacy = androidPrivacy
-    .replaceAll('iOS', 'Android')
-    .replaceAll('Safari', 'Android');
-await writeFile(androidPrivacyPath, androidPrivacy);
-
-const androidSupportPath = join(androidNativeDir, 'support.html');
-let androidSupport = await readFile(androidSupportPath, 'utf8');
-androidSupport = androidSupport
-    .replaceAll('iOS/iPadOS', 'Android')
-    .replaceAll('iOS', 'Android');
-await writeFile(androidSupportPath, androidSupport);
+for (const relPath of legalRelativePaths) {
+    const androidPath = join(androidNativeDir, relPath);
+    let content = await readFile(androidPath, 'utf8');
+    content = content
+        .replaceAll('iOS/iPadOS', 'Android')
+        .replaceAll('iOS', 'Android')
+        .replaceAll('Safari', 'Android');
+    await writeFile(androidPath, content);
+}
 
 const androidIndexPath = join(androidNativeDir, 'index.html');
 let androidIndex = await readFile(androidIndexPath, 'utf8');

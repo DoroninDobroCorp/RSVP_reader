@@ -148,6 +148,10 @@ class RSVPReader {
             this.setupHardwareControls();
             this.setupAndroidNavigation();
             this.revealWebOnlySurfaces();
+            this.updateLegalLinks(this.i18n ? this.i18n.language : 'en');
+            if (typeof window !== 'undefined' && window.location && window.location.hash === '#settings') {
+                this.openSettings();
+            }
             if (this.settings.cloudSyncEnabled && !this.isNativePlatform()) this.syncSoon(800);
         });
         this.setupExtensionImportBridge();
@@ -6693,8 +6697,24 @@ class RSVPReader {
         }
     }
 
+    updateLegalLinks(language) {
+        const lang = language || (this.i18n ? this.i18n.language : 'en');
+        const prefix = (lang === 'ru') ? 'ru/' : (lang === 'es') ? 'es/' : '';
+        if (typeof document === 'undefined') return;
+        document.querySelectorAll('a[href]').forEach((link) => {
+            const rawHref = link.getAttribute('href');
+            if (!rawHref) return;
+            const match = rawHref.match(/^(?:(?:\.\.\/)*(?:ru\/|es\/)?)?(privacy\.html|support\.html|acknowledgements\.html)(?:#.*)?$/);
+            if (match) {
+                const pageName = match[1];
+                link.setAttribute('href', `${prefix}${pageName}`);
+            }
+        });
+    }
+
     setLanguage(language) {
         this.i18n.setLanguage(language);
+        this.updateLegalLinks(language);
         if (typeof window !== 'undefined' && window.history && window.history.pushState) {
             try {
                 const newPath = this.getLocaleRoutePath(language);
