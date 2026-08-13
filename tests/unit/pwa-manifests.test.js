@@ -51,8 +51,8 @@ test('VAL-WEB-PWA-001: Localized manifest files generated for /, /ru/, and /es/'
     assert.match(esManifest.description, /lector de velocidad RSVP/i);
 });
 
-// VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests
-test('VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests', async (t) => {
+// VAL-WEB-PWA-002 / VAL-R2-PWA-004 / VAL-R3-PWA-004: Stable PWA Application Identity (id) and start URLs across all localized manifests
+test('VAL-WEB-PWA-002 / VAL-R2-PWA-004 / VAL-R3-PWA-004: Stable PWA Application Identity (id) and start URLs across all localized manifests', async (t) => {
     ensureDistBuilt();
     const enManifest = JSON.parse(await readFile(join(root, 'dist', 'manifest.webmanifest'), 'utf8'));
     const ruManifest = JSON.parse(await readFile(join(root, 'dist', 'ru', 'manifest.webmanifest'), 'utf8'));
@@ -81,8 +81,8 @@ test('VAL-WEB-PWA-003: HTML landing pages link to corresponding localized webman
     assert.match(esHtml, /<link rel="manifest" href="manifest\.webmanifest">/);
 });
 
-// VAL-WEB-PWA-004 / VAL-R2-PWA-003: Service Worker Offline Precache for Multilingual Routes & Assets
-test('VAL-WEB-PWA-004 / VAL-R2-PWA-003: Service Worker precaches all static HTML locale routes and localized sample text files', async () => {
+// VAL-WEB-PWA-004 / VAL-R2-PWA-003 / VAL-R3-PWA-001 / VAL-R3-PWA-003: Service Worker Offline Precache for Multilingual Routes & Assets
+test('VAL-WEB-PWA-004 / VAL-R2-PWA-003 / VAL-R3-PWA-001 / VAL-R3-PWA-003: Service Worker precaches all static HTML locale routes and localized sample text files', async () => {
     const swContent = await readFile(join(root, 'service-worker.js'), 'utf8');
 
     const requiredShellAssets = [
