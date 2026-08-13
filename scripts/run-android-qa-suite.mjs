@@ -188,7 +188,8 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 240; i++) {
+    for (let i = 0; i < 300; i++) {
+        await sleep(500);
         const devs = getRunningDevices();
         if (devs.length > 0) {
             activeDeviceSerial = devs[0];
@@ -199,7 +200,6 @@ async function launchAVDIfNeeded(avdName) {
                 break;
             }
         }
-        await sleep(500);
     }
 
     if (!booted) throw new Error(`Failed to boot AVD ${avdName} within timeout.`);
