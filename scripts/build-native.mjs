@@ -177,6 +177,7 @@ await rm(iosDestination, { recursive: true, force: true });
 await cp(destination, iosDestination, { recursive: true });
 await rm(join(iosDestination, 'android'), { recursive: true, force: true });
 
-await writeFile(join(destination, '.build-complete'), new Date().toISOString(), 'utf8');
+const buildTimestamp = process.env.SOURCE_DATE_EPOCH ? new Date(process.env.SOURCE_DATE_EPOCH * 1000).toISOString() : '2026-08-13T00:00:00.000Z';
+await writeFile(join(destination, '.build-complete'), buildTimestamp, 'utf8');
 
 console.log(`Built filtered native assets in ${destination} and ${androidNativeDir}`);
