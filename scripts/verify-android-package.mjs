@@ -187,12 +187,10 @@ async function runPackageAudit() {
     console.log(`   Computed AAB SHA-256: ${aabSha256}`);
 
     // Check evidence-summary.json
-    const summaryPaths = [
-        join(root, 'artifacts', 'android-r3', 'evidence-summary.json'),
-        join(root, 'artifacts', 'android-r2', 'evidence-summary.json'),
-        join(root, 'evidence', 'android', 'evidence-summary.json'),
-        join(root, 'evidence-summary.json')
-    ];
+    const r4Summary = join(root, 'artifacts', 'android-r4', 'evidence-summary.json');
+    const r3Summary = join(root, 'artifacts', 'android-r3', 'evidence-summary.json');
+    const r2Summary = join(root, 'artifacts', 'android-r2', 'evidence-summary.json');
+    const summaryPaths = [r4Summary, targetApk.includes('android-r3') ? r3Summary : null, targetApk.includes('android-r2') ? r2Summary : null].filter(Boolean);
 
     let summaryData = null;
     for (const sp of summaryPaths) {
