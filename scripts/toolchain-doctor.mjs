@@ -7,6 +7,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const JDK21_CANDIDATE_PATHS = [
     process.env.JAVA_HOME,
+    '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home',
     '/usr/lib/jvm/java-21-openjdk-amd64',
     '/usr/lib/jvm/java-21-openjdk-arm64',
     '/usr/lib/jvm/java-21-openjdk',
@@ -16,6 +17,7 @@ const JDK21_CANDIDATE_PATHS = [
 const ANDROID_SDK_CANDIDATE_PATHS = [
     process.env.ANDROID_SDK_ROOT,
     process.env.ANDROID_HOME,
+    '/opt/homebrew/share/android-commandlinetools',
     '/opt/android-sdk'
 ].filter(Boolean);
 
@@ -80,13 +82,7 @@ export function resolveToolchain(options = {}) {
     let javaHome = customEnv.JAVA_HOME;
     let javaBin = null;
 
-    const jdkCandidatePaths = options.env ? [customEnv.JAVA_HOME].filter(Boolean) : [
-        customEnv.JAVA_HOME,
-        '/usr/lib/jvm/java-21-openjdk-amd64',
-        '/usr/lib/jvm/java-21-openjdk-arm64',
-        '/usr/lib/jvm/java-21-openjdk',
-        '/usr/lib/jvm/default-java'
-    ].filter(Boolean);
+    const jdkCandidatePaths = options.env ? [customEnv.JAVA_HOME].filter(Boolean) : JDK21_CANDIDATE_PATHS;
 
     if (javaHome && existsSync(join(javaHome, 'bin', 'java'))) {
         javaBin = join(javaHome, 'bin', 'java');
@@ -119,11 +115,7 @@ export function resolveToolchain(options = {}) {
 
     // 2. Validate Android SDK 36
     let androidHome = customEnv.ANDROID_SDK_ROOT || customEnv.ANDROID_HOME;
-    const sdkCandidatePaths = options.env ? [customEnv.ANDROID_SDK_ROOT, customEnv.ANDROID_HOME].filter(Boolean) : [
-        customEnv.ANDROID_SDK_ROOT,
-        customEnv.ANDROID_HOME,
-        '/opt/android-sdk'
-    ].filter(Boolean);
+    const sdkCandidatePaths = options.env ? [customEnv.ANDROID_SDK_ROOT, customEnv.ANDROID_HOME].filter(Boolean) : ANDROID_SDK_CANDIDATE_PATHS;
 
     if (!androidHome || !existsSync(androidHome)) {
         for (const cand of sdkCandidatePaths) {
