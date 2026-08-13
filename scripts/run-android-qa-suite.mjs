@@ -191,7 +191,7 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 240; i++) {
+    for (let i = 0; i < 360; i++) {
         await sleep(500);
         const devs = getRunningDevices();
         if (devs.length > 0) {
