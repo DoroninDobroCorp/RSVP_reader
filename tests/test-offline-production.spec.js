@@ -39,6 +39,7 @@ test('navigating to a text asset cannot poison the cached offline app shell', as
   await expect(page.locator('body')).toContainText('Chapter One');
   await page.goto('/');
   await page.waitForFunction(() => Boolean(window.rsvpReader));
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller));
 
   await context.setOffline(true);
   try {
