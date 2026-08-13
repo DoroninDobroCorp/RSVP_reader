@@ -36,7 +36,7 @@
     "typecheck": "node --check scripts/*.mjs",
     "lint": "npm run verify:all",
     "test:cross-browser": "playwright test tests/test-production-regressions.spec.js --project=webkit --project=mobile-safari",
-    "test:visual": "npm run build:native && node tests/visual/capture-matrix.mjs",
+    "test:visual": "npm run build:native && node scripts/run-visual-qa-matrix.mjs",
     "test:lighthouse": "npm run build:web && node tests/performance/run-lighthouse.mjs",
     "test:local": "playwright test tests/test-production-regressions.spec.js --project=chromium",
     "test:headed": "playwright test tests/test-production-regressions.spec.js --project=chromium --headed",

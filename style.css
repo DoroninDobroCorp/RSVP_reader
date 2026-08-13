@@ -3342,7 +3342,14 @@ body::before {
     font-weight: 750;
 }
 
-.product-links a { color: var(--brand-cobalt); }
+.product-links a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: var(--brand-cobalt);
+}
 .product-links span { color: #667085; }
 
 .product-faq { margin-top: 18px; color: #39445c; }

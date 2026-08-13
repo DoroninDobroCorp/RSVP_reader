@@ -1,0 +1,18 @@
+{
+  "filename": "evidence/android/screenshots/matrix/phone_320x568_es_legal.png",
+  "gitCommitSha": "9b2788e776149b76ea94312768fcea8893f70f1e",
+  "commitSha": "9b2788e776149b76ea94312768fcea8893f70f1e",
+  "apkSha256": "20d15323067e20832eb23977a308e414cd1f06f08d68794b2d6887fc5ba9cbc3",
+  "avdName": "test_avd_api36",
+  "locale": "es",
+  "viewportDimensions": {
+    "width": 320,
+    "height": 568
+  },
+  "timestamp": "2026-08-13T15:55:36.230Z",
+  "appState": "legal",
+  "packageVersion": "2.0.0",
+  "orientation": "portrait",
+  "theme": "light",
+  "captureCommand": "adb exec-out screencap -p"
+}
