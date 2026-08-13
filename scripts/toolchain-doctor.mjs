@@ -1,34 +1,25 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const JDK21_CANDIDATE_PATHS = [
     process.env.JAVA_HOME,
-    '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home',
-    '/opt/homebrew/opt/openjdk@21',
     '/usr/lib/jvm/java-21-openjdk-amd64',
     '/usr/lib/jvm/java-21-openjdk-arm64',
     '/usr/lib/jvm/java-21-openjdk',
-    '/usr/lib/jvm/default-java',
-    '/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home',
-    '/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home',
-    '/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home'
+    '/usr/lib/jvm/default-java'
 ].filter(Boolean);
 
 const ANDROID_SDK_CANDIDATE_PATHS = [
     process.env.ANDROID_SDK_ROOT,
     process.env.ANDROID_HOME,
-    '/opt/homebrew/share/android-commandlinetools',
-    '/opt/android-sdk',
-    join(process.env.HOME || '', 'Library', 'Android', 'sdk'),
-    join(process.env.HOME || '', 'Android', 'Sdk')
+    '/opt/android-sdk'
 ].filter(Boolean);
 
 function findExecutable(name, searchDirs = []) {
-    // 1. Check system PATH first
     const pathDirs = (process.env.PATH || '').split(':');
     for (const dir of [...searchDirs, ...pathDirs]) {
         if (!dir) continue;
@@ -42,6 +33,48 @@ export function resolveToolchain(options = {}) {
     const customEnv = options.env || process.env;
     const errors = [];
     const status = {};
+
+    // 0. Host Path and Branch Guard Check (VAL-R3-ENV-001)
+    const shouldCheckHostAndBranch = options.checkHostAndBranch ||
+        customEnv.STRICT_HOST_CHECK === '1' ||
+        (process.platform === 'linux' && !customEnv.ALLOW_ANY_HOST_OR_BRANCH && !customEnv.SKIP_HOST_CHECK && !options.skipHostCheck);
+
+    if (shouldCheckHostAndBranch) {
+        const canonicalPath = '/srv/RSVP_reader-r2';
+        const canonicalBranch = 'mission/android-r3-server-proof-20260813';
+
+        let actualPath = root;
+        try {
+            const pwdRes = spawnSync('pwd', ['-P'], { cwd: root, encoding: 'utf8' });
+            if (pwdRes.status === 0 && pwdRes.stdout.trim()) {
+                actualPath = pwdRes.stdout.trim();
+            }
+        } catch (e) {
+            // fallback
+        }
+
+        if (actualPath !== canonicalPath) {
+            errors.push(`Canonical worktree path mismatch: expected '${canonicalPath}', got '${actualPath}'.`);
+        } else {
+            status.worktree = { path: actualPath, valid: true };
+        }
+
+        let actualBranch = '';
+        try {
+            const branchRes = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
+            if (branchRes.status === 0) {
+                actualBranch = branchRes.stdout.trim();
+            }
+        } catch (e) {
+            // fallback
+        }
+
+        if (actualBranch !== canonicalBranch) {
+            errors.push(`Canonical git branch mismatch: expected '${canonicalBranch}', got '${actualBranch || 'unknown'}'.`);
+        } else {
+            status.branch = { name: actualBranch, valid: true };
+        }
+    }
 
     // 1. Validate Java 21 (JDK 21)
     let javaHome = customEnv.JAVA_HOME;
@@ -98,20 +131,21 @@ export function resolveToolchain(options = {}) {
         }
     }
 
-    // Search directories for Android tools
+    // Search directories for Android tools (No personal Mac / Homebrew paths)
     const sdkDirs = androidHome ? [
         join(androidHome, 'platform-tools'),
         join(androidHome, 'emulator'),
         join(androidHome, 'build-tools', '36.0.0'),
         join(androidHome, 'cmdline-tools', 'latest', 'bin'),
+        join(androidHome, 'cmdline-tools', 'bin'),
         join(androidHome, 'tools', 'bin'),
         join(androidHome, 'tools')
     ] : [];
 
-    // Additional common macOS / Homebrew dirs if needed
     const extraDirs = [
-        '/opt/homebrew/bin',
-        '/usr/local/bin'
+        '/usr/local/bin',
+        '/usr/bin',
+        '/bin'
     ];
     const searchDirs = [...sdkDirs, ...extraDirs];
 
@@ -195,6 +229,72 @@ export function resolveToolchain(options = {}) {
         }
     }
 
+    // 8. Validate Hardware KVM Acceleration (VAL-R3-ENV-003)
+    let kvmUsable = false;
+    let kvmInfo = '';
+    if (emulatorBin) {
+        const res = spawnSync(emulatorBin, ['-accel-check'], { encoding: 'utf8' });
+        const out = ((res.stdout || '') + (res.stderr || '')).trim();
+        if (res.status === 0 || out.includes('KVM') || out.includes('accel') || out.includes('usable')) {
+            kvmUsable = true;
+            kvmInfo = out.split('\n')[0] || 'KVM acceleration usable';
+        }
+    }
+    if (!kvmUsable && existsSync('/dev/kvm')) {
+        try {
+            const accessRes = spawnSync('test', ['-r', '/dev/kvm', '-a', '-w', '/dev/kvm']);
+            if (accessRes.status === 0) {
+                kvmUsable = true;
+                kvmInfo = '/dev/kvm is readable and writable by current user';
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+    if (!kvmUsable && (process.platform === 'linux' || customEnv.REQUIRE_KVM === '1')) {
+        errors.push('Hardware KVM acceleration unavailable or /dev/kvm not accessible by current user.');
+    } else {
+        status.kvm = { usable: true, info: kvmInfo || 'KVM check bypassed or verified' };
+    }
+
+    // 9. Validate AVDs: test_avd_api36 and test_tablet_api36
+    const requiredAvds = ['test_avd_api36', 'test_tablet_api36'];
+    let installedAvds = [];
+
+    if (emulatorBin) {
+        const res = spawnSync(emulatorBin, ['-list-avds'], { encoding: 'utf8' });
+        if (res.status === 0 && res.stdout) {
+            installedAvds = res.stdout.split('\n').map((s) => s.trim()).filter(Boolean);
+        }
+    }
+    if (installedAvds.length === 0 && avdmanagerBin) {
+        const res = spawnSync(avdmanagerBin, ['list', 'avd'], { encoding: 'utf8', env: { ...customEnv, JAVA_HOME: javaHome || customEnv.JAVA_HOME } });
+        if (res.status === 0 && res.stdout) {
+            const matches = res.stdout.match(/Name:\s+([^\s\n]+)/g);
+            if (matches) {
+                installedAvds = matches.map((m) => m.replace(/Name:\s+/, '').trim());
+            }
+        }
+    }
+    if (installedAvds.length === 0) {
+        const avdDir = join(customEnv.HOME || process.env.HOME || '', '.android', 'avd');
+        if (existsSync(avdDir)) {
+            try {
+                const files = readdirSync(avdDir);
+                installedAvds = files.filter((f) => f.endsWith('.ini')).map((f) => f.replace(/\.ini$/, ''));
+            } catch (e) {
+                // ignore
+            }
+        }
+    }
+
+    const missingAvds = requiredAvds.filter((avd) => !installedAvds.includes(avd));
+    if (missingAvds.length > 0 && (process.platform === 'linux' || customEnv.REQUIRE_AVDS === '1')) {
+        errors.push(`Required Android AVDs missing: ${missingAvds.join(', ')}. Expected test_avd_api36 and test_tablet_api36.`);
+    } else {
+        status.avds = { found: installedAvds.filter((a) => requiredAvds.includes(a)) };
+    }
+
     return {
         success: errors.length === 0,
         errors,
@@ -218,7 +318,6 @@ export function checkToolchain(options = {}) {
         process.env.ANDROID_SDK_ROOT = result.env.ANDROID_HOME;
     }
 
-    // Ensure tool directories are prepended to PATH
     const extraPaths = [];
     if (result.status.java?.path) extraPaths.push(dirname(result.status.java.path));
     if (result.status.adb?.path) extraPaths.push(dirname(result.status.adb.path));
@@ -253,6 +352,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
         process.exit(1);
     } else {
         console.log('[PASS] Toolchain Doctor verified all required components:');
+        if (result.status.worktree) console.log(`  - Worktree:     ${result.status.worktree.path}`);
+        if (result.status.branch)   console.log(`  - Branch:       ${result.status.branch.name}`);
         console.log(`  - JDK 21:       ${result.status.java.path} (${result.status.java.version})`);
         console.log(`  - Android SDK:  ${result.status.androidSdk.path} (platforms/android-36)`);
         console.log(`  - adb:          ${result.status.adb.path} (${result.status.adb.version})`);
@@ -260,6 +361,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
         console.log(`  - aapt2:        ${result.status.aapt2.path} (${result.status.aapt2.version})`);
         console.log(`  - avdmanager:   ${result.status.avdmanager.path}`);
         console.log(`  - ./gradlew:    ${result.status.gradlew.path} (${result.status.gradlew.version})`);
+        if (result.status.kvm)      console.log(`  - KVM:          ${result.status.kvm.info}`);
+        if (result.status.avds)     console.log(`  - AVDs:         ${result.status.avds.found.join(', ')}`);
         console.log('\nToolchain diagnostic complete: 0 errors.\n');
         process.exit(0);
     }
