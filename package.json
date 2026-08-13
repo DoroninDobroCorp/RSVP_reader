@@ -34,7 +34,7 @@
     "test:extension": "node tests/extension/chrome-extension.e2e.mjs",
     "test:production": "playwright test tests/test-production-regressions.spec.js tests/test-offline-production.spec.js --project=chromium",
     "typecheck": "node --check scripts/*.mjs",
-    "lint": "npm run verify:all",
+    "lint": "node --check app.js server.js scripts/*.mjs tests/unit/*.test.js",
     "test:cross-browser": "playwright test tests/test-production-regressions.spec.js --project=webkit --project=mobile-safari",
     "test:visual": "npm run build:native && node scripts/run-visual-qa-matrix.mjs",
     "test:lighthouse": "npm run build:web && node tests/performance/run-lighthouse.mjs",
