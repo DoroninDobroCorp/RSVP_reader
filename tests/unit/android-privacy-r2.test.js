@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-test('VAL-R2-PRIV-001: Zero Dangerous Runtime Permissions declared in AndroidManifest.xml', async () => {
+test('VAL-R2-PRIV-001 / VAL-R4-SEC-001: Zero Dangerous Runtime Permissions declared in AndroidManifest.xml', async () => {
     const manifestPath = join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
     const manifestContent = await readFile(manifestPath, 'utf8');
 
@@ -34,23 +34,23 @@ test('VAL-R2-PRIV-001: Zero Dangerous Runtime Permissions declared in AndroidMan
         assert.equal(
             manifestContent.includes(perm),
             false,
-            `VAL-R2-PRIV-001 Failed: Manifest contains dangerous permission: ${perm}`
+            `VAL-R2-PRIV-001 / VAL-R4-SEC-001 Failed: Manifest contains dangerous permission: ${perm}`
         );
     }
 });
 
-test('VAL-R2-PRIV-002: INTERNET permission omitted from AndroidManifest.xml for local-only build', async () => {
+test('VAL-R2-PRIV-002 / VAL-R4-SEC-001: INTERNET permission omitted from AndroidManifest.xml for local-only build', async () => {
     const manifestPath = join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
     const manifestContent = await readFile(manifestPath, 'utf8');
 
     assert.equal(
         manifestContent.includes('android.permission.INTERNET'),
         false,
-        'VAL-R2-PRIV-002 Failed: android.permission.INTERNET must be omitted from AndroidManifest.xml for local-only build'
+        'VAL-R2-PRIV-002 / VAL-R4-SEC-001 Failed: android.permission.INTERNET must be omitted from AndroidManifest.xml for local-only build'
     );
 });
 
-test('VAL-R2-PRIV-003: Restricted App-Private Cache Scope in FileProvider Manifest (file_paths.xml)', async () => {
+test('VAL-R2-PRIV-003 / VAL-R4-SEC-002: Restricted App-Private Cache Scope in FileProvider Manifest (file_paths.xml)', async () => {
     const filePathsXmlPath = join(root, 'android', 'app', 'src', 'main', 'res', 'xml', 'file_paths.xml');
     const xmlContent = await readFile(filePathsXmlPath, 'utf8');
 

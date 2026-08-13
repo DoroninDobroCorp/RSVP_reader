@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-test('VAL-AND-DATA-001..006: Android Document Picker, Pinning, Product Config & Native Safe Export Invariants', async () => {
+test('VAL-AND-DATA-001..006 / VAL-R4-SEC-003: Android Document Picker, Pinning, Product Config & Native Safe Export Invariants', async () => {
     const indexHtmlContent = await readFile(join(root, 'index.html'), 'utf8');
     const appJsContent = await readFile(join(root, 'app.js'), 'utf8');
     const pkgContent = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
