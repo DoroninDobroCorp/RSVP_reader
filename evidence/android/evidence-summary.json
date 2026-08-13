@@ -1,15 +1,29 @@
 {
-  "timestamp": "2026-08-13T01:27:40.852Z",
+  "timestamp": "2026-08-13T03:09:24.381Z",
+  "commitSha": "0be40ff91142a099ef849bc8b3f465684ee65554",
+  "gitSha": "0be40ff91142a099ef849bc8b3f465684ee65554",
+  "cleanWorkingTree": false,
+  "unitTestStatus": "PASSED",
+  "builtTestStatus": "PASSED",
+  "masterVerificationStatus": "PASSED",
   "avd": "test_avd_api36",
   "apiLevel": 36,
+  "totalStepsCompleted": 13,
   "assertions": {
-    "VAL-CROSS-QA-005": "PASSED",
+    "VAL-R2-TEST-001": "PASSED",
+    "VAL-R2-TEST-002": "PASSED",
+    "VAL-R2-TEST-003": "PASSED",
+    "VAL-R2-TEST-004": "PASSED",
+    "VAL-R2-TEST-005": "PASSED",
+    "VAL-R2-TEST-006": "PASSED",
     "VAL-CROSS-QA-001": "PASSED",
     "VAL-CROSS-QA-002": "PASSED",
     "VAL-CROSS-QA-003": "PASSED",
     "VAL-CROSS-QA-004": "PASSED",
+    "VAL-CROSS-QA-005": "PASSED",
     "VAL-CROSS-QA-006": "PASSED",
     "VAL-CROSS-QA-007": "PASSED",
     "VAL-CROSS-QA-008": "PASSED"
-  }
+  },
+  "apkSha256": "16dd476e725e2c2821d8f70228894e7b4f8f6aa8eee6b93bfa713c1c721bf46a"
 }

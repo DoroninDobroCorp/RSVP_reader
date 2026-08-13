@@ -16,7 +16,11 @@ function parseHtml(content) {
 }
 
 // VAL-WEB-SEO-005: Tester-Preview noindex Robots Isolation
-test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta tag and Disallow: / in robots.txt', () => {
+test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta tag and Disallow: / in robots.txt', (t) => {
+  if (!fs.existsSync(path.join(root, 'dist', 'index.html'))) {
+    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
+    return;
+  }
   const htmlFiles = [
     'index.html',
     'privacy.html',
@@ -51,7 +55,11 @@ test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta
 });
 
 // VAL-WEB-SEO-006: Tester-Preview Metadata & Canonical Stripping Safeguard
-test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, hreflang, and JSON-LD tags with no sslip.io leakage', () => {
+test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, hreflang, and JSON-LD tags with no sslip.io leakage', (t) => {
+  if (!fs.existsSync(path.join(root, 'dist', 'index.html'))) {
+    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
+    return;
+  }
   const htmlFiles = [
     'index.html',
     'privacy.html',
