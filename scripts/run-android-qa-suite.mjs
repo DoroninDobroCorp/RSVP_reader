@@ -153,12 +153,13 @@ async function stopAllEmulators() {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
         const devs = getRunningDevices();
-        if (devs.length === 0) break;
+        const checkQemu = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
+        if (devs.length === 0 && !checkQemu) break;
         await sleep(1000);
     }
-    await sleep(2000);
+    await sleep(3000);
 }
 
 async function launchAVDIfNeeded(avdName) {
