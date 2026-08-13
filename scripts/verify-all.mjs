@@ -251,7 +251,7 @@ export async function runMasterVerificationPipeline(options = {}) {
         { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R3-EXT-001'] },
         { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R3-PWA-002'] },
         { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R3-PWA-001'] },
-        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R3-BUILD-001'] },
+        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R3-BUILD-001', 'VAL-R3-BUILD-002', 'VAL-R3-BUILD-003', 'VAL-R3-BUILD-004'] },
         { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R3-STORE-001'] },
         { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R3-HERMETIC-001'] },
         { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R3-PWA-001', 'VAL-R3-PWA-003'] }

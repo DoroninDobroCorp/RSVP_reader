@@ -42,6 +42,8 @@ async function digestTree() {
   return { digest: hash.digest('hex'), count: files.length };
 }
 
+import { packageReleaseR3 } from './package-release-r3.mjs';
+
 await build();
 const first = await digestTree();
 await build();
@@ -52,3 +54,7 @@ if (first.digest !== second.digest || first.count !== second.count) {
 }
 
 console.log(`Verified deterministic web/extension output: ${second.count} files, SHA-256 ${second.digest}.`);
+
+console.log('Running reproducible remote-SHA build and packaging audit...');
+await packageReleaseR3();
+
