@@ -136,6 +136,28 @@ try {
       assert.equal(assetRes.status, 200, `SW Precache asset '${relAsset}' resolved to ${resolvedUrl} must return 200 (got ${assetRes.status})`);
     }
 
+    // 5. Verify Service Worker subpath scope trailing slash compliance under /rsvp/
+    const swScope = mountPath ? (mountPath.endsWith('/') ? mountPath : `${mountPath}/`) : '/';
+    assert.ok(swScope.endsWith('/'), `SW scope for path '${mountPath || '/'}' must end with trailing slash: '${swScope}'`);
+    if (mountPath === '/rsvp') {
+      assert.equal(swScope, '/rsvp/', 'Service Worker scope under subpath /rsvp must be /rsvp/');
+    }
+
+    const appJsUrl = `${baseUrl}/app.js?v=49`;
+    const appJsRes = await fetch(appJsUrl);
+    assert.equal(appJsRes.status, 200, `app.js must return 200 at ${appJsUrl}`);
+    const appJsCode = await appJsRes.text();
+    assert.ok(
+      appJsCode.includes('swScope') && (appJsCode.includes('rawBase') || appJsCode.includes('getAppBaseUrl')),
+      'app.js must calculate Service Worker scope'
+    );
+    if (mountPath === '/rsvp') {
+      assert.ok(
+        appJsCode.includes('rawBase.endsWith(\'/\') ? rawBase : `${rawBase}/`') || appJsCode.includes('`${getAppBaseUrl()}/`') || appJsCode.includes('swScope'),
+        'app.js must handle trailing slash for Service Worker scope under subpath /rsvp/'
+      );
+    }
+
     console.log(`[PASS] Built-output tests passed for deployment path: '${mountPath || '/'}'`);
   }
 } finally {

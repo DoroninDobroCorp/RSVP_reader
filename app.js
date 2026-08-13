@@ -6623,7 +6623,8 @@ class RSVPReader {
             });
 
             const swPath = typeof window !== 'undefined' && window.resolveAppPath ? window.resolveAppPath('service-worker.js') : '/service-worker.js';
-            const swScope = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '/';
+            const rawBase = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '';
+            const swScope = rawBase ? (rawBase.endsWith('/') ? rawBase : `${rawBase}/`) : '/';
             const registration = await navigator.serviceWorker.register(swPath, {
                 scope: swScope,
                 updateViaCache: 'none'
@@ -6957,7 +6958,8 @@ async function resetRuntimeCacheIfRequested() {
 
     try {
         if ('serviceWorker' in navigator) {
-            const swScope = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '/';
+            const rawBase = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '';
+            const swScope = rawBase ? (rawBase.endsWith('/') ? rawBase : `${rawBase}/`) : '/';
             const registration = await navigator.serviceWorker.getRegistration(swScope);
             if (registration) await registration.unregister();
         }

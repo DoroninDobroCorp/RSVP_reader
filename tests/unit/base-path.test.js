@@ -45,11 +45,15 @@ test('VAL-WEB-PATH-002: Subpath Sample Text Asset Loading Integrity', () => {
 test('VAL-R2-PWA-002: Base-Aware Service Worker Registration & Scope Invariance', () => {
     const rootBase = getAppBaseUrl('http://localhost:3100/ru/');
     assert.equal(`${rootBase}/service-worker.js`, '/service-worker.js');
-    assert.equal(`${rootBase}/`, '/');
+    const rootScope = rootBase ? (rootBase.endsWith('/') ? rootBase : `${rootBase}/`) : '/';
+    assert.equal(rootScope, '/');
+    assert.ok(rootScope.endsWith('/'), 'Root scope must end with trailing slash');
 
     const subpathBase = getAppBaseUrl('http://localhost:3100/rsvp/ru/');
     assert.equal(`${subpathBase}/service-worker.js`, '/rsvp/service-worker.js');
-    assert.equal(`${subpathBase}/`, '/rsvp/');
+    const subpathScope = subpathBase ? (subpathBase.endsWith('/') ? subpathBase : `${subpathBase}/`) : '/';
+    assert.equal(subpathScope, '/rsvp/');
+    assert.ok(subpathScope.endsWith('/'), 'Subpath scope under /rsvp/ must end with trailing slash');
 });
 
 test('VAL-WEB-PATH-004: Extension Package Download Link Base Resolution', () => {

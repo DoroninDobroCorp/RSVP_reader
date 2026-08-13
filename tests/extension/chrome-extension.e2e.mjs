@@ -247,6 +247,10 @@ try {
       assert.equal(popupStatusText, profile.noTextError, `Empty text area status mismatch in ${profile.lang}`);
       console.log(`   Localized error feedback verified in ${profile.lang}: "${emptySelRes.error}"`);
 
+      if (artifactDirectory) {
+        await popup.screenshot({ path: join(artifactDirectory, `extension-error-${profile.code}.png`), fullPage: true });
+      }
+
       // Verify Selection Extraction across Locales (VAL-R2-EXT-005)
       const selectionSentinel = `SENTINEL_${profile.code}_${Date.now()}`;
       const fullPassage = `${selectionSentinel} - ${profile.sampleText}`;
@@ -276,6 +280,10 @@ try {
       assert.equal(await reader.locator('#documentTitle').textContent(), 'Localized selection test');
       assert.match(await reader.locator('#wordFrame').textContent(), new RegExp(selectionSentinel, 'u'));
       console.log(`   Text selection extraction & message passing verified in ${profile.lang}.`);
+
+      if (artifactDirectory) {
+        await reader.screenshot({ path: join(artifactDirectory, `extension-reader-${profile.code}.png`), fullPage: true });
+      }
 
     } finally {
       await profileContext?.close().catch(() => undefined);
