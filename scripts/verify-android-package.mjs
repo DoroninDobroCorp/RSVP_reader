@@ -28,16 +28,25 @@ async function expectMissing(path, description) {
 async function runPackageAudit() {
     console.log('=== Running Android Package Integrity & Security Audit ===\n');
 
-    // 1. Verify package.json dependencies
+    // 1. Verify package.json dependencies & pinning
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
-    if (!pkg.dependencies['@capacitor/android'] || !pkg.dependencies['@capacitor/android'].includes('8.5')) {
-        throw new Error('@capacitor/android version 8.5.0 must be present in package.json.');
+    if (pkg.dependencies['@capacitor/android'] !== '8.5.0') {
+        throw new Error('@capacitor/android version 8.5.0 must be pinned exactly in package.json.');
     }
     if (!pkg.dependencies['@capacitor/app']) {
         throw new Error('@capacitor/app must be present in package.json.');
     }
     if (!pkg.dependencies['@capacitor/share']) {
         throw new Error('@capacitor/share must be present in package.json.');
+    }
+
+    // 1b. Verify product config identity fields & unapproved build gate
+    const productConfig = JSON.parse(await readFile(join(root, 'product.config.json'), 'utf8'));
+    if (!productConfig.android || typeof productConfig.android.applicationId !== 'string') {
+        throw new Error('product.config.json must define android identity fields.');
+    }
+    if (productConfig.android.applicationIdApproved !== false) {
+        throw new Error('product.config.json android.applicationIdApproved must be false for review builds.');
     }
 
     // 2. Verify top-level android/build.gradle AGP

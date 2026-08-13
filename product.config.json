@@ -30,5 +30,15 @@
     "currentBundleIdentifier": "team.ibet.paceflow",
     "proposedBundleIdentifier": "team.ibet.hummingread",
     "changeApproved": false
+  },
+  "android": {
+    "applicationId": "team.ibet.paceflow",
+    "proposedApplicationId": "team.ibet.hummingread",
+    "applicationIdApproved": false,
+    "versionCode": 200,
+    "versionName": "2.0.0",
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "compileSdkVersion": 36
   }
 }

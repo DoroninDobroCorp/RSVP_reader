@@ -6,18 +6,37 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invariants', async () => {
+test('VAL-AND-DATA-001..006: Android Document Picker, Pinning, Product Config & Native Safe Export Invariants', async () => {
     const indexHtmlContent = await readFile(join(root, 'index.html'), 'utf8');
     const appJsContent = await readFile(join(root, 'app.js'), 'utf8');
     const pkgContent = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+    const pkgLockContent = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8'));
+    const productConfigContent = JSON.parse(await readFile(join(root, 'product.config.json'), 'utf8'));
 
-    // 1. VAL-AND-DATA-001 & VAL-AND-DATA-006: Document picker configuration & formats
+    // 0. Pinning and Product Config Identity Gates
+    assert.equal(pkgContent.dependencies['@capacitor/android'], '8.5.0', '@capacitor/android must be pinned to 8.5.0 in package.json');
+    assert.equal(pkgLockContent.packages[''].dependencies['@capacitor/android'], '8.5.0', '@capacitor/android must be pinned to 8.5.0 in package-lock.json root packages');
+    
+    assert.ok(productConfigContent.android, 'product.config.json must define android section');
+    assert.equal(productConfigContent.android.applicationId, 'team.ibet.paceflow', 'applicationId must match review app id');
+    assert.equal(productConfigContent.android.proposedApplicationId, 'team.ibet.hummingread', 'proposedApplicationId must be defined');
+    assert.equal(productConfigContent.android.applicationIdApproved, false, 'applicationIdApproved must be false for unapproved review builds');
+    assert.equal(productConfigContent.android.versionCode, 200, 'versionCode must be 200');
+    assert.equal(productConfigContent.android.versionName, '2.0.0', 'versionName must be 2.0.0');
+
+    // Test product config assertion throw
+    const { productConfig, assertAndroidUploadApproved } = await import('../../scripts/product-config.mjs');
+    assert.equal(productConfig.android.applicationIdApproved, false);
+    assert.throws(() => assertAndroidUploadApproved(), /applicationIdApproved is false/);
+
+    // 1. VAL-AND-DATA-001 & VAL-AND-DATA-006: Document picker configuration & 7 document formats
     assert.match(indexHtmlContent, /id="fileInput"[^>]*accept="[^"]*\.pdf/i, 'fileInput accept must include .pdf');
     assert.match(indexHtmlContent, /id="fileInput"[^>]*accept="[^"]*application\/pdf/i, 'fileInput accept must include application/pdf');
     assert.match(indexHtmlContent, /id="libraryImportInput"[^>]*accept="[^"]*\.pdf/i, 'libraryImportInput accept must include .pdf');
     assert.match(indexHtmlContent, /id="libraryImportInput"[^>]*accept="[^"]*application\/pdf/i, 'libraryImportInput accept must include application/pdf');
 
-    for (const format of ['.epub', '.fb2', '.docx', '.rtf', '.txt', '.html', '.md', '.pdf']) {
+    const required7Formats = ['.epub', '.fb2', '.docx', '.txt', '.html', '.md', '.rtf'];
+    for (const format of required7Formats) {
         assert.ok(indexHtmlContent.includes(format), `index.html input accept attribute must include ${format}`);
     }
 
@@ -32,18 +51,20 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
     assert.match(appJsContent, /Plugins\?\.Share/, 'exportLibrary must trigger Share plugin');
     assert.match(appJsContent, /deleteFile\s*\(\s*\{\s*path:\s*fileName,\s*directory:\s*'CACHE'\s*\}\s*\)/, 'exportLibrary must delete temporary export file from CACHE in finally block');
 
-    // 4. Test simulated native backup export & cleanup sequence
+    // 4. Test simulated native backup export, cleanup sequence & re-import completeness
     let cacheFileWritten = false;
     let shareTriggered = false;
     let cacheFileDeleted = false;
+    let exportedJsonPayload = null;
 
     const mockFilesystem = {
         async mkdir({ path, directory }) {
             return true;
         },
-        async writeFile({ path, directory }) {
+        async writeFile({ path, data, directory }) {
             if (path === 'backups/hummingread-backup.json' && directory === 'CACHE') {
                 cacheFileWritten = true;
+                exportedJsonPayload = data;
             }
         },
         async getUri({ path, directory }) {
@@ -65,8 +86,8 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
 
     const mockApp = {
         ready: Promise.resolve(),
-        library: [{ id: 'b1', name: 'Test Book', text: 'Sample text' }],
-        settings: { theme: 'dark' },
+        library: [{ id: 'b1', name: 'Test Book', text: 'Sample text for speed reading test.', readingPosition: 5, wpm: 350 }],
+        settings: { theme: 'dark', defaultWpm: 350 },
         settingsUpdatedAt: '2026-08-13T00:00:00.000Z',
         isNativePlatform: () => true,
         nativeFilesystem: () => mockFilesystem,
@@ -126,4 +147,14 @@ test('VAL-AND-DATA-001..006: Android Document Picker & Native Safe Export Invari
     assert.equal(cacheFileWritten, true, 'Cache file must be written before sharing');
     assert.equal(shareTriggered, true, 'Capacitor Share plugin must be invoked');
     assert.equal(cacheFileDeleted, true, 'Temporary cache file must be deleted after sharing completes');
+    assert.ok(exportedJsonPayload, 'Exported JSON payload must be non-empty');
+
+    // Verify Exported JSON payload re-importability and completeness
+    const reImported = JSON.parse(exportedJsonPayload);
+    assert.equal(reImported.version, 2);
+    assert.equal(reImported.settings.theme, 'dark');
+    assert.equal(reImported.settings.defaultWpm, 350);
+    assert.equal(reImported.books.length, 1);
+    assert.equal(reImported.books[0].name, 'Test Book');
+    assert.equal(reImported.books[0].readingPosition, 5);
 });

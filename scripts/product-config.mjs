@@ -26,13 +26,32 @@ const requiredStrings = [
     ['versions.iosBuild', productConfig.versions?.iosBuild],
     ['versions.extension', productConfig.versions?.extension],
     ['ios.currentBundleIdentifier', productConfig.ios?.currentBundleIdentifier],
-    ['ios.proposedBundleIdentifier', productConfig.ios?.proposedBundleIdentifier]
+    ['ios.proposedBundleIdentifier', productConfig.ios?.proposedBundleIdentifier],
+    ['android.applicationId', productConfig.android?.applicationId],
+    ['android.proposedApplicationId', productConfig.android?.proposedApplicationId],
+    ['android.versionName', productConfig.android?.versionName]
 ];
 
 for (const [key, value] of requiredStrings) {
     if (typeof value !== 'string' || !value.trim()) {
         throw new Error(`Product configuration value ${key} must be a non-empty string.`);
     }
+}
+
+if (typeof productConfig.android?.versionCode !== 'number' || productConfig.android.versionCode < 1) {
+    throw new Error('Product configuration android.versionCode must be a positive number.');
+}
+if (typeof productConfig.android?.applicationIdApproved !== 'boolean') {
+    throw new Error('Product configuration android.applicationIdApproved must be a boolean.');
+}
+if (typeof productConfig.android?.minSdkVersion !== 'number' || productConfig.android.minSdkVersion < 1) {
+    throw new Error('Product configuration android.minSdkVersion must be a positive number.');
+}
+if (typeof productConfig.android?.targetSdkVersion !== 'number' || productConfig.android.targetSdkVersion < 1) {
+    throw new Error('Product configuration android.targetSdkVersion must be a positive number.');
+}
+if (typeof productConfig.android?.compileSdkVersion !== 'number' || productConfig.android.compileSdkVersion < 1) {
+    throw new Error('Product configuration android.compileSdkVersion must be a positive number.');
 }
 
 for (const key of ['support', 'privacy', 'marketingSite', 'chromeWebStore', 'appStore', 'publicArticleApiBase']) {
@@ -43,7 +62,16 @@ for (const key of ['support', 'privacy', 'marketingSite', 'chromeWebStore', 'app
     }
 }
 
+export function assertAndroidUploadApproved() {
+    if (!productConfig.android?.applicationIdApproved) {
+        throw new Error(
+            'Android upload configuration is not approved: applicationIdApproved is false for review builds.'
+        );
+    }
+}
+
 export function assertProductionConfiguration() {
+    assertAndroidUploadApproved();
     const serializedUrls = JSON.stringify(productConfig.urls);
     if (!productConfig.release?.finalDomainApproved
         || !productConfig.release?.storeUrlsApproved
