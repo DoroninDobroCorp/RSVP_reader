@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { execFile } = require('node:child_process');
+const { execFile, execSync } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
@@ -12,6 +12,29 @@ const execFileAsync = util.promisify(execFile);
 
 const root = path.resolve(__dirname, '../../');
 const i18nSource = fs.readFileSync(path.join(root, 'i18n.js'), 'utf8');
+
+function ensureDistBuilt() {
+  const distRuIndex = path.join(root, 'dist', 'ru', 'index.html');
+  const distEsIndex = path.join(root, 'dist', 'es', 'index.html');
+  if (fs.existsSync(distRuIndex) && fs.existsSync(distEsIndex)) {
+    return;
+  }
+  const lockFile = path.join(root, '.build-web.lock');
+  try {
+    const fd = fs.openSync(lockFile, 'wx');
+    try {
+      execSync(`${process.execPath} scripts/build-web.mjs`, { cwd: root, stdio: 'ignore' });
+    } finally {
+      fs.closeSync(fd);
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+  } catch (e) {
+    for (let i = 0; i < 50; i++) {
+      if (fs.existsSync(distRuIndex) && fs.existsSync(distEsIndex)) return;
+      try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+    }
+  }
+}
 
 function fetchServerPath(serverInstance, pathName) {
   return new Promise((resolve, reject) => {
@@ -51,6 +74,7 @@ function createI18nInstance({ pathname = '/', browserLanguage = 'en-US', storedL
 
 // VAL-WEB-LOC-001: Pre-rendered English body copy at /index.html
 test('VAL-WEB-LOC-001: Raw HTTP GET /index.html contains pre-rendered English visible body copy', async (t) => {
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 
@@ -68,10 +92,7 @@ test('VAL-WEB-LOC-001: Raw HTTP GET /index.html contains pre-rendered English vi
 
 // VAL-WEB-LOC-002: Pre-rendered Russian body copy at /ru/index.html
 test('VAL-WEB-LOC-002: Raw HTTP GET /ru/index.html contains pre-rendered Russian visible body copy', async (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 
@@ -89,10 +110,7 @@ test('VAL-WEB-LOC-002: Raw HTTP GET /ru/index.html contains pre-rendered Russian
 
 // VAL-WEB-LOC-003: Pre-rendered Spanish body copy at /es/index.html
 test('VAL-WEB-LOC-003: Raw HTTP GET /es/index.html contains pre-rendered Spanish visible body copy', async (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'es', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 
@@ -152,6 +170,7 @@ test('VAL-WEB-LOC-007: Visiting root route / with explicit stored language respe
 
 // VAL-WEB-LOC-008: Invalid locale URL subpath safety handling
 test('VAL-WEB-LOC-008: Non-existent or unsupported subpaths fall back to default English app without 404', async (t) => {
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 
@@ -170,10 +189,7 @@ test('VAL-WEB-LOC-008: Non-existent or unsupported subpaths fall back to default
 
 // Directory routing: automated curl unit tests for /ru, /ru/, /es, /es/
 test('Directory routing: curl requests for /ru and /ru/ resolve directly to dist/ru/index.html with HTTP 200', async (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
   const port = testServer.address().port;
@@ -194,10 +210,7 @@ test('Directory routing: curl requests for /ru and /ru/ resolve directly to dist
 });
 
 test('Directory routing: curl requests for /es and /es/ resolve directly to dist/es/index.html with HTTP 200', async (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'es', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
   const port = testServer.address().port;
@@ -218,10 +231,7 @@ test('Directory routing: curl requests for /es and /es/ resolve directly to dist
 });
 
 test('VAL-WEB-PATH-006: pico-hero-640 img tag src attribute uses relative asset path in index.html, /ru/index.html, and /es/index.html', async (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+  ensureDistBuilt();
   const testServer = http.createServer((req, res) => server.emit('request', req, res));
   await new Promise((res) => testServer.listen(0, '127.0.0.1', res));
 

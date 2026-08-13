@@ -2,11 +2,36 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execSync } = require('node:child_process');
 const { JSDOM } = require('jsdom');
 
 const root = path.resolve(__dirname, '../../');
 
+function ensureDistBuilt() {
+  const distIndex = path.join(root, 'dist', 'privacy.html');
+  const distRuIndex = path.join(root, 'dist', 'ru', 'privacy.html');
+  if (fs.existsSync(distIndex) && fs.existsSync(distRuIndex)) {
+    return;
+  }
+  const lockFile = path.join(root, '.build-web.lock');
+  try {
+    const fd = fs.openSync(lockFile, 'wx');
+    try {
+      execSync(`${process.execPath} scripts/build-web.mjs`, { cwd: root, stdio: 'ignore' });
+    } finally {
+      fs.closeSync(fd);
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+  } catch (e) {
+    for (let i = 0; i < 50; i++) {
+      if (fs.existsSync(distIndex) && fs.existsSync(distRuIndex)) return;
+      try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+    }
+  }
+}
+
 function getLegalPath(relPath) {
+  ensureDistBuilt();
   const distPath = path.join(root, 'dist', relPath);
   if (fs.existsSync(distPath)) return distPath;
   return path.join(root, relPath);
@@ -19,11 +44,8 @@ function parseHtml(filePath) {
 }
 
 // VAL-WEB-LEGAL-001: Single-Language Body Filtering in Root Legal Pages
-test('VAL-WEB-LEGAL-001: Root legal pages contain English article body', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'privacy.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-001: Root legal pages contain English article body', () => {
+  ensureDistBuilt();
   for (const page of ['privacy.html', 'support.html', 'acknowledgements.html']) {
     const filePath = getLegalPath(page);
     assert.ok(fs.existsSync(filePath), `${page} must exist at ${filePath}`);
@@ -36,11 +58,8 @@ test('VAL-WEB-LEGAL-001: Root legal pages contain English article body', (t) => 
 });
 
 // VAL-WEB-LEGAL-002: Single-Language Body Filtering in Russian Legal Pages
-test('VAL-WEB-LEGAL-002: Russian legal pages contain Russian article body', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'privacy.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-002: Russian legal pages contain Russian article body', () => {
+  ensureDistBuilt();
   for (const page of ['privacy.html', 'support.html', 'acknowledgements.html']) {
     const filePath = getLegalPath(path.join('ru', page));
     assert.ok(fs.existsSync(filePath), `ru/${page} must exist at ${filePath}`);
@@ -53,11 +72,8 @@ test('VAL-WEB-LEGAL-002: Russian legal pages contain Russian article body', (t) 
 });
 
 // VAL-WEB-LEGAL-003: Single-Language Body Filtering in Spanish Legal Pages
-test('VAL-WEB-LEGAL-003: Spanish legal pages contain Spanish article body', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'es', 'privacy.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-003: Spanish legal pages contain Spanish article body', () => {
+  ensureDistBuilt();
   for (const page of ['privacy.html', 'support.html', 'acknowledgements.html']) {
     const filePath = getLegalPath(path.join('es', page));
     assert.ok(fs.existsSync(filePath), `es/${page} must exist at ${filePath}`);
@@ -70,11 +86,8 @@ test('VAL-WEB-LEGAL-003: Spanish legal pages contain Spanish article body', (t) 
 });
 
 // VAL-WEB-LEGAL-004: Cross-Locale Legal Navigation Links & Accessibility
-test('VAL-WEB-LEGAL-004: Single-language legal pages provide header and footer locale switchers with links to identical doc in EN, RU, ES', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'privacy.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-004: Single-language legal pages provide header and footer locale switchers with links to identical doc in EN, RU, ES', () => {
+  ensureDistBuilt();
   const routes = [
     { dir: '', lang: 'en', expectedUrlMap: { en: 'privacy.html', ru: 'ru/privacy.html', es: 'es/privacy.html' } },
     { dir: 'ru', lang: 'ru', expectedUrlMap: { en: '../privacy.html', ru: 'privacy.html', es: '../es/privacy.html' } },
@@ -115,11 +128,8 @@ test('VAL-WEB-LEGAL-004: Single-language legal pages provide header and footer l
 });
 
 // VAL-WEB-LEGAL-005: Single-Language Acknowledgements & Third-Party License Filtering
-test('VAL-WEB-LEGAL-005: acknowledgements pages filter introductory copy per locale while preserving unmodified license notices text', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'acknowledgements.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-005: acknowledgements pages filter introductory copy per locale while preserving unmodified license notices text', () => {
+  ensureDistBuilt();
   for (const route of ['', 'ru', 'es']) {
     const filePath = getLegalPath(route ? path.join(route, 'acknowledgements.html') : 'acknowledgements.html');
     const { document } = parseHtml(filePath);
@@ -138,11 +148,8 @@ test('VAL-WEB-LEGAL-005: acknowledgements pages filter introductory copy per loc
 });
 
 // VAL-WEB-LEGAL-006: Legal Route Direct Load & Head Metadata Parity
-test('VAL-WEB-LEGAL-006: Direct loading of any localized legal page URL returns complete HTML head metadata matching page locale', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'ru', 'privacy.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-LEGAL-006: Direct loading of any localized legal page URL returns complete HTML head metadata matching page locale', () => {
+  ensureDistBuilt();
   const checkList = [
     { page: 'privacy.html', lang: 'en', title: 'Privacy Policy — HummingRead' },
     { page: 'ru/privacy.html', lang: 'ru', title: 'Политика конфиденциальности — HummingRead' },

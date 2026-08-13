@@ -63,6 +63,10 @@ test('VAL-R2-VERIFY-002 / VAL-R2-VERIFY-005: verify-android-privacy.mjs fails cl
 test('VAL-R2-VERIFY-004 / VAL-R2-VERIFY-005: verify-android-package.mjs fails closed on SHA-256 mismatch', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'hummingread-negative-pkg-'));
     try {
+        // Create dummy APK inside tempDir
+        const fakeApkPath = join(tempDir, 'dummy-app-debug.apk');
+        await writeFile(fakeApkPath, Buffer.from('DUMMY_APK_FIXTURE_CONTENT_FOR_NEGATIVE_TEST'), 'utf8');
+
         // Create corrupted dummy summary declaring an invalid SHA-256
         const fakeSummaryPath = join(tempDir, 'evidence-summary.json');
         await writeFile(fakeSummaryPath, JSON.stringify({
@@ -74,10 +78,8 @@ test('VAL-R2-VERIFY-004 / VAL-R2-VERIFY-005: verify-android-package.mjs fails cl
         const testScript = `
             import { readFile } from 'node:fs/promises';
             import { createHash } from 'node:crypto';
-            import { join } from 'node:path';
 
-            const apkPath = ${JSON.stringify(join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'))};
-            const apkBuffer = await readFile(apkPath);
+            const apkBuffer = await readFile(${JSON.stringify(fakeApkPath)});
             const actualSha = createHash('sha256').update(apkBuffer).digest('hex');
             const summary = JSON.parse(await readFile(${JSON.stringify(fakeSummaryPath)}, 'utf8'));
 

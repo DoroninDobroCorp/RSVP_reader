@@ -1,18 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, openSync, closeSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// VAL-WEB-PWA-001: Localized Manifest Files for EN, RU, and ES
-test('VAL-WEB-PWA-001: Localized manifest files generated for /, /ru/, and /es/', async (t) => {
-    if (!existsSync(join(root, 'dist', 'manifest.webmanifest'))) {
-        t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
+function ensureDistBuilt() {
+    const manifestFile = join(root, 'dist', 'manifest.webmanifest');
+    const indexFile = join(root, 'dist', 'index.html');
+    if (existsSync(manifestFile) && existsSync(indexFile)) {
         return;
     }
+    const lockFile = join(root, '.build-web.lock');
+    try {
+        const fd = openSync(lockFile, 'wx');
+        try {
+            execSync(`${process.execPath} scripts/build-web.mjs`, { cwd: root, stdio: 'ignore' });
+        } finally {
+            closeSync(fd);
+            try { unlinkSync(lockFile); } catch (e) {}
+        }
+    } catch (e) {
+        for (let i = 0; i < 50; i++) {
+            if (existsSync(manifestFile) && existsSync(indexFile)) return;
+            try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+        }
+    }
+}
+
+// VAL-WEB-PWA-001: Localized Manifest Files for EN, RU, and ES
+test('VAL-WEB-PWA-001: Localized manifest files generated for /, /ru/, and /es/', async (t) => {
+    ensureDistBuilt();
     const enManifest = JSON.parse(await readFile(join(root, 'dist', 'manifest.webmanifest'), 'utf8'));
     const ruManifest = JSON.parse(await readFile(join(root, 'dist', 'ru', 'manifest.webmanifest'), 'utf8'));
     const esManifest = JSON.parse(await readFile(join(root, 'dist', 'es', 'manifest.webmanifest'), 'utf8'));
@@ -32,10 +53,7 @@ test('VAL-WEB-PWA-001: Localized manifest files generated for /, /ru/, and /es/'
 
 // VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests
 test('VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) across all localized manifests', async (t) => {
-    if (!existsSync(join(root, 'dist', 'manifest.webmanifest'))) {
-        t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-        return;
-    }
+    ensureDistBuilt();
     const enManifest = JSON.parse(await readFile(join(root, 'dist', 'manifest.webmanifest'), 'utf8'));
     const ruManifest = JSON.parse(await readFile(join(root, 'dist', 'ru', 'manifest.webmanifest'), 'utf8'));
     const esManifest = JSON.parse(await readFile(join(root, 'dist', 'es', 'manifest.webmanifest'), 'utf8'));
@@ -53,10 +71,7 @@ test('VAL-WEB-PWA-002 / VAL-R2-PWA-004: Stable PWA Application Identity (id) acr
 
 // VAL-WEB-PWA-003: HTML Manifest Link References per Locale Route
 test('VAL-WEB-PWA-003: HTML landing pages link to corresponding localized webmanifest files', async (t) => {
-    if (!existsSync(join(root, 'dist', 'index.html'))) {
-        t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-        return;
-    }
+    ensureDistBuilt();
     const enHtml = await readFile(join(root, 'dist', 'index.html'), 'utf8');
     const ruHtml = await readFile(join(root, 'dist', 'ru', 'index.html'), 'utf8');
     const esHtml = await readFile(join(root, 'dist', 'es', 'index.html'), 'utf8');

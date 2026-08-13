@@ -160,6 +160,46 @@ try {
 
     console.log(`[PASS] Built-output tests passed for deployment path: '${mountPath || '/'}'`);
   }
+
+  // 6. Verify dist-native/ built assets separately
+  const distNativeAndroidDir = join(root, 'dist-native', 'android');
+  try {
+    await stat(distNativeAndroidDir);
+  } catch (e) {
+    throw new Error('dist-native/android directory does not exist. Run "npm run build:native" first.');
+  }
+
+  console.log('Testing built-output native deployment under dist-native/android...');
+  const nativeIndexPath = join(distNativeAndroidDir, 'index.html');
+  const nativeIndexHtml = await readFile(nativeIndexPath, 'utf8');
+  assert.ok(nativeIndexHtml.includes('data-platform="native"'), 'Native index.html must set data-platform="native"');
+  assert.ok(!nativeIndexHtml.includes('<!-- WEB_ONLY_START -->'), 'Native index.html must strip WEB_ONLY blocks');
+  assert.ok(nativeIndexHtml.includes('Pico turns local books'), 'Native index.html must use native copy');
+
+  const nativeLegalFiles = [
+    { file: 'privacy.html', lang: 'en', back: 'index.html#settings' },
+    { file: 'ru/privacy.html', lang: 'ru', back: '../index.html#settings' },
+    { file: 'es/privacy.html', lang: 'es', back: '../index.html#settings' },
+    { file: 'support.html', lang: 'en', back: 'index.html#settings' },
+    { file: 'ru/support.html', lang: 'ru', back: '../index.html#settings' },
+    { file: 'es/support.html', lang: 'es', back: '../index.html#settings' },
+    { file: 'acknowledgements.html', lang: 'en', back: 'index.html#settings' },
+    { file: 'ru/acknowledgements.html', lang: 'ru', back: '../index.html#settings' },
+    { file: 'es/acknowledgements.html', lang: 'es', back: '../index.html#settings' }
+  ];
+
+  for (const item of nativeLegalFiles) {
+    const filePath = join(distNativeAndroidDir, item.file);
+    const content = await readFile(filePath, 'utf8');
+    assert.ok(content.includes(`lang="${item.lang}"`), `${item.file} must have lang="${item.lang}"`);
+    assert.ok(content.includes(`href="${item.back}"`), `${item.file} back button must point to ${item.back}`);
+  }
+
+  const nativeI18nPath = join(distNativeAndroidDir, 'i18n.js');
+  const nativeI18nCode = await readFile(nativeI18nPath, 'utf8');
+  assert.ok(nativeI18nCode.includes('Android keeps its volume buttons unchanged.'), 'Native i18n.js must contain Android volume copy');
+
+  console.log('[PASS] Built-output native tests passed for dist-native/android');
 } finally {
   await new Promise((resolve) => server.close(resolve));
 }

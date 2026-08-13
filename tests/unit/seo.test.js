@@ -2,9 +2,33 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execSync } = require('node:child_process');
 const { JSDOM } = require('jsdom');
 
 const root = path.resolve(__dirname, '../../');
+
+function ensureDistBuilt() {
+  const indexFile = path.join(root, 'dist', 'index.html');
+  const robotsFile = path.join(root, 'dist', 'robots.txt');
+  if (fs.existsSync(indexFile) && fs.existsSync(robotsFile)) {
+    return;
+  }
+  const lockFile = path.join(root, '.build-web.lock');
+  try {
+    const fd = fs.openSync(lockFile, 'wx');
+    try {
+      execSync(`${process.execPath} scripts/build-web.mjs`, { cwd: root, stdio: 'ignore' });
+    } finally {
+      fs.closeSync(fd);
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+  } catch (e) {
+    for (let i = 0; i < 50; i++) {
+      if (fs.existsSync(indexFile) && fs.existsSync(robotsFile)) return;
+      try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+    }
+  }
+}
 
 async function getProductConfigHelpers() {
   return await import('../../scripts/product-config.mjs');
@@ -16,11 +40,8 @@ function parseHtml(content) {
 }
 
 // VAL-WEB-SEO-005: Tester-Preview noindex Robots Isolation
-test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta tag and Disallow: / in robots.txt', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta tag and Disallow: / in robots.txt', () => {
+  ensureDistBuilt();
   const htmlFiles = [
     'index.html',
     'privacy.html',
@@ -55,11 +76,8 @@ test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta
 });
 
 // VAL-WEB-SEO-006: Tester-Preview Metadata & Canonical Stripping Safeguard
-test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, hreflang, and JSON-LD tags with no sslip.io leakage', (t) => {
-  if (!fs.existsSync(path.join(root, 'dist', 'index.html'))) {
-    t.skip('Skipped: Requires dist/ build output (run npm run build:web)');
-    return;
-  }
+test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, hreflang, and JSON-LD tags with no sslip.io leakage', () => {
+  ensureDistBuilt();
   const htmlFiles = [
     'index.html',
     'privacy.html',

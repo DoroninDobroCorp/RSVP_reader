@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execSync } = require('node:child_process');
 const { JSDOM } = require('jsdom');
 
 const root = path.resolve(__dirname, '../../');
@@ -12,7 +13,30 @@ function parseHtml(filePath) {
   return { content, document: dom.window.document };
 }
 
+function ensureNativeLegalBuilt() {
+  const nativeRuPrivacy = path.join(root, 'dist-native', 'android', 'ru', 'privacy.html');
+  if (fs.existsSync(nativeRuPrivacy)) {
+    return;
+  }
+  const lockFile = path.join(root, '.build-native.lock');
+  try {
+    const fd = fs.openSync(lockFile, 'wx');
+    try {
+      execSync(`${process.execPath} scripts/build-native.mjs`, { cwd: root, stdio: 'ignore' });
+    } finally {
+      fs.closeSync(fd);
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+  } catch (e) {
+    for (let i = 0; i < 50; i++) {
+      if (fs.existsSync(nativeRuPrivacy)) return;
+      try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+    }
+  }
+}
+
 function getLegalFilePath(relPath) {
+  ensureNativeLegalBuilt();
   const distNativePath = path.join(root, 'dist-native', 'android', relPath);
   if (fs.existsSync(distNativePath)) {
     return distNativePath;
