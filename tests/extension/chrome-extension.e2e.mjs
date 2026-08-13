@@ -69,8 +69,8 @@ async function waitForWebsitePayload(browserContext, expectedText) {
   throw new Error('Quick Send did not open the configured website preview.');
 }
 
-// 1. VAL-R2-EXT-001: Chrome Extension Unpacked Manifest V3 Validation across Locales
-console.log('1. Validating VAL-R2-EXT-001: Manifest V3 Schema Compliance & Locale Catalog Parity...');
+// 1. VAL-R3-EXT-001: Chrome Extension Unpacked Manifest V3 Validation across Locales
+console.log('1. Validating VAL-R3-EXT-001: Manifest V3 Schema Compliance & Locale Catalog Parity...');
 const manifestSource = JSON.parse(await readFile(join(sourceExtensionPath, 'manifest.json'), 'utf8'));
 assert.equal(manifestSource.manifest_version, 3, 'Manifest version must be 3.');
 assert.equal(manifestSource.background?.service_worker, 'background.js', 'Service worker must be background.js.');
@@ -106,10 +106,10 @@ try {
   });
   await waitForServer();
 
-  // 2. Profile Configurations for Isolated 3-Locale E2E Tests (VAL-R2-EXT-002, 003, 004, 005, 006)
+  // 2. Profile Configurations for Isolated 3-Locale E2E Tests (VAL-R3-EXT-002: EN, RU, ES)
   const profilesToTest = [
     {
-      assertion: 'VAL-R2-EXT-002',
+      assertion: 'VAL-R3-EXT-002 (en-US)',
       lang: 'en-US',
       code: 'en',
       selectionBtn: 'Read selected text locally',
@@ -123,7 +123,7 @@ try {
       sampleText: 'HummingRead keeps your reading focus steady in English.'
     },
     {
-      assertion: 'VAL-R2-EXT-003',
+      assertion: 'VAL-R3-EXT-002 (ru-RU)',
       lang: 'ru-RU',
       code: 'ru',
       selectionBtn: 'Читать выделенный текст локально',
@@ -137,7 +137,7 @@ try {
       sampleText: 'HummingRead удерживает фокус чтения на русском языке.'
     },
     {
-      assertion: 'VAL-R2-EXT-004',
+      assertion: 'VAL-R3-EXT-002 (es-ES)',
       lang: 'es-ES',
       code: 'es',
       selectionBtn: 'Leer texto seleccionado localmente',
@@ -189,6 +189,32 @@ try {
       const extensionId = new URL(worker.url()).hostname;
       assert.match(extensionId, /^[a-p]{32}$/u);
 
+      // Verify chrome.i18n.getUILanguage() returns valid browser locale string
+      const uiLang = await worker.evaluate(() => chrome.i18n.getUILanguage());
+      assert.ok(
+        typeof uiLang === 'string' && uiLang.length >= 2,
+        `chrome.i18n.getUILanguage() must return a non-empty string, got '${uiLang}'`
+      );
+
+      // Verify getActiveLocale() without storage override resolves via chrome.i18n.getUILanguage() fallback
+      const fallbackLocale = await worker.evaluate(() => globalThis.HummingReadExtensionCore.getActiveLocale());
+      assert.ok(
+        ['en', 'ru', 'es'].includes(fallbackLocale),
+        `getActiveLocale() without storage override should return a supported locale ('en', 'ru', or 'es'), got '${fallbackLocale}'`
+      );
+
+      // Verify storage override takes precedence over browser UI locale
+      const testOverride = profile.code === 'ru' ? 'es' : 'ru';
+      await worker.evaluate((override) => chrome.storage.local.set({ hummingreadProfileLocale: override }), testOverride);
+      const overrideLocale = await worker.evaluate(() => globalThis.HummingReadExtensionCore.getActiveLocale());
+      assert.equal(
+        overrideLocale,
+        testOverride,
+        `getActiveLocale() with storage override '${testOverride}' should take precedence, got '${overrideLocale}'`
+      );
+      console.log(`   chrome.i18n.getUILanguage() ('${uiLang}') & storage override ('${testOverride}') verified in ${profile.lang}.`);
+
+      // Reset storage local with profile locale & preview URL for full E2E testing
       await worker.evaluate((params) => chrome.storage.local.set({
         hummingreadPreviewUrl: params.url,
         hummingreadProfileLocale: params.lang
