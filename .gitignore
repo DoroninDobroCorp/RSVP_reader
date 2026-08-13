@@ -28,3 +28,7 @@ android/local.properties
 
 # Test artifacts
 *.epub
+
+# Build & work directories
+.build/
+contract-work/
