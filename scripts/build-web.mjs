@@ -257,6 +257,9 @@ function adjustRelativePathsForSubdir(html, lang) {
         out = out.replace(/href="manifest\.webmanifest"/g, `href="/${lang}/manifest.webmanifest"`);
         out = out.replace(/href="manifest\.json(\?[^"]*)?"/g, `href="/${lang}/manifest.webmanifest"`);
     }
+    if (out.includes('src="assets/brand/pico-hero-640.webp"')) {
+        out = out.replace(/src="assets\/brand\/pico-hero-640\.webp"/g, 'src="/assets/brand/pico-hero-640.webp"');
+    }
     return out;
 }
 
