@@ -29,7 +29,7 @@ function runCmd(cmd, options = {}) {
                 finalCmd = `adb -s ${serial} ` + cmd.slice(4);
             }
         }
-        return execSync(finalCmd, { encoding: 'utf8', cwd: root, env: process.env, ...options });
+        return execSync(finalCmd, { encoding: 'utf8', cwd: root, env: process.env, timeout: 10000, ...options });
     } catch (err) {
         if (options.allowFail) return (err.stdout || '').trim();
         throw err;
@@ -41,7 +41,7 @@ function sleep(ms) {
 }
 
 function getRunningDevices() {
-    const out = execSync('adb devices', { encoding: 'utf8', cwd: root, env: process.env });
+    const out = execSync('adb devices', { encoding: 'utf8', cwd: root, env: process.env, timeout: 10000 });
     const lines = out.split('\n').filter(l => l.includes('\tdevice'));
     return lines.map(l => l.split('\t')[0]);
 }
@@ -148,19 +148,18 @@ async function stopAllEmulators() {
     activeDeviceSerial = null;
     const devices = getRunningDevices();
     for (const d of devices) {
-        try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8' }); } catch (e) {}
+        try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
-    await sleep(3000);
-    try { execSync('pkill -15 -f qemu 2>/dev/null || true', { encoding: 'utf8' }); } catch (e) {}
-    try { execSync('pkill -15 -f emulator 2>/dev/null || true', { encoding: 'utf8' }); } catch (e) {}
     await sleep(2000);
-    try { execSync('pkill -9 -f qemu 2>/dev/null || true', { encoding: 'utf8' }); } catch (e) {}
-    try { execSync('pkill -9 -f emulator 2>/dev/null || true', { encoding: 'utf8' }); } catch (e) {}
-    await sleep(3000);
-    try { execSync('rm -rf /run/user/1000/avd/running/* /tmp/android-*/emu-crash-*.db 2>/dev/null || true', { encoding: 'utf8' }); } catch (e) {}
-    try { execSync('adb kill-server', { encoding: 'utf8' }); } catch (e) {}
-    try { execSync('adb start-server', { encoding: 'utf8' }); } catch (e) {}
-    await sleep(3000);
+    try { execSync('pkill -15 -f qemu 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('pkill -15 -f emulator 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    await sleep(2000);
+    try { execSync('pkill -9 -f qemu 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('pkill -9 -f emulator 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    await sleep(2000);
+    try { execSync('adb kill-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb start-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    await sleep(2000);
 }
 
 async function launchAVDIfNeeded(avdName) {
