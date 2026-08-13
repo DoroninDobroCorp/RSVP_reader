@@ -95,7 +95,46 @@ privacy = privacy
     );
 await writeFile(privacyPath, privacy);
 
+const stylePath = join(destination, 'style.css');
+let style = await readFile(stylePath, 'utf8');
+style = style.replaceAll('url("assets/brand/pico-quick-send-640.webp")', 'none');
+await writeFile(stylePath, style);
+
 const iosDestination = join(root, 'ios', 'App', 'App', 'public');
 await cp(destination, iosDestination, { recursive: true });
 
-console.log(`Built filtered native assets in ${destination}`);
+const androidNativeDir = join(destination, 'android');
+await rm(androidNativeDir, { recursive: true, force: true });
+await cp(iosDestination, androidNativeDir, { recursive: true });
+
+const androidPrivacyPath = join(androidNativeDir, 'privacy.html');
+let androidPrivacy = await readFile(androidPrivacyPath, 'utf8');
+androidPrivacy = androidPrivacy
+    .replaceAll('Приложение iOS', 'Приложение Android')
+    .replaceAll('нативном приложении iOS', 'нативном приложении Android')
+    .replaceAll('The iOS app', 'The Android app')
+    .replaceAll('The native iOS app', 'The native Android app')
+    .replaceAll('La aplicación para iOS', 'La aplicación para Android')
+    .replaceAll('La aplicación nativa para iOS', 'La aplicación nativa para Android');
+await writeFile(androidPrivacyPath, androidPrivacy);
+
+const androidSupportPath = join(androidNativeDir, 'support.html');
+let androidSupport = await readFile(androidSupportPath, 'utf8');
+androidSupport = androidSupport
+    .replaceAll('iOS/iPadOS', 'Android')
+    .replaceAll('iOS', 'Android');
+await writeFile(androidSupportPath, androidSupport);
+
+const androidIndexPath = join(androidNativeDir, 'index.html');
+let androidIndex = await readFile(androidIndexPath, 'utf8');
+androidIndex = androidIndex
+    .replaceAll('iOS keeps its volume buttons unchanged.', 'Android keeps its volume buttons unchanged.')
+    .replaceAll('На iOS кнопки громкости не переназначаются.', 'На Android кнопки громкости не переназначаются.')
+    .replaceAll('iOS mantiene sus botones de volumen sin cambios.', 'Android mantiene sus botones de volumen sin cambios.');
+await writeFile(androidIndexPath, androidIndex);
+
+const androidAppAssets = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
+await rm(androidAppAssets, { recursive: true, force: true });
+await cp(androidNativeDir, androidAppAssets, { recursive: true });
+
+console.log(`Built filtered native assets in ${destination} and ${androidNativeDir}`);

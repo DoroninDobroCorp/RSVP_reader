@@ -219,7 +219,8 @@ if (/__HUMMINGREAD_/u.test(finalSeo)) throw new Error('Final-channel SEO structu
 
 const nativeRoot = join(root, 'dist-native');
 const iosRoot = join(root, 'ios', 'App', 'App', 'public');
-const nativeFiles = await listFiles(nativeRoot);
+const androidRoot = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
+const nativeFiles = (await listFiles(nativeRoot)).filter((file) => !file.startsWith('android/'));
 const iosFiles = (await listFiles(iosRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js'].includes(file));
 if (JSON.stringify(iosFiles.sort()) !== JSON.stringify(nativeFiles.sort())) {
     throw new Error('The iOS public tree has stale or missing files compared with dist-native.');
@@ -228,6 +229,18 @@ for (const file of nativeFiles) {
     const native = await readFile(join(nativeRoot, file));
     const ios = await readFile(join(iosRoot, file));
     if (digest(native) !== digest(ios)) throw new Error(`iOS copy differs from filtered native asset: ${file}`);
+}
+
+const androidNativeRoot = join(root, 'dist-native', 'android');
+const androidNativeFiles = (await listFiles(androidNativeRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js', 'capacitor.config.json'].includes(file));
+const androidFiles = (await listFiles(androidRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js', 'capacitor.config.json'].includes(file));
+if (JSON.stringify(androidFiles.sort()) !== JSON.stringify(androidNativeFiles.sort())) {
+    throw new Error('The Android public tree has stale or missing files compared with dist-native/android.');
+}
+for (const file of androidNativeFiles) {
+    const androidNative = await readFile(join(androidNativeRoot, file));
+    const androidApp = await readFile(join(androidRoot, file));
+    if (digest(androidNative) !== digest(androidApp)) throw new Error(`Android app asset differs from dist-native/android asset: ${file}`);
 }
 
 for (const forbidden of [
