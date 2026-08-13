@@ -7,7 +7,12 @@ const MENU_SELECTION = 'hummingread-read-selection';
 const MENU_PAGE = 'hummingread-read-page';
 const EXPIRATION_ALARM_PREFIX = 'hummingread-expire:';
 
+let activeCatalog = {};
+let installedMenus = [];
+let installPromise = null;
+
 function getMessage(key, fallback = '') {
+  if (activeCatalog && activeCatalog[key]) return activeCatalog[key];
   return Core?.getMessage?.(key, fallback) || (typeof chrome !== 'undefined' && chrome?.i18n?.getMessage?.(key)) || fallback;
 }
 
@@ -16,18 +21,40 @@ function expirationAlarm(scope, nonce) {
 }
 
 async function installContextMenus() {
-  await chrome.contextMenus.removeAll();
-  chrome.contextMenus.create({
-    id: MENU_SELECTION,
-    title: getMessage('contextSelection', 'Read selection locally with HummingRead'),
-    contexts: ['selection']
-  });
-  chrome.contextMenus.create({
-    id: MENU_PAGE,
-    title: getMessage('contextPage', 'Extract and read this page locally'),
-    contexts: ['page']
-  });
+  installPromise = (async () => {
+    await chrome.contextMenus.removeAll();
+    installedMenus = [];
+    const locale = await Core.getActiveLocale();
+    activeCatalog = await Core.loadLocaleCatalog(locale);
+
+    const selTitle = getMessage('contextSelection', 'Read selection locally with HummingRead');
+    const pageTitle = getMessage('contextPage', 'Extract and read this page locally');
+
+    chrome.contextMenus.create({
+      id: MENU_SELECTION,
+      title: selTitle,
+      contexts: ['selection']
+    });
+    chrome.contextMenus.create({
+      id: MENU_PAGE,
+      title: pageTitle,
+      contexts: ['page']
+    });
+    installedMenus = [
+      { id: MENU_SELECTION, title: selTitle },
+      { id: MENU_PAGE, title: pageTitle }
+    ];
+  })();
+  return installPromise;
 }
+
+self.installContextMenus = installContextMenus;
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && (changes.hummingreadProfileLocale || changes.hummingreadLocale)) {
+    installContextMenus().catch(console.error);
+  }
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   installContextMenus().catch(console.error);
@@ -214,6 +241,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 async function handleMessage(message, sender) {
+  if (message?.type === 'hummingread:get-context-menus') {
+    return { ok: true, menus: installedMenus, locale: await Core.getActiveLocale() };
+  }
+
   if (message?.type === 'hummingread:open-local') {
     return openLocalReader(message.payload);
   }

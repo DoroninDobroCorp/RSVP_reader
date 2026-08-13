@@ -5,19 +5,17 @@ const statusElement = document.getElementById('status');
 const textInput = document.getElementById('textInput');
 const actionButtons = Array.from(document.querySelectorAll('button'));
 
+let activeCatalog = {};
+
 function message(key, substitutions) {
+  if (activeCatalog && activeCatalog[key]) return activeCatalog[key];
   return chrome.i18n.getMessage(key, substitutions) || key;
 }
 
-function detectLocale() {
-  const uiLang = (chrome.i18n.getUILanguage() || 'en').toLowerCase();
-  if (uiLang.startsWith('ru')) return 'ru';
-  if (uiLang.startsWith('es')) return 'es';
-  return 'en';
-}
-
-function localize() {
-  document.documentElement.lang = detectLocale();
+async function localize() {
+  const locale = await Core.getActiveLocale();
+  document.documentElement.lang = locale;
+  activeCatalog = await Core.loadLocaleCatalog(locale);
   document.querySelectorAll('[data-i18n]').forEach((element) => {
     element.textContent = message(element.dataset.i18n);
   });

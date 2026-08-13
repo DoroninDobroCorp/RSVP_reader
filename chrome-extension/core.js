@@ -8,8 +8,56 @@
   const MAX_TEXT_CHARACTERS = 1_500_000;
   const MAX_TITLE_CHARACTERS = 300;
   const PENDING_TTL_MS = 10 * 60 * 1000;
+  const localeCatalogs = new Map();
+  let cachedLocale = 'en';
+
+  async function getActiveLocale() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+        const stored = await chrome.storage.local.get(['hummingreadProfileLocale', 'hummingreadLocale']);
+        const override = stored.hummingreadProfileLocale || stored.hummingreadLocale;
+        if (override) {
+          const lower = String(override).toLowerCase();
+          if (lower.startsWith('ru')) { cachedLocale = 'ru'; return 'ru'; }
+          if (lower.startsWith('es')) { cachedLocale = 'es'; return 'es'; }
+          if (lower.startsWith('en')) { cachedLocale = 'en'; return 'en'; }
+        }
+      }
+    } catch (error) {}
+    const uiLang = (typeof chrome !== 'undefined' && chrome?.i18n?.getUILanguage?.() || 'en').toLowerCase();
+    if (uiLang.startsWith('ru')) { cachedLocale = 'ru'; return 'ru'; }
+    if (uiLang.startsWith('es')) { cachedLocale = 'es'; return 'es'; }
+    cachedLocale = 'en';
+    return 'en';
+  }
+
+  async function loadLocaleCatalog(locale) {
+    const normLocale = ['ru', 'es', 'en'].includes(locale) ? locale : 'en';
+    cachedLocale = normLocale;
+    if (localeCatalogs.has(normLocale)) return localeCatalogs.get(normLocale);
+    try {
+      if (typeof chrome !== 'undefined' && chrome?.runtime?.getURL) {
+        const url = chrome.runtime.getURL(`_locales/${normLocale}/messages.json`);
+        const response = await fetch(url);
+        if (response.ok) {
+          const raw = await response.json();
+          const catalog = {};
+          for (const [key, entry] of Object.entries(raw)) {
+            if (entry && entry.message) catalog[key] = entry.message;
+          }
+          localeCatalogs.set(normLocale, catalog);
+          return catalog;
+        }
+      }
+    } catch (error) {}
+    return {};
+  }
 
   function getMessage(key, fallback = '') {
+    if (localeCatalogs.has(cachedLocale)) {
+      const catalog = localeCatalogs.get(cachedLocale);
+      if (catalog && catalog[key]) return catalog[key];
+    }
     if (typeof chrome !== 'undefined' && chrome?.i18n?.getMessage) {
       const localized = chrome.i18n.getMessage(key);
       if (localized) return localized;
@@ -233,10 +281,12 @@
     createNonce,
     extractReadablePageFromDocument,
     focusSegments,
+    getActiveLocale,
     getMessage,
     handoffStorageKey,
     isExtractablePageUrl,
     isValidNonce,
+    loadLocaleCatalog,
     normalizeHttpUrl,
     normalizePayload,
     normalizeTitle,
