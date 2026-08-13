@@ -1,0 +1,454 @@
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preDebugBuild UP-TO-DATE
+> Task :capacitor-android:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-android:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-android:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-android:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-android:generateDebugResValues UP-TO-DATE
+> Task :capacitor-android:generateDebugResources UP-TO-DATE
+> Task :capacitor-android:packageDebugResources UP-TO-DATE
+> Task :capacitor-android:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-android:generateDebugRFile UP-TO-DATE
+> Task :capacitor-android:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-android:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-android:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-android:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-android:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-android:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-android:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-android:compileDebugShaders NO-SOURCE
+> Task :capacitor-android:generateDebugAssets UP-TO-DATE
+> Task :capacitor-android:packageDebugAssets UP-TO-DATE
+> Task :capacitor-android:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-android:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-android:processDebugManifest UP-TO-DATE
+> Task :capacitor-android:processDebugJavaRes NO-SOURCE
+> Task :capacitor-android:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-android:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-android:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-android:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-cordova-android-plugins:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-cordova-android-plugins:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResValues UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:packageDebugResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugRFile UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:compileDebugJavaWithJavac NO-SOURCE
+> Task :capacitor-cordova-android-plugins:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:compileDebugShaders NO-SOURCE
+> Task :capacitor-cordova-android-plugins:generateDebugAssets UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:packageDebugAssets UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:processDebugManifest UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:processDebugJavaRes NO-SOURCE
+> Task :capacitor-cordova-android-plugins:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-community-keep-awake:preBuild UP-TO-DATE
+> Task :capacitor-community-keep-awake:preDebugBuild UP-TO-DATE
+> Task :capacitor-community-keep-awake:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-community-keep-awake:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-community-keep-awake:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-community-keep-awake:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-android:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugResValues UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugResources UP-TO-DATE
+> Task :capacitor-community-keep-awake:packageDebugResources UP-TO-DATE
+> Task :capacitor-community-keep-awake:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugRFile UP-TO-DATE
+> Task :capacitor-community-keep-awake:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-community-keep-awake:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-community-keep-awake:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-community-keep-awake:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-community-keep-awake:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-community-keep-awake:compileDebugShaders NO-SOURCE
+> Task :capacitor-community-keep-awake:generateDebugAssets UP-TO-DATE
+> Task :capacitor-community-keep-awake:packageDebugAssets UP-TO-DATE
+> Task :capacitor-community-keep-awake:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-community-keep-awake:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-community-keep-awake:processDebugManifest UP-TO-DATE
+> Task :capacitor-community-keep-awake:processDebugJavaRes NO-SOURCE
+> Task :capacitor-community-keep-awake:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-community-keep-awake:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-community-keep-awake:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-community-keep-awake:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-app:preBuild UP-TO-DATE
+> Task :capacitor-app:preDebugBuild UP-TO-DATE
+> Task :capacitor-app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-app:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-app:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-app:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-app:generateDebugResValues UP-TO-DATE
+> Task :capacitor-app:generateDebugResources UP-TO-DATE
+> Task :capacitor-app:packageDebugResources UP-TO-DATE
+> Task :capacitor-app:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-app:generateDebugRFile UP-TO-DATE
+> Task :capacitor-app:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-app:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-app:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-app:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-app:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-app:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-app:compileDebugShaders NO-SOURCE
+> Task :capacitor-app:generateDebugAssets UP-TO-DATE
+> Task :capacitor-app:packageDebugAssets UP-TO-DATE
+> Task :capacitor-app:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-app:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-app:processDebugManifest UP-TO-DATE
+> Task :capacitor-app:processDebugJavaRes NO-SOURCE
+> Task :capacitor-app:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-app:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-app:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-app:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-filesystem:preBuild UP-TO-DATE
+> Task :capacitor-filesystem:preDebugBuild UP-TO-DATE
+> Task :capacitor-filesystem:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-filesystem:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-filesystem:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-filesystem:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-filesystem:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :capacitor-filesystem:generateDebugResValues UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugResources UP-TO-DATE
+> Task :capacitor-filesystem:packageDebugResources UP-TO-DATE
+> Task :capacitor-filesystem:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugRFile UP-TO-DATE
+> Task :capacitor-filesystem:compileDebugKotlin UP-TO-DATE
+> Task :capacitor-filesystem:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-filesystem:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-filesystem:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-filesystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :capacitor-filesystem:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-filesystem:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-filesystem:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-filesystem:compileDebugShaders NO-SOURCE
+> Task :capacitor-filesystem:generateDebugAssets UP-TO-DATE
+> Task :capacitor-filesystem:packageDebugAssets UP-TO-DATE
+> Task :capacitor-filesystem:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-filesystem:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-filesystem:processDebugManifest UP-TO-DATE
+> Task :capacitor-filesystem:processDebugJavaRes UP-TO-DATE
+> Task :capacitor-filesystem:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-filesystem:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-filesystem:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-filesystem:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-haptics:preBuild UP-TO-DATE
+> Task :capacitor-haptics:preDebugBuild UP-TO-DATE
+> Task :capacitor-haptics:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-haptics:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-haptics:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-haptics:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-haptics:generateDebugResValues UP-TO-DATE
+> Task :capacitor-haptics:generateDebugResources UP-TO-DATE
+> Task :capacitor-haptics:packageDebugResources UP-TO-DATE
+> Task :capacitor-haptics:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-haptics:generateDebugRFile UP-TO-DATE
+> Task :capacitor-haptics:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-haptics:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-haptics:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-haptics:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-haptics:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-haptics:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-haptics:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-haptics:compileDebugShaders NO-SOURCE
+> Task :capacitor-haptics:generateDebugAssets UP-TO-DATE
+> Task :capacitor-haptics:packageDebugAssets UP-TO-DATE
+> Task :capacitor-haptics:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-haptics:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-haptics:processDebugManifest UP-TO-DATE
+> Task :capacitor-haptics:processDebugJavaRes NO-SOURCE
+> Task :capacitor-haptics:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-haptics:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-haptics:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-haptics:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-preferences:preBuild UP-TO-DATE
+> Task :capacitor-preferences:preDebugBuild UP-TO-DATE
+> Task :capacitor-preferences:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-preferences:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-preferences:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-preferences:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-preferences:generateDebugResValues UP-TO-DATE
+> Task :capacitor-preferences:generateDebugResources UP-TO-DATE
+> Task :capacitor-preferences:packageDebugResources UP-TO-DATE
+> Task :capacitor-preferences:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-preferences:generateDebugRFile UP-TO-DATE
+> Task :capacitor-preferences:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-preferences:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-preferences:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-preferences:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-preferences:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-preferences:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-preferences:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-preferences:compileDebugShaders NO-SOURCE
+> Task :capacitor-preferences:generateDebugAssets UP-TO-DATE
+> Task :capacitor-preferences:packageDebugAssets UP-TO-DATE
+> Task :capacitor-preferences:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-preferences:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-preferences:processDebugManifest UP-TO-DATE
+> Task :capacitor-preferences:processDebugJavaRes NO-SOURCE
+> Task :capacitor-preferences:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-preferences:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-preferences:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-preferences:bundleDebugLocalLintAar UP-TO-DATE
+> Task :capacitor-share:preBuild UP-TO-DATE
+> Task :capacitor-share:preDebugBuild UP-TO-DATE
+> Task :capacitor-share:mergeDebugJniLibFolders UP-TO-DATE
+> Task :capacitor-share:mergeDebugNativeLibs NO-SOURCE
+> Task :capacitor-share:stripDebugDebugSymbols NO-SOURCE
+> Task :capacitor-share:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :capacitor-share:generateDebugResValues UP-TO-DATE
+> Task :capacitor-share:generateDebugResources UP-TO-DATE
+> Task :capacitor-share:packageDebugResources UP-TO-DATE
+> Task :capacitor-share:parseDebugLocalResources UP-TO-DATE
+> Task :capacitor-share:generateDebugRFile UP-TO-DATE
+> Task :capacitor-share:extractDebugAnnotations UP-TO-DATE
+> Task :capacitor-share:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :capacitor-share:javaPreCompileDebug UP-TO-DATE
+> Task :capacitor-share:compileDebugJavaWithJavac UP-TO-DATE
+> Task :capacitor-share:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :capacitor-share:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :capacitor-share:mergeDebugShaders UP-TO-DATE
+> Task :capacitor-share:compileDebugShaders NO-SOURCE
+> Task :capacitor-share:generateDebugAssets UP-TO-DATE
+> Task :capacitor-share:packageDebugAssets UP-TO-DATE
+> Task :capacitor-share:prepareDebugArtProfile UP-TO-DATE
+> Task :capacitor-share:prepareLintJarForPublish UP-TO-DATE
+> Task :capacitor-share:processDebugManifest UP-TO-DATE
+> Task :capacitor-share:processDebugJavaRes NO-SOURCE
+> Task :capacitor-share:mergeDebugJavaResource UP-TO-DATE
+> Task :capacitor-share:syncDebugLibJars UP-TO-DATE
+> Task :capacitor-share:writeDebugAarMetadata UP-TO-DATE
+> Task :capacitor-share:bundleDebugLocalLintAar UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-android:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-app:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-filesystem:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-haptics:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-preferences:extractDeepLinksDebug UP-TO-DATE
+> Task :capacitor-share:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :capacitor-android:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-app:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-community-keep-awake:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-filesystem:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-haptics:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-preferences:compileDebugLibraryResources UP-TO-DATE
+> Task :capacitor-share:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :capacitor-app:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-filesystem:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-haptics:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-preferences:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :capacitor-share:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-android:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-android:createFullJarDebug UP-TO-DATE
+> Task :capacitor-android:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-app:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-app:createFullJarDebug UP-TO-DATE
+> Task :capacitor-app:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-community-keep-awake:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:createFullJarDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:createFullJarDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-filesystem:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-filesystem:createFullJarDebug UP-TO-DATE
+> Task :capacitor-filesystem:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-haptics:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-haptics:createFullJarDebug UP-TO-DATE
+> Task :capacitor-haptics:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-preferences:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-preferences:createFullJarDebug UP-TO-DATE
+> Task :capacitor-preferences:writeDebugLintModelMetadata UP-TO-DATE
+> Task :capacitor-share:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :capacitor-share:createFullJarDebug UP-TO-DATE
+> Task :capacitor-share:writeDebugLintModelMetadata UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :capacitor-android:extractProguardFiles UP-TO-DATE
+> Task :capacitor-android:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-app:extractProguardFiles UP-TO-DATE
+> Task :capacitor-app:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-community-keep-awake:extractProguardFiles UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:extractProguardFiles UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-filesystem:extractProguardFiles UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-haptics:extractProguardFiles UP-TO-DATE
+> Task :capacitor-haptics:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-preferences:extractProguardFiles UP-TO-DATE
+> Task :capacitor-preferences:generateDebugLintModel UP-TO-DATE
+> Task :capacitor-share:extractProguardFiles UP-TO-DATE
+> Task :capacitor-share:generateDebugLintModel UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-android:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-app:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-community-keep-awake:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-filesystem:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-haptics:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-preferences:lintAnalyzeDebug UP-TO-DATE
+> Task :capacitor-share:lintAnalyzeDebug UP-TO-DATE
+> Task :app:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :app:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-android:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-android:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-android:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-android:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-android:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-android:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-android:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-app:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-app:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-app:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-app:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-app:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-app:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-community-keep-awake:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-community-keep-awake:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-community-keep-awake:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-community-keep-awake:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-filesystem:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-filesystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-filesystem:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-filesystem:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-haptics:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-haptics:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-haptics:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-haptics:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-haptics:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-haptics:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-haptics:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-preferences:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-preferences:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-preferences:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-preferences:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-preferences:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-preferences:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-preferences:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-share:preDebugAndroidTestBuild UP-TO-DATE
+> Task :capacitor-share:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :capacitor-share:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :capacitor-share:preDebugUnitTestBuild UP-TO-DATE
+> Task :capacitor-share:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :capacitor-share:lintAnalyzeDebugAndroidTest UP-TO-DATE
+> Task :capacitor-share:lintAnalyzeDebugUnitTest UP-TO-DATE
+> Task :capacitor-android:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-app:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-community-keep-awake:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-filesystem:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-haptics:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-preferences:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-share:generateDebugLintReportModel UP-TO-DATE
+> Task :capacitor-android:lintReportDebug
+> Task :capacitor-android:lintDebug
+
+> Task :capacitor-app:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor/app/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-app:lintDebug
+
+> Task :capacitor-community-keep-awake:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor-community/keep-awake/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-community-keep-awake:lintDebug
+> Task :capacitor-cordova-android-plugins:lintReportDebug UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:lintDebug
+
+> Task :capacitor-filesystem:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor/filesystem/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-filesystem:lintDebug
+
+> Task :capacitor-haptics:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor/haptics/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-haptics:lintDebug
+
+> Task :capacitor-preferences:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor/preferences/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-preferences:lintDebug
+
+> Task :capacitor-share:lintReportDebug
+Wrote HTML report to file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/node_modules/@capacitor/share/android/build/reports/lint-results-debug.html
+
+> Task :capacitor-share:lintDebug
+
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug UP-TO-DATE
+> Task :app:lintDebug
+
+[Incubating] Problems report is available at: file:///Users/vladimirdoronin/VovkaNowEngineer/work_fold/new/paceflow-production/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 8s
+338 actionable tasks: 18 executed, 320 up-to-date

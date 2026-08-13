@@ -137,6 +137,25 @@ androidIndex = androidIndex
     .replaceAll('iOS mantiene sus botones de volumen sin cambios.', 'Android mantiene sus botones de volumen sin cambios.');
 await writeFile(androidIndexPath, androidIndex);
 
+const androidI18nPath = join(androidNativeDir, 'i18n.js');
+let androidI18n = await readFile(androidI18nPath, 'utf8');
+androidI18n = androidI18n
+    .replaceAll('iOS keeps its volume buttons unchanged.', 'Android keeps its volume buttons unchanged.')
+    .replaceAll('На iOS кнопки громкости не переназначаются.', 'На Android кнопки громкости не переназначаются.')
+    .replaceAll('iOS mantiene sus botones de volumen sin cambios.', 'Android mantiene sus botones de volumen sin cambios.')
+    .replaceAll('Unavailable in the iOS build.', 'Unavailable in the Android build.')
+    .replaceAll('В сборке для iOS функция недоступна.', 'В сборке для Android функция недоступна.')
+    .replaceAll('No disponible en la versión de iOS.', 'No disponible en la versión de Android.')
+    .replaceAll('iOS', 'Android');
+await writeFile(androidI18nPath, androidI18n);
+
+const androidAppJsPath = join(androidNativeDir, 'app.js');
+let androidAppJs = await readFile(androidAppJsPath, 'utf8');
+androidAppJs = androidAppJs
+    .replaceAll('Safari', 'native WebView')
+    .replaceAll('Service Worker', 'background cache');
+await writeFile(androidAppJsPath, androidAppJs);
+
 const androidAppAssets = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
 await rm(androidAppAssets, { recursive: true, force: true });
 await cp(androidNativeDir, androidAppAssets, { recursive: true });

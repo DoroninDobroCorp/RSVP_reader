@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-08-13T01:27:40.852Z",
+  "avd": "test_avd_api36",
+  "apiLevel": 36,
+  "assertions": {
+    "VAL-CROSS-QA-005": "PASSED",
+    "VAL-CROSS-QA-001": "PASSED",
+    "VAL-CROSS-QA-002": "PASSED",
+    "VAL-CROSS-QA-003": "PASSED",
+    "VAL-CROSS-QA-004": "PASSED",
+    "VAL-CROSS-QA-006": "PASSED",
+    "VAL-CROSS-QA-007": "PASSED",
+    "VAL-CROSS-QA-008": "PASSED"
+  }
+}

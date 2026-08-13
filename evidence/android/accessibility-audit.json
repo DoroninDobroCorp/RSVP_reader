@@ -1,0 +1,654 @@
+{
+  "totalControls": 72,
+  "validControls": 10,
+  "controls": [
+    {
+      "id": "skip-link",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Saltar al contenido",
+      "width": 161,
+      "height": 44,
+      "touchTargetValid": true
+    },
+    {
+      "id": "homeBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "HummingRead\n                Lee a tu ritmo con Pico",
+      "width": 164,
+      "height": 46,
+      "touchTargetValid": true
+    },
+    {
+      "id": "globalSearchBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Buscar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "settingsBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Ajustes",
+      "width": 44,
+      "height": 44,
+      "touchTargetValid": true
+    },
+    {
+      "id": "continueReadingCard",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Continuar leyendo\n                \n                \n                →",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "tryDemoBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "▶\n                            Ver la demostración de 45 segundos",
+      "width": 258,
+      "height": 59,
+      "touchTargetValid": true
+    },
+    {
+      "id": "heroImportBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "↓\n                            Importar tu libro",
+      "width": 258,
+      "height": 46,
+      "touchTargetValid": true
+    },
+    {
+      "id": "bookNameInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "Título del libro (opcional)",
+      "width": 234,
+      "height": 48,
+      "touchTargetValid": true
+    },
+    {
+      "id": "loadFileBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Importar libro",
+      "width": 234,
+      "height": 44,
+      "touchTargetValid": true
+    },
+    {
+      "id": "startReadingBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Abrir lector",
+      "width": 234,
+      "height": 44,
+      "touchTargetValid": true
+    },
+    {
+      "id": "addToLibraryBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Guardar en la biblioteca",
+      "width": 266,
+      "height": 50,
+      "touchTargetValid": true
+    },
+    {
+      "id": "libraryBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Biblioteca (0)",
+      "width": 266,
+      "height": 50,
+      "touchTargetValid": true
+    },
+    {
+      "id": "",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Política de privacidad",
+      "width": 127,
+      "height": 20,
+      "touchTargetValid": false
+    },
+    {
+      "id": "",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Soporte",
+      "width": 47,
+      "height": 20,
+      "touchTargetValid": false
+    },
+    {
+      "id": "",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Agradecimientos y licencias",
+      "width": 166,
+      "height": 20,
+      "touchTargetValid": false
+    },
+    {
+      "id": "fileInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "",
+      "width": 1,
+      "height": 1,
+      "touchTargetValid": false
+    },
+    {
+      "id": "backFromLibraryBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "← Volver",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "librarySearchInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "Buscar en tu biblioteca",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "exportLibraryBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Exportar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "importLibraryBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Importar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "libraryImportInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "backToInputBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Volver",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "tocBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Índice",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "searchInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "Buscar en el libro",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "searchPrevBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Resultado anterior",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "searchNextBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Resultado siguiente",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "addBookmarkBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Marcador",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "bookmarksBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Marcadores",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "startRSVPBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Iniciar modo enfoque",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rsvpTocBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Índice",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rsvpSearchBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Buscar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "demoCoachActionBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "demoCoachSkipBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Omitir guía",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "playPauseBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Pausar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rewindWordsBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Rebobinar 10 palabras",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "prevWordBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Disminuir la velocidad en 20 palabras por minuto",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "nextWordBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Aumentar la velocidad en 20 palabras por minuto",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rsvpBookmarkBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Añadir marcador",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "stopRSVPBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cerrar modo enfoque",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rsvpScrubber",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "Posición de lectura",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "rsvpBottomTapZone",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Pausar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "closeSettingsBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cerrar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "languageEnBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "English",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "languageRuBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Русский",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "languageEsBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Español",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "themeNightBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "● Noche",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "themeDayBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "○ Día",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "wpmInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "350",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "fontSizeInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "42",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "focusLetterColor",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "#ff6b6b",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "orpAlignmentInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "lengthScalingInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "chunkingEnabledInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "balancedPairsEnabledInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "speedRampUpInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "orpNotchesInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "commaPause",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "1.05",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "periodPause",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "1.6",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "semicolonPause",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "1.3",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "hardwareControlsInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "on",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "settingsExportBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Exportar copia de seguridad",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "deleteAllDataBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Eliminar todos los datos locales",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "secondary-btn settings-link",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Política de privacidad",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "secondary-btn settings-link",
+      "tag": "A",
+      "role": "a",
+      "ariaLabel": "Soporte",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "resetSettingsBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Restaurar valores predeterminados",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "closeBookmarksBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cerrar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "saveBookmarkBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Añadir posición actual",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "closeTocBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cerrar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "actionDialogCloseBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cerrar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "actionDialogInput",
+      "tag": "INPUT",
+      "role": "input",
+      "ariaLabel": "",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "actionDialogCancelBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Cancelar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    },
+    {
+      "id": "actionDialogConfirmBtn",
+      "tag": "BUTTON",
+      "role": "button",
+      "ariaLabel": "Confirmar",
+      "width": 0,
+      "height": 0,
+      "touchTargetValid": false
+    }
+  ]
+}
