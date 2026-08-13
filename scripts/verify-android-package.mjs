@@ -132,13 +132,26 @@ async function runPackageAudit() {
 
     // 6. VAL-R2-VERIFY-004 & VAL-R2-ARTIFACT-001/002: APK & AAB Existence & SHA-256 Checksum Verification Gate
     console.log('6. Checking VAL-R2-VERIFY-004: APK & AAB Existence and SHA-256 Checksum Validation...');
+    const r4Apk = join(root, 'artifacts', 'android-r4', 'HummingRead-R4-debug.apk');
     const r3Apk = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-debug.apk');
     const primaryApk = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
     const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    const targetApk = existsSync(r3Apk) ? r3Apk : (existsSync(primaryApk) ? primaryApk : (existsSync(buildApk) ? buildApk : null));
+    let targetApk = null;
+
+    for (const cand of [r4Apk, buildApk, r3Apk, primaryApk]) {
+        if (existsSync(cand)) {
+            try {
+                const stat = (await import('node:fs')).statSync(cand);
+                if (stat.size > 100000) {
+                    targetApk = cand;
+                    break;
+                }
+            } catch (e) {}
+        }
+    }
 
     if (!targetApk) {
-        throw new Error('VAL-R2-VERIFY-004 Failed: APK file missing. Expected at artifacts/android-r3/HummingRead-R3-debug.apk, artifacts/android-r2/HummingRead-R2-debug.apk or android/app/build/outputs/apk/debug/app-debug.apk. Run build first.');
+        throw new Error('VAL-R2-VERIFY-004 Failed: APK file missing. Expected at artifacts/android-r4/HummingRead-R4-debug.apk, android/app/build/outputs/apk/debug/app-debug.apk, artifacts/android-r3/HummingRead-R3-debug.apk or artifacts/android-r2/HummingRead-R2-debug.apk. Run build first.');
     }
 
     const apkBuffer = await readFile(targetApk);
@@ -146,13 +159,26 @@ async function runPackageAudit() {
     console.log(`   Target APK located: ${targetApk}`);
     console.log(`   Computed APK SHA-256: ${actualSha256}`);
 
+    const r4Aab = join(root, 'artifacts', 'android-r4', 'HummingRead-R4-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const r3Aab = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const primaryAab = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const buildAab = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
-    const targetAab = existsSync(r3Aab) ? r3Aab : (existsSync(primaryAab) ? primaryAab : (existsSync(buildAab) ? buildAab : null));
+    let targetAab = null;
+
+    for (const cand of [r4Aab, buildAab, r3Aab, primaryAab]) {
+        if (existsSync(cand)) {
+            try {
+                const stat = (await import('node:fs')).statSync(cand);
+                if (stat.size > 100000) {
+                    targetAab = cand;
+                    break;
+                }
+            } catch (e) {}
+        }
+    }
 
     if (!targetAab) {
-        throw new Error('VAL-R2-ARTIFACT-002 Failed: Release AAB file missing. Expected at artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab, artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab or android/app/build/outputs/bundle/release/app-release.aab.');
+        throw new Error('VAL-R2-ARTIFACT-002 Failed: Release AAB file missing. Expected at artifacts/android-r4/HummingRead-R4-review-UNSIGNED-NOT-FOR-UPLOAD.aab, android/app/build/outputs/bundle/release/app-release.aab, artifacts/android-r3/HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab or artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab.');
     }
 
     const aabBuffer = await readFile(targetAab);
