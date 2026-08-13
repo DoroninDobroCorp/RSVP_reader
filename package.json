@@ -22,7 +22,7 @@
     "verify:determinism": "node scripts/verify-deterministic-build.mjs",
     "verify:store-copy": "node scripts/verify-store-copy.mjs",
     "verify:all": "npm run verify:brand && npm run verify:notices && npm run verify:package && npm run verify:android && npm run verify:extension && npm run verify:precache && npm run verify:deployment && npm run verify:determinism && npm run verify:store-copy",
-    "verify:android": "node scripts/verify-android-package.mjs",
+    "verify:android": "node scripts/verify-android-package.mjs && node scripts/verify-android-privacy.mjs",
     "release:check": "npm run test:isolation && npm test && npm run test:extension && npm run test:visual && npm run test:lighthouse && npm run cap:sync && npm run verify:all",
     "ios:add": "npm run build && cap add ios",
     "ios:open": "npm run cap:sync && cap open ios",
