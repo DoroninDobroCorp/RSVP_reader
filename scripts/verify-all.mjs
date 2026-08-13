@@ -1,163 +1,219 @@
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
-function runStep(name, command, args, options = {}) {
+// ============================================================================
+// Verification Audit Helpers (Exported for fail-closed validation & self-tests)
+// ============================================================================
+
+export function verifyApkFreshness(apkPath, buildStartTime) {
+    if (!existsSync(apkPath)) {
+        throw new Error(`APK file missing: ${apkPath}`);
+    }
+    const stat = statSync(apkPath);
+    const mtime = stat.mtimeMs || stat.mtime;
+    if (mtime < buildStartTime) {
+        throw new Error(`Stale APK detected: mtime (${new Date(mtime).toISOString()}) is older than build start time (${new Date(buildStartTime).toISOString()}).`);
+    }
+}
+
+export function verifyApkChecksum(apkPath, expectedSha256) {
+    if (!existsSync(apkPath)) {
+        throw new Error(`APK file missing: ${apkPath}`);
+    }
+    const apkBuffer = readFileSync(apkPath);
+    const actualSha256 = createHash('sha256').update(apkBuffer).digest('hex');
+    if (actualSha256 !== expectedSha256) {
+        throw new Error(`APK SHA-256 mismatch: expected ${expectedSha256}, got ${actualSha256}`);
+    }
+    return actualSha256;
+}
+
+export function verifyManifestPermissions(manifestContent) {
+    const forbidden = ['android.permission.INTERNET', 'READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE'];
+    for (const perm of forbidden) {
+        if (manifestContent.includes(perm)) {
+            throw new Error(`Manifest permission audit failed: contains forbidden permission ${perm}`);
+        }
+    }
+}
+
+export function verifyFileProviderPaths(filePathsXmlContent) {
+    if (filePathsXmlContent.includes('external-path') || filePathsXmlContent.includes('root-path')) {
+        throw new Error('FileProvider audit failed: contains broad external-path or root-path');
+    }
+    if (!filePathsXmlContent.includes('cache-path name="backup_share" path="backups/"')) {
+        throw new Error('FileProvider audit failed: missing restricted <cache-path name="backup_share" path="backups/" />');
+    }
+}
+
+export function verifyGitShaMatch(localSha, remoteSha) {
+    if (!localSha || !remoteSha || localSha !== remoteSha) {
+        throw new Error(`Git SHA mismatch: local HEAD (${localSha || 'none'}) does not match remote SHA (${remoteSha || 'none'})`);
+    }
+}
+
+export function fetchRemoteGitSha(options = {}) {
+    const remoteUrl = options.remoteUrl || 'origin';
+    const branch = options.branch || 'mission/android-r3-server-proof-20260813';
+    const res = spawnSync('git', ['ls-remote', '--heads', remoteUrl, branch], { cwd: root, encoding: 'utf8' });
+    if (res.status !== 0 || !res.stdout) {
+        throw new Error(`Failed to fetch remote Git SHA from ${remoteUrl} ${branch}: ${res.stderr || 'Network or remote unreachable'}`);
+    }
+    const parts = res.stdout.trim().split(/\s+/);
+    if (!parts[0] || parts[0].length < 40) {
+        throw new Error(`Invalid remote SHA returned from ${remoteUrl} ${branch}: ${res.stdout}`);
+    }
+    return parts[0];
+}
+
+export function verifyLogProvenance(assertionsMap, logsDir) {
+    for (const [assertion, status] of Object.entries(assertionsMap)) {
+        if (status === 'PASSED') {
+            const logFileName = `${assertion.toLowerCase()}.log`;
+            const logPath = join(logsDir, logFileName);
+            if (!existsSync(logPath)) {
+                throw new Error(`Claimed assertion ${assertion} has no matching validation log at ${logPath}`);
+            }
+            const logContent = readFileSync(logPath, 'utf8');
+            if (!logContent.trim()) {
+                throw new Error(`Validation log for claimed assertion ${assertion} is empty at ${logPath}`);
+            }
+        }
+    }
+}
+
+export function verifyScreenshotDeduplication(fileHashesMap) {
+    const seenHashes = new Map();
+    for (const [filename, hash] of Object.entries(fileHashesMap)) {
+        if (seenHashes.has(hash)) {
+            throw new Error(`Duplicate workflow screenshot detected: ${filename} has same SHA-256 as ${seenHashes.get(hash)}`);
+        }
+        seenHashes.set(hash, filename);
+    }
+}
+
+export function verifySidecarDimensions(measuredWidth, measuredHeight, sidecarWidth, sidecarHeight) {
+    if (measuredWidth !== sidecarWidth || measuredHeight !== sidecarHeight) {
+        throw new Error(`PNG/sidecar dimension mismatch: measured ${measuredWidth}x${measuredHeight}, sidecar declared ${sidecarWidth}x${sidecarHeight}`);
+    }
+}
+
+export function verifySidecarCommitSha(sidecarSha, expectedSha) {
+    if (!sidecarSha || sidecarSha !== expectedSha) {
+        throw new Error(`Sidecar source SHA mismatch: sidecar claims ${sidecarSha}, expected ${expectedSha}`);
+    }
+}
+
+export function verifyQaResults(scenarios) {
+    for (const scenario of scenarios) {
+        if (scenario.status === 'SKIPPED' || scenario.status === 'FAILED') {
+            throw new Error(`Required QA scenario failed or skipped: ${scenario.id || scenario.name} (${scenario.status})`);
+        }
+    }
+}
+
+export function verifyExecutionRecord(record) {
+    if (record.allowFail) {
+        throw new Error(`Execution record uses allowFail: true for proof: ${record.name || record.id}`);
+    }
+    if (record.exitCode !== 0 || record.status !== 'PASS') {
+        throw new Error(`Execution record failed: ${record.name || record.id} (exitCode: ${record.exitCode})`);
+    }
+}
+
+export function verifyExecutedAssertions(assertionsMap, executedChecks) {
+    for (const [assertion, status] of Object.entries(assertionsMap)) {
+        if (status === 'PASSED') {
+            const hasCheck = executedChecks.some(c =>
+                c.status === 'PASS' && (
+                    (c.assertions && c.assertions.includes(assertion)) ||
+                    (c.id && c.id.toLowerCase().includes(assertion.toLowerCase()))
+                )
+            );
+            if (!hasCheck) {
+                throw new Error(`Hard-coded PASSED assertion without an executed check record: ${assertion}`);
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Master Verification Pipeline Runner
+// ============================================================================
+
+function executeCheckStep(stepId, name, command, args, logsDir, masterLogPath, options = {}) {
     console.log(`\n====================================================`);
     console.log(`>>> Running Verification Step: ${name}`);
     console.log(`====================================================\n`);
 
+    const startTime = new Date();
+    const logFileName = `${stepId}.log`;
+    const stepLogPath = join(logsDir, logFileName);
+
     const result = spawnSync(command, args, {
         cwd: root,
-        stdio: 'inherit',
+        encoding: 'utf8',
         env: { ...process.env, ...options.env }
     });
 
-    if (result.status !== 0) {
-        console.error(`\n[FAIL] Verification step "${name}" failed with exit code ${result.status}. Aborting master pipeline.`);
-        process.exit(result.status || 1);
-    }
-    console.log(`\n[PASS] Verification step "${name}" completed successfully.`);
-}
+    const endTime = new Date();
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const exitCode = result.status ?? (result.signal ? 128 : 1);
+    const status = exitCode === 0 ? 'PASS' : 'FAIL';
 
-function updateEvidenceSummary(currentGitSha, isClean) {
-    console.log('\nGenerating deterministic evidence-summary.json artifact (VAL-R2-TEST-006 & VAL-R2-ARTIFACT-004)...');
+    const stdoutText = result.stdout || '';
+    const stderrText = result.stderr || '';
+    const fullLog = `=== Step: ${name} ===\nCommand: ${command} ${args.join(' ')}\nStart: ${startTime.toISOString()}\nEnd: ${endTime.toISOString()}\nDuration: ${durationMs}ms\nExit Code: ${exitCode}\nStatus: ${status}\n\n--- STDOUT ---\n${stdoutText}\n--- STDERR ---\n${stderrText}\n`;
 
-    const primaryApk = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
-    const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    const targetApk = existsSync(primaryApk) ? primaryApk : (existsSync(buildApk) ? buildApk : null);
+    writeFileSync(stepLogPath, fullLog, 'utf8');
+    appendFileSync(masterLogPath, fullLog + '\n========================================\n', 'utf8');
 
-    let apkSha256 = null;
-    if (targetApk) {
-        const apkBuffer = readFileSync(targetApk);
-        apkSha256 = createHash('sha256').update(apkBuffer).digest('hex');
-    }
+    if (stdoutText) process.stdout.write(stdoutText);
+    if (stderrText) process.stderr.write(stderrText);
 
-    const primaryAab = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
-    const buildAab = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
-    const targetAab = existsSync(primaryAab) ? primaryAab : (existsSync(buildAab) ? buildAab : null);
-
-    let aabSha256 = null;
-    if (targetAab) {
-        const aabBuffer = readFileSync(targetAab);
-        aabSha256 = createHash('sha256').update(aabBuffer).digest('hex');
-    }
-
-    const summaryPayload = {
-        timestamp: new Date().toISOString(),
-        commitSha: currentGitSha,
-        gitSha: currentGitSha,
-        cleanWorkingTree: isClean,
-        jdkVersion: '21',
-        androidSdkLevel: 36,
-        agpVersion: '8.5.0',
-        capacitorAndroidVersion: '8.5.0',
-        apkPath: 'artifacts/android-r2/HummingRead-R2-debug.apk',
-        apkSha256: apkSha256,
-        aabPath: 'artifacts/android-r2/HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab',
-        aabSha256: aabSha256,
-        unitTestStatus: 'PASSED',
-        builtTestStatus: 'PASSED',
-        masterVerificationStatus: 'PASSED',
-        emulatorQaStatus: 'PASSED',
-        avd: 'test_avd_api36',
-        avds: ['test_avd_api36', 'test_tablet_api36'],
-        apiLevel: 36,
-        totalStepsCompleted: 13,
-        assertions: {
-            'VAL-R2-ARTIFACT-001': 'PASSED',
-            'VAL-R2-ARTIFACT-002': 'PASSED',
-            'VAL-R2-ARTIFACT-003': 'PASSED',
-            'VAL-R2-ARTIFACT-004': 'PASSED',
-            'VAL-R2-ARTIFACT-005': 'PASSED',
-            'VAL-R2-ARTIFACT-006': 'PASSED',
-            'VAL-R2-VERIFY-001': 'PASSED',
-            'VAL-R2-VERIFY-002': 'PASSED',
-            'VAL-R2-VERIFY-003': isClean ? 'PASSED' : 'DIRTY',
-            'VAL-R2-VERIFY-004': 'PASSED',
-            'VAL-R2-VERIFY-005': 'PASSED',
-            'VAL-R2-VERIFY-006': 'PASSED',
-            'VAL-R2-PWA-001': 'PASSED',
-            'VAL-R2-PWA-002': 'PASSED',
-            'VAL-R2-PWA-003': 'PASSED',
-            'VAL-R2-PWA-004': 'PASSED',
-            'VAL-R2-PWA-005': 'PASSED',
-            'VAL-R2-PWA-006': 'PASSED',
-            'VAL-R2-LEGAL-001': 'PASSED',
-            'VAL-R2-LEGAL-002': 'PASSED',
-            'VAL-R2-LEGAL-003': 'PASSED',
-            'VAL-R2-LEGAL-004': 'PASSED',
-            'VAL-R2-LEGAL-005': 'PASSED',
-            'VAL-R2-LEGAL-006': 'PASSED',
-            'VAL-R2-TEST-001': 'PASSED',
-            'VAL-R2-TEST-002': 'PASSED',
-            'VAL-R2-TEST-003': 'PASSED',
-            'VAL-R2-TEST-004': 'PASSED',
-            'VAL-R2-TEST-005': 'PASSED',
-            'VAL-R2-TEST-006': 'PASSED',
-            'VAL-R2-EXT-001': 'PASSED',
-            'VAL-R2-EXT-002': 'PASSED',
-            'VAL-R2-EXT-003': 'PASSED',
-            'VAL-R2-EXT-004': 'PASSED',
-            'VAL-R2-EXT-005': 'PASSED',
-            'VAL-R2-EXT-006': 'PASSED',
-            'VAL-R2-PRIV-001': 'PASSED',
-            'VAL-R2-PRIV-002': 'PASSED',
-            'VAL-R2-PRIV-003': 'PASSED',
-            'VAL-R2-PRIV-004': 'PASSED',
-            'VAL-R2-PRIV-005': 'PASSED',
-            'VAL-R2-PRIV-006': 'PASSED',
-            'VAL-R2-EMU-001': 'PASSED',
-            'VAL-R2-EMU-002': 'PASSED',
-            'VAL-R2-EMU-003': 'PASSED',
-            'VAL-R2-EMU-004': 'PASSED',
-            'VAL-R2-EMU-005': 'PASSED',
-            'VAL-R2-EMU-006': 'PASSED',
-            'VAL-R2-EMU-007': 'PASSED',
-            'VAL-R2-EMU-008': 'PASSED',
-            'VAL-R2-SCREEN-001': 'PASSED',
-            'VAL-R2-SCREEN-002': 'PASSED',
-            'VAL-R2-SCREEN-003': 'PASSED',
-            'VAL-R2-SCREEN-004': 'PASSED',
-            'VAL-R2-SCREEN-005': 'PASSED',
-            'VAL-R2-SCREEN-006': 'PASSED',
-            'VAL-CROSS-QA-001': 'PASSED',
-            'VAL-CROSS-QA-002': 'PASSED',
-            'VAL-CROSS-QA-003': 'PASSED',
-            'VAL-CROSS-QA-004': 'PASSED',
-            'VAL-CROSS-QA-005': 'PASSED',
-            'VAL-CROSS-QA-006': 'PASSED',
-            'VAL-CROSS-QA-007': 'PASSED',
-            'VAL-CROSS-QA-008': 'PASSED'
-        }
+    const record = {
+        id: stepId,
+        name,
+        command: `${command} ${args.join(' ')}`,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        durationMs,
+        exitCode,
+        status,
+        logPath: `artifacts/android-r3/logs/${logFileName}`,
+        stdoutSnippet: stdoutText.slice(0, 300).trim(),
+        stderrSnippet: stderrText.slice(0, 300).trim()
     };
 
-    const targetDirs = [
-        join(root, 'artifacts', 'android-r2'),
-        join(root, 'evidence', 'android')
-    ];
-
-    for (const dir of targetDirs) {
-        if (!existsSync(dir)) {
-            mkdirSync(dir, { recursive: true });
-        }
-        const summaryPath = join(dir, 'evidence-summary.json');
-        writeFileSync(summaryPath, JSON.stringify(summaryPayload, null, 2), 'utf8');
-        console.log(`   Updated evidence summary at ${summaryPath}`);
+    if (exitCode !== 0) {
+        console.error(`\n[FAIL] Verification step "${name}" failed with exit code ${exitCode}. Aborting master pipeline.`);
+    } else {
+        console.log(`\n[PASS] Verification step "${name}" completed successfully (${durationMs}ms).`);
     }
+
+    return record;
 }
 
-async function verifyAll() {
+export async function runMasterVerificationPipeline(options = {}) {
     console.log('=== Starting Fail-Closed Master Verifier Pipeline (verify-all.mjs) ===\n');
 
-    const allowDirty = process.argv.includes('--allow-dirty');
+    const allowDirty = options.allowDirty || process.argv.includes('--allow-dirty');
+    const logsDir = join(root, 'artifacts', 'android-r3', 'logs');
+    const artifactsDir = join(root, 'artifacts', 'android-r3');
 
-    // 1. VAL-R2-VERIFY-003: Fresh Git SHA and Clean Working Tree Pre-Verification Check
-    console.log('1. Checking VAL-R2-VERIFY-003: Fresh Git SHA & Clean Working Tree Invariant...');
+    mkdirSync(logsDir, { recursive: true });
+    mkdirSync(artifactsDir, { recursive: true });
+
+    const masterLogPath = join(logsDir, 'verify-all.log');
+    writeFileSync(masterLogPath, `=== Master Verification Pipeline Log ===\nStart: ${new Date().toISOString()}\n\n`, 'utf8');
+
+    // 1. Clean Working Tree and Git Commit SHA Pre-Check (VAL-R3-VERIFY-003)
+    console.log('1. Checking VAL-R3-VERIFY-003: Fresh Git SHA & Clean Working Tree Invariant...');
     const statusRes = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
     if (statusRes.status !== 0) {
         console.error('[FAIL] Failed to execute git status --porcelain');
@@ -166,7 +222,7 @@ async function verifyAll() {
 
     const dirtyOutput = statusRes.stdout ? statusRes.stdout.trim() : '';
     if (dirtyOutput && !allowDirty) {
-        console.error('[FAIL] VAL-R2-VERIFY-003 Failed: Dirty working tree detected! Uncommitted changes are present:');
+        console.error('[FAIL] VAL-R3-VERIFY-003 Failed: Dirty working tree detected! Uncommitted changes are present:');
         console.error(dirtyOutput);
         console.error('\nVerifier pipeline fails if working tree is dirty. Commit or stash changes before running verify:all.');
         process.exit(1);
@@ -181,31 +237,103 @@ async function verifyAll() {
     console.log(`   Git commit SHA: ${currentGitSha}`);
     console.log(`   Working tree status: ${dirtyOutput ? 'DIRTY (bypassed with --allow-dirty)' : 'CLEAN'}\n`);
 
-    // 2. Sequential fail-closed verification pipeline (VAL-R2-VERIFY-006 & VAL-R2-TEST-005)
+    // 2. Sequential Execution of 13 Verification Steps
     const nodeBin = process.execPath;
+    const executedChecks = [];
 
-    runStep('01 Toolchain Doctor Diagnostic', nodeBin, ['scripts/toolchain-doctor.mjs']);
-    runStep('02 Brand & Placeholder Integrity', nodeBin, ['scripts/verify-brand.mjs']);
-    runStep('03 Third-Party Notices & License Integrity', nodeBin, ['scripts/verify-notices.mjs']);
-    runStep('04 Packaged Asset Stripping & Security', nodeBin, ['scripts/verify-packaged-assets.mjs']);
-    runStep('05 Android Local Privacy & Permissions Audit', nodeBin, ['scripts/verify-android-privacy.mjs']);
-    runStep('06 Android Package & SHA-256 Checksum Gate', nodeBin, ['scripts/verify-android-package.mjs']);
-    runStep('07 Chrome Extension Manifest & Catalog Verification', nodeBin, ['scripts/verify-chrome-extension.mjs']);
-    runStep('08 Service Worker App Shell Precache Audit', nodeBin, ['scripts/verify-service-worker-precache.mjs']);
-    runStep('09 Deployment & Security Gate', nodeBin, ['scripts/verify-deployment.mjs']);
-    runStep('10 Deterministic Build Output Audit', nodeBin, ['scripts/verify-deterministic-build.mjs']);
-    runStep('11 Store Metadata Copy & Localization Gate', nodeBin, ['scripts/verify-store-copy.mjs']);
-    runStep('12 Hermetic Unit Tests', nodeBin, ['--test', 'tests/unit/*.test.js']);
-    runStep('13 Built-Output Web Tests', nodeBin, ['scripts/test-web-built.mjs']);
+    const steps = [
+        { id: 'step-01-toolchain-doctor', name: '01 Toolchain Doctor Diagnostic', cmd: nodeBin, args: ['scripts/toolchain-doctor.mjs'], assertions: ['VAL-R3-ENV-001', 'VAL-R3-ENV-002', 'VAL-R3-ENV-003'] },
+        { id: 'step-02-verify-brand', name: '02 Brand & Placeholder Integrity', cmd: nodeBin, args: ['scripts/verify-brand.mjs'], assertions: ['VAL-R3-BRAND-001'] },
+        { id: 'step-03-verify-notices', name: '03 Third-Party Notices & License Integrity', cmd: nodeBin, args: ['scripts/verify-notices.mjs'], assertions: ['VAL-R3-NOTICES-001'] },
+        { id: 'step-04-verify-packaged-assets', name: '04 Packaged Asset Stripping & Security', cmd: nodeBin, args: ['scripts/verify-packaged-assets.mjs'], assertions: ['VAL-R3-SEC-001'] },
+        { id: 'step-05-verify-android-privacy', name: '05 Android Local Privacy & Permissions Audit', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R3-SEC-001', 'VAL-R3-SEC-002'] },
+        { id: 'step-06-verify-android-package', name: '06 Android Package & SHA-256 Checksum Gate', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R3-SEC-003', 'VAL-R3-BUILD-004'] },
+        { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R3-EXT-001'] },
+        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R3-PWA-002'] },
+        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R3-PWA-001'] },
+        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R3-BUILD-001'] },
+        { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R3-STORE-001'] },
+        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R3-HERMETIC-001'] },
+        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R3-PWA-001', 'VAL-R3-PWA-003'] }
+    ];
 
-    updateEvidenceSummary(currentGitSha, !dirtyOutput);
+    let overallPassed = true;
+    for (const step of steps) {
+        const record = executeCheckStep(step.id, step.name, step.cmd, step.args, logsDir, masterLogPath, options);
+        record.assertions = step.assertions;
+        executedChecks.push(record);
+
+        if (record.status !== 'PASS') {
+            overallPassed = false;
+            break;
+        }
+    }
+
+    // Write validation-state.json and evidence-summary.json based strictly on executed checks
+    const passedCount = executedChecks.filter(c => c.status === 'PASS').length;
+    const failedCount = executedChecks.filter(c => c.status === 'FAIL').length;
+    const overallStatus = overallPassed && failedCount === 0 ? 'PASSED' : 'FAILED';
+
+    const assertionsMap = { 'VAL-R3-NEG-001': overallStatus };
+    for (const check of executedChecks) {
+        if (check.assertions && check.status === 'PASS') {
+            for (const ass of check.assertions) {
+                assertionsMap[ass] = 'PASSED';
+            }
+        }
+    }
+
+    const validationState = {
+        timestamp: new Date().toISOString(),
+        commitSha: currentGitSha,
+        gitSha: currentGitSha,
+        cleanWorkingTree: !dirtyOutput,
+        overallStatus,
+        totalExecutedSteps: executedChecks.length,
+        passedSteps: passedCount,
+        failedSteps: failedCount,
+        executedChecks,
+        assertions: assertionsMap
+    };
+
+    writeFileSync(join(artifactsDir, 'validation-state.json'), JSON.stringify(validationState, null, 2), 'utf8');
+
+    const summaryPayload = {
+        timestamp: new Date().toISOString(),
+        commitSha: currentGitSha,
+        gitSha: currentGitSha,
+        cleanWorkingTree: !dirtyOutput,
+        masterVerificationStatus: overallStatus,
+        totalStepsCompleted: executedChecks.length,
+        executedChecks,
+        assertions: assertionsMap
+    };
+
+    writeFileSync(join(artifactsDir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
+
+    // Also update artifacts/android-r2 for backward compatibility if present
+    const r2Dir = join(root, 'artifacts', 'android-r2');
+    if (existsSync(r2Dir)) {
+        writeFileSync(join(r2Dir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
+        writeFileSync(join(r2Dir, 'validation-state.json'), JSON.stringify(validationState, null, 2), 'utf8');
+    }
+
+    if (!overallPassed) {
+        console.error('\n====================================================');
+        console.error(`MASTER VERIFICATION PIPELINE FAILED (${failedCount} step(s) failed)`);
+        console.error('====================================================\n');
+        process.exit(1);
+    }
 
     console.log('\n====================================================');
-    console.log('MASTER VERIFICATION SUITE PASSED (0 errors, 0 warnings)');
+    console.log('MASTER VERIFICATION SUITE PASSED (0 errors, 13 executed steps)');
     console.log('====================================================\n');
 }
 
-verifyAll().catch((err) => {
-    console.error(`[FAIL] Unhandled master verifier error: ${err.message}`);
-    process.exit(1);
-});
+// Execute as script when invoked directly
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+    runMasterVerificationPipeline().catch((err) => {
+        console.error(`[FAIL] Unhandled master verifier error: ${err.message}`);
+        process.exit(1);
+    });
+}
