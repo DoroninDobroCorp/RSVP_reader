@@ -177,4 +177,6 @@ await rm(iosDestination, { recursive: true, force: true });
 await cp(destination, iosDestination, { recursive: true });
 await rm(join(iosDestination, 'android'), { recursive: true, force: true });
 
+await writeFile(join(destination, '.build-complete'), new Date().toISOString(), 'utf8');
+
 console.log(`Built filtered native assets in ${destination} and ${androidNativeDir}`);

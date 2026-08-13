@@ -14,9 +14,8 @@ const root = path.resolve(__dirname, '../../');
 const i18nSource = fs.readFileSync(path.join(root, 'i18n.js'), 'utf8');
 
 function ensureDistBuilt() {
-  const distRuIndex = path.join(root, 'dist', 'ru', 'index.html');
-  const distEsIndex = path.join(root, 'dist', 'es', 'index.html');
-  if (fs.existsSync(distRuIndex) && fs.existsSync(distEsIndex)) {
+  const sentinel = path.join(root, 'dist', '.build-complete');
+  if (fs.existsSync(sentinel)) {
     return;
   }
   const lockFile = path.join(root, '.build-web.lock');
@@ -29,10 +28,13 @@ function ensureDistBuilt() {
       try { fs.unlinkSync(lockFile); } catch (e) {}
     }
   } catch (e) {
-    for (let i = 0; i < 50; i++) {
-      if (fs.existsSync(distRuIndex) && fs.existsSync(distEsIndex)) return;
+    for (let i = 0; i < 100; i++) {
+      if (fs.existsSync(sentinel)) return;
       try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
     }
+  }
+  if (!fs.existsSync(sentinel)) {
+    throw new Error('Timed out waiting for dist/.build-complete');
   }
 }
 

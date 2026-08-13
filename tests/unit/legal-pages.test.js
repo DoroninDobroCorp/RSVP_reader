@@ -8,9 +8,8 @@ const { JSDOM } = require('jsdom');
 const root = path.resolve(__dirname, '../../');
 
 function ensureDistBuilt() {
-  const distIndex = path.join(root, 'dist', 'privacy.html');
-  const distRuIndex = path.join(root, 'dist', 'ru', 'privacy.html');
-  if (fs.existsSync(distIndex) && fs.existsSync(distRuIndex)) {
+  const sentinel = path.join(root, 'dist', '.build-complete');
+  if (fs.existsSync(sentinel)) {
     return;
   }
   const lockFile = path.join(root, '.build-web.lock');
@@ -23,10 +22,13 @@ function ensureDistBuilt() {
       try { fs.unlinkSync(lockFile); } catch (e) {}
     }
   } catch (e) {
-    for (let i = 0; i < 50; i++) {
-      if (fs.existsSync(distIndex) && fs.existsSync(distRuIndex)) return;
+    for (let i = 0; i < 100; i++) {
+      if (fs.existsSync(sentinel)) return;
       try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
     }
+  }
+  if (!fs.existsSync(sentinel)) {
+    throw new Error('Timed out waiting for dist/.build-complete');
   }
 }
 

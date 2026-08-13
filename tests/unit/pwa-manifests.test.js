@@ -9,9 +9,8 @@ import { execSync } from 'node:child_process';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function ensureDistBuilt() {
-    const manifestFile = join(root, 'dist', 'manifest.webmanifest');
-    const indexFile = join(root, 'dist', 'index.html');
-    if (existsSync(manifestFile) && existsSync(indexFile)) {
+    const sentinel = join(root, 'dist', '.build-complete');
+    if (existsSync(sentinel)) {
         return;
     }
     const lockFile = join(root, '.build-web.lock');
@@ -24,10 +23,13 @@ function ensureDistBuilt() {
             try { unlinkSync(lockFile); } catch (e) {}
         }
     } catch (e) {
-        for (let i = 0; i < 50; i++) {
-            if (existsSync(manifestFile) && existsSync(indexFile)) return;
+        for (let i = 0; i < 100; i++) {
+            if (existsSync(sentinel)) return;
             try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
         }
+    }
+    if (!existsSync(sentinel)) {
+        throw new Error('Timed out waiting for dist/.build-complete');
     }
 }
 

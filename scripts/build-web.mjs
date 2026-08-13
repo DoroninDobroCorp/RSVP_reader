@@ -475,4 +475,6 @@ await buildChromeExtension({
     destination: join(destination, 'downloads', 'hummingread-tester.zip')
 });
 
+await writeFile(join(destination, '.build-complete'), new Date().toISOString(), 'utf8');
+
 console.log(`Built bundled web assets in ${destination}`);

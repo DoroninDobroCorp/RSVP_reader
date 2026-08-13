@@ -13,11 +13,37 @@ function parseHtml(filePath) {
   return { content, document: dom.window.document };
 }
 
-function ensureNativeLegalBuilt() {
-  const nativeRuPrivacy = path.join(root, 'dist-native', 'android', 'ru', 'privacy.html');
-  if (fs.existsSync(nativeRuPrivacy)) {
+function ensureDistBuilt() {
+  const sentinel = path.join(root, 'dist', '.build-complete');
+  if (fs.existsSync(sentinel)) {
     return;
   }
+  const lockFile = path.join(root, '.build-web.lock');
+  try {
+    const fd = fs.openSync(lockFile, 'wx');
+    try {
+      execSync(`${process.execPath} scripts/build-web.mjs`, { cwd: root, stdio: 'ignore' });
+    } finally {
+      fs.closeSync(fd);
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+  } catch (e) {
+    for (let i = 0; i < 100; i++) {
+      if (fs.existsSync(sentinel)) return;
+      try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
+    }
+  }
+  if (!fs.existsSync(sentinel)) {
+    throw new Error('Timed out waiting for dist/.build-complete');
+  }
+}
+
+function ensureNativeLegalBuilt() {
+  const sentinel = path.join(root, 'dist-native', '.build-complete');
+  if (fs.existsSync(sentinel)) {
+    return;
+  }
+  ensureDistBuilt();
   const lockFile = path.join(root, '.build-native.lock');
   try {
     const fd = fs.openSync(lockFile, 'wx');
@@ -28,10 +54,13 @@ function ensureNativeLegalBuilt() {
       try { fs.unlinkSync(lockFile); } catch (e) {}
     }
   } catch (e) {
-    for (let i = 0; i < 50; i++) {
-      if (fs.existsSync(nativeRuPrivacy)) return;
+    for (let i = 0; i < 100; i++) {
+      if (fs.existsSync(sentinel)) return;
       try { execSync(`${process.execPath} -e "new Promise(r=>setTimeout(r,100))"`, { stdio: 'ignore' }); } catch (err) {}
     }
+  }
+  if (!fs.existsSync(sentinel)) {
+    throw new Error('Timed out waiting for dist-native/.build-complete');
   }
 }
 

@@ -10,9 +10,11 @@ const { JSDOM } = require('jsdom');
 const { Readability } = require('@mozilla/readability');
 
 const PORT = Number(process.env.PORT || 8081);
-const ROOT = fs.existsSync(path.join(__dirname, 'dist', 'index.html'))
-  ? path.join(__dirname, 'dist')
-  : __dirname;
+function getRootPath() {
+  return fs.existsSync(path.join(__dirname, 'dist', 'index.html'))
+    ? path.join(__dirname, 'dist')
+    : __dirname;
+}
 const TEST_MARKER = String(process.env.HUMMINGREAD_TEST_MARKER || '');
 const MAX_ARTICLE_REQUEST_BYTES = 16 * 1024;
 const MAX_ARTICLE_SOURCE_BYTES = 5 * 1024 * 1024;
@@ -488,6 +490,7 @@ async function handleArticleImport(request, response) {
 }
 
 function sendStatic(request, response, url) {
+  const ROOT = getRootPath();
   let pathname;
   try {
     pathname = decodeURIComponent(url.pathname);

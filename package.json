@@ -30,6 +30,7 @@
     "ios:open": "npm run cap:sync && cap open ios",
     "test": "npm run test:unit && npm run test:web-built && npm run test:production",
     "test:unit": "node --test tests/unit/*.test.js",
+    "test:clean-checkout": "node scripts/verify-clean-checkout.mjs",
     "test:web-built": "node scripts/test-web-built.mjs",
     "test:isolation": "node tests/isolation/run-port-collision.mjs",
     "test:extension": "node tests/extension/chrome-extension.e2e.mjs",
