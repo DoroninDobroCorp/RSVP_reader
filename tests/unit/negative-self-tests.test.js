@@ -100,19 +100,21 @@ test('VAL-R2-VERIFY-004 / VAL-R2-VERIFY-005: verify-android-package.mjs fails cl
 });
 
 // VAL-R2-VERIFY-003 & VAL-R2-VERIFY-005: verify-all.mjs fails closed on dirty working tree
-test('VAL-R2-VERIFY-003 / VAL-R2-VERIFY-005: verify-all.mjs enforces clean working tree check', () => {
-    // When run without --allow-dirty on a dirty working tree, verify-all.mjs aborts with exit code 1
-    const res = spawnSync(process.execPath, [join(root, 'scripts', 'verify-all.mjs')], {
-        cwd: root,
-        encoding: 'utf8'
-    });
-    // If working tree is dirty (e.g. during test run), verify-all exits 1 with message
-    if (res.status === 1) {
+test('VAL-R2-VERIFY-003 / VAL-R2-VERIFY-005: verify-all.mjs enforces clean working tree check', async () => {
+    const tempDirtyFile = join(root, '.tmp-negative-test-dirty-check.tmp');
+    await writeFile(tempDirtyFile, 'dirty', 'utf8');
+    try {
+        const res = spawnSync(process.execPath, [join(root, 'scripts', 'verify-all.mjs')], {
+            cwd: root,
+            encoding: 'utf8'
+        });
+        assert.equal(res.status, 1, 'verify-all.mjs must fail closed with exit code 1 on dirty working tree');
         assert.ok(
             res.stderr.includes('Dirty working tree detected') ||
-            res.stderr.includes('Verification step') ||
             res.stdout.includes('VAL-R2-VERIFY-003 Failed: Dirty working tree detected'),
-            'verify-all.mjs must fail closed on dirty working tree'
+            'verify-all.mjs must report dirty working tree error'
         );
+    } finally {
+        await rm(tempDirtyFile, { force: true });
     }
 });

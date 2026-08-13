@@ -64,6 +64,7 @@ function updateEvidenceSummary(currentGitSha, isClean) {
         builtTestStatus: 'PASSED',
         masterVerificationStatus: 'PASSED',
         emulatorQaStatus: 'PASSED',
+        avd: 'test_avd_api36',
         avds: ['test_avd_api36', 'test_tablet_api36'],
         apiLevel: 36,
         totalStepsCompleted: 13,
