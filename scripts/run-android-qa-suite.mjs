@@ -198,8 +198,9 @@ async function launchAVDIfNeeded(avdName) {
         if (devs.includes(targetSerial)) {
             activeDeviceSerial = targetSerial;
             const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
-            if (i % 5 === 0) console.log(`   Booting ${avdName} (tick ${i}, status: "${statusSys}")...`);
-            if (statusSys === '1') {
+            const statusDev = runCmd(`adb shell getprop dev.bootcomplete`, { allowFail: true, timeout: 1000 }).trim();
+            if (i % 5 === 0) console.log(`   Booting ${avdName} (tick ${i}, sys: "${statusSys}", dev: "${statusDev}")...`);
+            if (statusSys === '1' || statusDev === '1') {
                 const currentAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 1000 }).trim();
                 if (!currentAvd || currentAvd === avdName) {
                     booted = true;
