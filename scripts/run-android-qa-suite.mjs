@@ -192,15 +192,15 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Waiting for AVD ${avdName} (${targetSerial}) to finish booting...`);
     let booted = false;
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 120; i++) {
         await sleep(1000);
         const devs = getRunningDevices();
         if (devs.includes(targetSerial)) {
             activeDeviceSerial = targetSerial;
-            const state = runCmd(`adb get-state`, { allowFail: true, timeout: 1000 }).trim();
-            if (i % 5 === 0) console.log(`   Booting ${avdName} (tick ${i}, state: "${state}")...`);
+            const state = execSync(`adb -s ${targetSerial} get-state 2>/dev/null || true`, { encoding: 'utf8', env: process.env }).trim();
+            if (i % 10 === 0) console.log(`   Booting ${avdName} (tick ${i}, state: "${state}")...`);
             if (state === 'device') {
-                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
+                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
                 if (statusSys === '1') {
                     booted = true;
                     break;
