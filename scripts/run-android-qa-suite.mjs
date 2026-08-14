@@ -145,6 +145,7 @@ async function ensureAppReady(client) {
 
 async function stopAllEmulators() {
     activeDeviceSerial = null;
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     const devices = getRunningDevices();
     if (devices.length === 0) return;
 
@@ -160,6 +161,7 @@ async function stopAllEmulators() {
     }
     await sleep(3000);
     try { execSync('rm -f ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
 async function launchAVDIfNeeded(avdName) {
