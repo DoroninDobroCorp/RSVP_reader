@@ -179,6 +179,7 @@ async function launchAVDIfNeeded(avdName) {
 
     console.log(`Stopping running emulators before launching "${avdName}"...`);
     await stopAllEmulators();
+    activeDeviceSerial = null;
 
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
@@ -191,12 +192,16 @@ async function launchAVDIfNeeded(avdName) {
     let booted = false;
     for (let i = 0; i < 180; i++) {
         await sleep(1000);
-        const state = runCmd(`adb get-state`, { allowFail: true, timeout: 5000 }).trim();
-        if (state === 'device') {
-            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 5000 }).trim();
-            if (statusSys === '1') {
-                booted = true;
-                break;
+        const devs = getRunningDevices();
+        if (devs.length > 0) {
+            activeDeviceSerial = devs[0];
+            const state = execSync(`adb -s ${activeDeviceSerial} get-state 2>/dev/null || true`, { encoding: 'utf8', env: process.env }).trim();
+            if (state === 'device') {
+                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+                if (statusSys === '1') {
+                    booted = true;
+                    break;
+                }
             }
         }
     }
