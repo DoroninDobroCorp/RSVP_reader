@@ -145,6 +145,7 @@ async function ensureAppReady(client) {
 
 async function stopAllEmulators() {
     activeDeviceSerial = null;
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     const devices = getRunningDevices();
     if (devices.length === 0) return;
 
@@ -159,8 +160,8 @@ async function stopAllEmulators() {
         if (devs.length === 0 && !checkQemu) break;
         await sleep(1000);
     }
-    console.log('Waiting 20s for Linux KVM kernel page unmapping...');
-    await sleep(20000);
+    await sleep(6000);
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
 async function launchAVDIfNeeded(avdName) {
