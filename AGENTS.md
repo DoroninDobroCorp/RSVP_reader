@@ -1,27 +1,32 @@
 # Active repository mission
 
-The active task is the focused Android R4 QA-truth mission in:
+The active task is the Android R5 recovery mission in:
 
-`ANDROID_R4_QA_TRUTH_MISSION.md`
+`ANDROID_R5_RECOVERY_MISSION.md`
 
 Work only through SSH on `serverforvovka` in `/srv/RSVP_reader-r2`, branch:
 
-`mission/android-r4-qa-truth-20260813`
+`mission/android-r5-recovery-20260814`
 
-Read the mission completely before changing code. Preserve the real R3 gains:
-the Linux Android toolchain, synchronized source, successful Gradle build,
-actual APK/AAB, web product, and extension. R4 is not a redesign. It closes the
-remaining proof gap with hermetic tests, real Android-system actions, truthful
-visual/accessibility evidence, and one complete executed validation contract.
+Read the mission completely before changing code. The branch starts from the
+preserved interrupted R4 checkpoint
+`8e91d5bcaa96a519de2866240b2f66d08da1738e`. Preserve useful hermetic-build,
+toolchain, verifier, package, website, extension, iOS, and Android product work,
+but do not trust the unfinished Android QA script or any R2/R3/R4 runtime
+evidence.
 
-Never invent a default `PASSED`, trust old evidence, label CDP/internal
-JavaScript as SAF/share/system QA, copy `node_modules` into the final validation
-clone, or report dimensions/SHA/hash/state that differ from the real artifact.
+The priority is truthful reproducibility: fix the clean-checkout reporter,
+remove manufactured emulator success, stabilize the two dedicated AVDs, execute
+real Android-system boundaries, and produce fresh SHA-bound evidence. CDP may
+inspect app state but may not substitute for SAF, DocumentsUI, Sharesheet,
+system Back, confirmation UI, airplane mode, rotation, process death, upgrade,
+KeepAwake, or haptic actions.
 
-Continue autonomously through implementation, clean remote-SHA build, real
-phone/tablet QA, evidence regeneration, final validation, logical commits, and
-final push. If a required system flow cannot be executed, leave it failed or
-blocked with raw evidence; do not convert it into prose success.
+Continue autonomously through implementation, a clean remote-source-SHA build,
+phone/tablet QA, evidence validation, logical commits, and final push. If a
+required system flow cannot be executed, leave it FAIL or BLOCKED with raw
+evidence; never invent or default to PASSED.
 
 Do not touch `/srv/RSVP_reader`, deploy, merge, publish, production-sign, create
-a PR, use paid services, or trigger GitHub-hosted Actions.
+a PR, use paid services, trigger GitHub-hosted Actions, force-push, or modify the
+forensic checkpoint branch.
