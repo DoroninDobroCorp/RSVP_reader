@@ -181,8 +181,7 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
-    const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
-    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -memory 1536 -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
+    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -no-snapshot -read-only </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
     console.log(`Waiting for AVD ${avdName} to connect to ADB...`);
