@@ -154,15 +154,12 @@ async function stopAllEmulators() {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 30; i++) {
         const check = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
         if (!check) break;
         await sleep(1000);
     }
-    await sleep(5000);
-    try { execSync('pkill -9 -f qemu 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
-    try { execSync('pkill -9 -f emulator 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
-    await sleep(5000);
+    await sleep(6000);
     try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
