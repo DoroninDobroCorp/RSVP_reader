@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#101529">
+    <meta name="description" content="Pico guides books, articles and pasted text into a calm, private reading rhythm.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PaceFlow">
+    <title>PaceFlow Reader</title>
+    <link rel="manifest" href="manifest.json?v=48">
+    <link rel="stylesheet" href="style.css?v=48">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/app-icon-32.png?v=48">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/app-icon-180.png?v=48">
+</head>
+<body>
+    <a class="skip-link" href="#mainContainer" data-i18n="skipToContent">Skip to content</a>
+
+    <header class="app-header">
+        <button id="homeBtn" class="brand-button" type="button" aria-label="PaceFlow Reader home" data-i18n-aria="homeAria">
+            <img src="assets/icons/app-icon-64.png?v=48" width="36" height="36" alt="" aria-hidden="true">
+            <span class="brand-copy">
+                <strong data-i18n="appName">PaceFlow Reader</strong>
+                <small data-i18n="appTagline">Focused reading, at your rhythm</small>
+            </span>
+        </button>
+        <div class="header-actions">
+            <button id="globalSearchBtn" class="icon-btn is-contextual" type="button" hidden data-i18n-title="search" data-i18n-aria="search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+            </button>
+            <span id="offlineBadge" class="status-pill" data-i18n="checkingCache">Preparing offline mode…</span>
+            <button id="settingsBtn" class="icon-btn" type="button" data-i18n-title="settings" data-i18n-aria="settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.55V21h-4v-.08A1.7 1.7 0 0 0 8.95 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.52-1H3v-4h.08A1.7 1.7 0 0 0 4.6 8.95a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.95 4.6 1.7 1.7 0 0 0 10 3.08V3h4v.08a1.7 1.7 0 0 0 1.03 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.12.4.52.98 1.52 1H21v4h-.08c-1 0-1.4.58-1.52 1Z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="mainContainer">
+        <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+        <section id="textInputSection" class="app-panel composer-panel">
+            <div class="pico-hero">
+                <div class="pico-hero-copy">
+                    <span class="hero-kicker"><span aria-hidden="true">◆</span><span data-i18n="heroKicker">Meet Pico · your reading wingmate</span></span>
+                    <h1><span data-i18n="heroTitle">Long reads.</span> <em data-i18n="heroTitleAccent">Zero drag.</em></h1>
+                    <p data-i18n="heroHint">Pico turns books, articles and pasted text into a calm rhythm that keeps your eyes—and your place—moving forward.</p>
+                    <div class="hero-actions">
+                        <button id="tryDemoBtn" class="primary-btn hero-demo-btn" type="button">
+                            <span aria-hidden="true">▶</span>
+                            <span data-i18n="tryDemo">Fly through the 45-second demo</span>
+                        </button>
+                        <span class="hero-promise" data-i18n="heroPromise">No account · no upload · no tracking</span>
+                    </div>
+                    <div class="privacy-card" aria-live="polite">
+                        <span class="privacy-dot" aria-hidden="true"></span>
+                        <span id="storageStatus" data-i18n="localStorageReady">Private, local storage is ready.</span>
+                    </div>
+                </div>
+                <div class="pico-hero-visual" aria-hidden="true">
+                    <span class="hero-orbit hero-orbit-one"></span>
+                    <span class="hero-orbit hero-orbit-two"></span>
+                    <img class="pico-hero-image" src="assets/brand/pico-hero.png" width="873" height="960" alt="" fetchpriority="high" decoding="async">
+                    <div class="focus-bubble">
+                        <span data-i18n="heroWordBefore">keep</span>
+                        <strong data-i18n="heroWordFocus">your</strong>
+                        <span data-i18n="heroWordAfter">rhythm</span>
+                    </div>
+                    <span class="pico-signature" data-i18n="picoSignature">PICO · FOCUS PILOT</span>
+                </div>
+            </div>
+
+            <ol class="flow-map" data-i18n-aria="flowMapLabel" aria-label="How PaceFlow works">
+                <li>
+                    <span class="flow-number">01</span>
+                    <div><strong data-i18n="flowBringTitle">Bring the text</strong><span data-i18n="flowBringHint">Paste, import, or send it from Chrome.</span></div>
+                </li>
+                <li>
+                    <span class="flow-number">02</span>
+                    <div><strong data-i18n="flowPaceTitle">Pick your pace</strong><span data-i18n="flowPaceHint">Pico shapes timing around words and punctuation.</span></div>
+                </li>
+                <li>
+                    <span class="flow-number">03</span>
+                    <div><strong data-i18n="flowReadTitle">Stay in the flow</strong><span data-i18n="flowReadHint">Read, pause, rewind, and return exactly where you left.</span></div>
+                </li>
+            </ol>
+
+            <div class="reading-dock">
+                <div class="dock-heading">
+                    <div>
+                        <span class="eyebrow" data-i18n="dockKicker">Pico's reading dock</span>
+                        <h2 data-i18n="dockTitle">What are we reading?</h2>
+                    </div>
+                    <p data-i18n="dockHint">Drop text into the main lane, or use a fast lane for a link or Chrome handoff.</p>
+                </div>
+
+                <div class="dock-grid">
+                    <div class="dock-editor">
+                        <div class="source-card-heading">
+                            <span class="source-number">01</span>
+                            <div><strong data-i18n="pasteSourceTitle">Paste or import</strong><span data-i18n="pasteSourceHint">Your text stays readable, editable, and local.</span></div>
+                        </div>
+                        <label class="sr-only" for="textInput" data-i18n="textOrBook">Start reading</label>
+                        <textarea id="textInput" data-i18n-placeholder="textPlaceholder" placeholder="Paste text here, or import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF…" spellcheck="false"></textarea>
+                        <div class="input-group">
+                            <label class="sr-only" for="bookNameInput" data-i18n="bookTitleLabel">Book title</label>
+                            <input type="text" id="bookNameInput" data-i18n-placeholder="bookNamePlaceholder" placeholder="Book title (optional)" autocomplete="off">
+                        </div>
+                        <div class="button-group primary-actions">
+                            <button id="loadFileBtn" class="primary-btn" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                                <span data-i18n="importBook">Import book</span>
+                            </button>
+                            <button id="startReadingBtn" class="primary-btn accent-btn" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                                <span data-i18n="startReading">Open reader</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <aside class="dock-inlets" data-i18n-aria="fastLanes" aria-label="Fast reading lanes">
+                        <form id="articleImportForm" class="article-import source-card" novalidate>
+                            <div class="source-card-heading">
+                                <span class="source-number">02</span>
+                                <div class="article-import-copy">
+                                    <strong data-i18n="articleImportTitle">Read an article from a link</strong>
+                                    <span data-i18n="articleImportHint">PaceFlow removes menus and distractions, then saves the readable text to your library.</span>
+                                </div>
+                            </div>
+                            <div class="article-import-controls">
+                                <label class="sr-only" for="articleUrlInput" data-i18n="articleUrlLabel">Article URL</label>
+                                <input id="articleUrlInput" type="url" inputmode="url" enterkeyhint="go" autocomplete="url" spellcheck="false" data-i18n-placeholder="articleUrlPlaceholder" data-i18n-aria="articleUrlLabel" aria-label="Article URL" placeholder="https://example.com/article">
+                                <button id="importArticleBtn" class="secondary-btn compact-btn" type="submit" data-i18n="importArticle">Import article</button>
+                            </div>
+                            <p id="articleImportStatus" class="article-import-status" role="status" aria-live="polite" data-i18n="articleOnlineOnly">Requires an internet connection. Paywalled and app-only pages may not be readable.</p>
+                        </form>
+
+                        <div id="chromeExtensionPanel" class="extension-action source-card">
+                            <img class="pico-quick-send" src="assets/brand/pico-quick-send.png" width="1100" height="733" alt="" decoding="async">
+                            <div class="extension-action-copy">
+                                <span class="source-number">03</span>
+                                <div>
+                                    <span class="extension-badge" aria-hidden="true">Chrome</span>
+                                    <strong data-i18n="chromeExtensionTitle">Send from Chrome in one click</strong>
+                                    <span data-i18n="chromeExtensionHint">Select text, copy a passage, or right-click an article and open it directly in PaceFlow.</span>
+                                </div>
+                            </div>
+                            <a id="chromeExtensionDownload" class="secondary-btn compact-btn" href="downloads/paceflow-quick-send.zip" download data-i18n="chromeExtensionDownload">Download Chrome extension</a>
+                            <details class="extension-install">
+                                <summary data-i18n="chromeExtensionInstall">Install in Chrome</summary>
+                                <ol>
+                                    <li data-i18n="chromeExtensionStepOne">Download and extract the extension ZIP.</li>
+                                    <li data-i18n="chromeExtensionStepTwo">Open chrome://extensions and enable Developer mode.</li>
+                                    <li data-i18n="chromeExtensionStepThree">Choose Load unpacked and select the extracted folder.</li>
+                                </ol>
+                                <p data-i18n="chromeExtensionPrivacy">It reads a selection or clipboard only when you explicitly press a PaceFlow action. No browsing-history permission or analytics.</p>
+                            </details>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="button-group secondary-actions dock-footer-actions">
+                    <button id="addToLibraryBtn" class="secondary-btn" type="button" data-i18n="saveBook">Save to library</button>
+                    <button id="libraryBtn" class="secondary-btn" type="button" data-i18n="myLibrary">Library</button>
+                </div>
+            </div>
+            <input type="file" id="fileInput" class="visually-hidden-file" tabindex="-1" aria-hidden="true" accept=".fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*">
+        </section>
+
+        <section id="librarySection" class="app-panel" hidden>
+            <div class="section-heading library-header">
+                <div>
+                    <span class="eyebrow" data-i18n="myLibrary">Library</span>
+                    <h2 data-i18n="libraryTitle">Your library</h2>
+                    <p id="librarySummary">0 books</p>
+                </div>
+                <button id="backFromLibraryBtn" class="secondary-btn compact-btn" type="button">
+                    <span aria-hidden="true">←</span> <span data-i18n="back">Back</span>
+                </button>
+            </div>
+            <div class="library-toolbar">
+                <label class="search-field" for="librarySearchInput">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+                    <span class="sr-only" data-i18n="searchLibrary">Search your library</span>
+                    <input type="search" id="librarySearchInput" data-i18n-placeholder="searchLibrary" data-i18n-aria="searchLibrary" aria-label="Search your library" placeholder="Search your library">
+                </label>
+                <div class="library-tools">
+                    <button id="exportLibraryBtn" class="secondary-btn compact-btn" type="button" data-i18n="export">Export</button>
+                    <button id="importLibraryBtn" class="secondary-btn compact-btn" type="button" data-i18n="import">Import</button>
+                </div>
+            </div>
+            <ul id="booksList" class="books-list" aria-live="polite"></ul>
+            <input type="file" id="libraryImportInput" class="visually-hidden-file" tabindex="-1" aria-hidden="true" accept=".json,.fb2,.fb2.zip,.zip,.epub,.txt,.xml,.docx,.html,.htm,.md,.markdown,.rtf,application/json,application/x-fictionbook+xml,application/x-fictionbook,text/xml,application/xml,application/x-zip-compressed,application/zip,application/epub+zip,text/plain,text/html,*/*">
+        </section>
+
+        <section id="normalReadingSection" class="reader-panel" hidden>
+            <div class="reading-header">
+                <div class="reading-nav">
+                    <button id="backToInputBtn" class="icon-text-btn" type="button" data-i18n-aria="back">
+                        <span aria-hidden="true">←</span><span data-i18n="back">Back</span>
+                    </button>
+                    <button id="tocBtn" class="icon-text-btn" type="button" data-i18n-aria="contents">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                        <span data-i18n="contents">Contents</span>
+                    </button>
+                </div>
+                <div class="search-container" role="search">
+                    <label class="search-field" for="searchInput">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+                        <span class="sr-only" data-i18n="findInBook">Find in book</span>
+                        <input type="search" id="searchInput" data-i18n-placeholder="findInBook" data-i18n-aria="findInBook" aria-label="Find in book" placeholder="Find in book" autocomplete="off">
+                    </label>
+                    <button id="searchPrevBtn" class="search-nav-btn" type="button" disabled data-i18n-title="previousResult" data-i18n-aria="previousResult">↑</button>
+                    <button id="searchNextBtn" class="search-nav-btn" type="button" disabled data-i18n-title="nextResult" data-i18n-aria="nextResult">↓</button>
+                    <span id="searchResults" class="search-results" aria-live="polite"></span>
+                </div>
+                <div class="reading-actions">
+                    <button id="addBookmarkBtn" class="icon-text-btn" type="button" data-i18n-aria="bookmark"><span aria-hidden="true">☆</span><span data-i18n="bookmark">Bookmark</span></button>
+                    <button id="bookmarksBtn" class="icon-text-btn" type="button" data-i18n-aria="bookmarks"><span aria-hidden="true">★</span><span data-i18n="bookmarks">Bookmarks</span></button>
+                    <button id="startRSVPBtn" class="primary-btn compact-btn" type="button" data-i18n-aria="startRsvp">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                        <span data-i18n="startRsvp">Start focus mode</span>
+                    </button>
+                </div>
+            </div>
+            <div class="progress-info">
+                <span id="progressText">0%</span>
+                <span id="wordCount">0 / 0</span>
+                <span id="currentBookInfo"></span>
+            </div>
+            <div id="normalTextDisplay" class="normal-text" tabindex="0"></div>
+        </section>
+
+        <section id="rsvpReadingSection" class="rsvp-section" hidden>
+            <div class="rsvp-container">
+                <div class="rsvp-topbar">
+                    <button id="rsvpTocBtn" class="icon-text-btn" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                        <span data-i18n="contents">Contents</span>
+                    </button>
+                    <span id="rsvpBookTitle" class="rsvp-book-title"></span>
+                    <button id="rsvpSearchBtn" class="icon-btn rsvp-search-btn" type="button" data-i18n-title="search" data-i18n-aria="search">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+                    </button>
+                </div>
+                <div class="rsvp-word-wrapper">
+                    <div id="orpAxisLine" class="orp-axis-line" hidden></div>
+                    <div id="orpNotchTop" class="orp-notch top-notch" hidden></div>
+                    <div id="rsvpWordDisplay" class="rsvp-word" aria-live="off"></div>
+                    <div id="orpNotchBottom" class="orp-notch bottom-notch" hidden></div>
+                </div>
+                <div id="rsvpPauseContext" class="rsvp-pause-context" aria-live="polite" aria-hidden="true"></div>
+                <div class="rsvp-controls" aria-label="Reading controls" data-i18n-aria="readingControls">
+                    <button id="playPauseBtn" class="control-btn play-control" type="button" data-i18n-aria="pause">⏸</button>
+                    <button id="prevWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="decreaseSpeed" data-i18n-aria="decreaseSpeed">−20</button>
+                    <button id="nextWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="increaseSpeed" data-i18n-aria="increaseSpeed">+20</button>
+                    <button id="rsvpBookmarkBtn" class="control-btn" type="button" data-i18n-title="addBookmark" data-i18n-aria="addBookmark">☆</button>
+                    <button id="stopRSVPBtn" class="control-btn" type="button" data-i18n-title="stopFocusMode" data-i18n-aria="stopFocusMode">×</button>
+                </div>
+                <div class="rsvp-progress">
+                    <label class="sr-only" for="rsvpScrubber" data-i18n="readingPosition">Reading position</label>
+                    <input id="rsvpScrubber" class="rsvp-scrubber" type="range" min="0" max="1000" value="0" step="1" data-i18n-aria="readingPosition" aria-label="Reading position">
+                    <div class="progress-bars-container" aria-hidden="true">
+                        <div id="rsvpTotalProgressBar" class="progress-bar progress-bar-total"><div id="rsvpTotalProgressFill" class="progress-fill total-fill"></div></div>
+                        <div id="rsvpRunProgressBar" class="progress-bar progress-bar-run"><div id="rsvpRunProgressFill" class="progress-fill run-fill"></div></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="rsvpProgressText" data-i18n="sessionProgress">Session 0% · book 0% · 0 min left</span>
+                        <span id="rsvpWordCount">0 / 0</span>
+                        <span id="rsvpSpeedText" data-i18n="targetWpmShort">350 target WPM</span>
+                    </div>
+                </div>
+                <button id="rsvpBottomTapZone" class="rsvp-bottom-tap" type="button" data-i18n-aria="pause">
+                    <span id="rsvpBottomTapIcon" aria-hidden="true">⏸</span>
+                    <span id="rsvpBottomTapLabel" data-i18n="pause">Pause</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <div id="settingsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-content settings-sheet">
+            <div class="modal-header">
+                <div><span class="eyebrow">PaceFlow</span><h2 id="settingsTitle" data-i18n="settings">Settings</h2></div>
+                <button id="closeSettingsBtn" class="close-btn" type="button" data-i18n-aria="close">×</button>
+            </div>
+            <div class="modal-body">
+                <section class="settings-section" aria-labelledby="appearanceHeading">
+                    <h3 id="appearanceHeading" data-i18n="appearance">Appearance</h3>
+                    <div class="setting-group">
+                        <label data-i18n="language">Language</label>
+                        <div class="segmented-control">
+                            <button type="button" id="languageEnBtn" data-language="en" data-i18n="english">English</button>
+                            <button type="button" id="languageRuBtn" data-language="ru" data-i18n="russian">Русский</button>
+                        </div>
+                        <span class="setting-desc" data-i18n="languageHint">English is used by default; Russian is fully supported.</span>
+                    </div>
+                    <div class="setting-group">
+                        <label data-i18n="theme">Theme</label>
+                        <div class="segmented-control theme-buttons">
+                            <button type="button" id="themeNightBtn"><span aria-hidden="true">●</span> <span data-i18n="night">Night</span></button>
+                            <button type="button" id="themeDayBtn"><span aria-hidden="true">○</span> <span data-i18n="day">Day</span></button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="rhythmHeading">
+                    <h3 id="rhythmHeading" data-i18n="readingRhythm">Reading rhythm</h3>
+                    <div class="setting-grid">
+                        <div class="setting-group">
+                            <label for="wpmInput" data-i18n="speedWpm">Target speed (WPM)</label>
+                            <input type="number" id="wpmInput" inputmode="numeric" min="100" max="1000" step="20" value="350">
+                            <span class="setting-desc" data-i18n="recommendedSpeed">A comfortable starting range is 250–400 WPM.</span>
+                        </div>
+                        <div class="setting-group">
+                            <label for="fontSizeInput" data-i18n="fontSize">Preferred focus font size (px)</label>
+                            <input type="number" id="fontSizeInput" inputmode="numeric" min="24" max="120" step="2" value="42">
+                            <span class="setting-desc" data-i18n="adaptiveFontHint">Long words shrink automatically so they are never clipped.</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                            <label for="focusLetterColor" data-i18n="focusColour">Focus-letter color</label>
+                        <input type="color" id="focusLetterColor" value="#ff6b6b">
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="focusHeading">
+                    <h3 id="focusHeading" data-i18n="focusOptions">Focus options</h3>
+                    <label class="switch-row" for="orpAlignmentInput"><span><strong data-i18n="orpAlignment">Align by optimal recognition point (ORP)</strong><small data-i18n="orpAlignmentHint">Keeps the coloured focus letter on a fixed visual axis.</small></span><input type="checkbox" id="orpAlignmentInput" checked><i aria-hidden="true"></i></label>
+                    <label class="switch-row" for="lengthScalingInput"><span><strong data-i18n="lengthScaling">Give long words more time</strong><small data-i18n="lengthScalingHint">Short words move faster; longer words remain visible longer.</small></span><input type="checkbox" id="lengthScalingInput" checked><i aria-hidden="true"></i></label>
+                    <label class="switch-row" for="chunkingEnabledInput"><span><strong data-i18n="shortPairs">Pair two short words</strong><small data-i18n="shortPairsHint">At 350+ WPM, pair words when each is 5 letters or fewer.</small></span><input type="checkbox" id="chunkingEnabledInput" checked><i aria-hidden="true"></i></label>
+                    <label class="switch-row" for="balancedPairsEnabledInput"><span><strong data-i18n="balancedPairs">Flexible pairs up to 10 letters total</strong><small data-i18n="balancedPairsHint">Also permits combinations such as 7 + 3 letters. Punctuation still ends a frame.</small></span><input type="checkbox" id="balancedPairsEnabledInput"><i aria-hidden="true"></i></label>
+                    <label class="switch-row" for="speedRampUpInput"><span><strong data-i18n="speedRamp">Ease into reading over 3 seconds</strong><small data-i18n="speedRampHint">Starts at 70% and reaches the selected rhythm after Play.</small></span><input type="checkbox" id="speedRampUpInput" checked><i aria-hidden="true"></i></label>
+                    <label class="switch-row" for="orpNotchesInput"><span><strong data-i18n="orpMarkers">Show focus-axis markers</strong><small data-i18n="orpMarkersHint">Adds subtle guides above and below the focus point.</small></span><input type="checkbox" id="orpNotchesInput"><i aria-hidden="true"></i></label>
+                </section>
+
+                <section class="settings-section" aria-labelledby="punctuationHeading">
+                    <h3 id="punctuationHeading" data-i18n="punctuationPauses">Punctuation timing</h3>
+                    <div class="setting-grid three-columns">
+                        <div class="setting-group"><label for="commaPause" data-i18n="commaPause">Comma multiplier</label><input type="number" id="commaPause" min="1" max="5" step="0.05" value="1.05"></div>
+                        <div class="setting-group"><label for="periodPause" data-i18n="periodPause">Sentence-ending multiplier</label><input type="number" id="periodPause" min="1" max="5" step="0.1" value="1.6"></div>
+                        <div class="setting-group"><label for="semicolonPause" data-i18n="semicolonPause">Semicolon and colon multiplier</label><input type="number" id="semicolonPause" min="1" max="5" step="0.1" value="1.3"></div>
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="controlsHeading">
+                    <h3 id="controlsHeading" data-i18n="controls">Controls</h3>
+                    <label class="switch-row" for="hardwareControlsInput"><span><strong data-i18n="hardwareControls">External media controls</strong><small id="hardwareControlsHint" data-i18n="hardwareControlsHint">Uses Media Play/Pause events on compatible web platforms. Space always works in the reader. iOS keeps its volume buttons unchanged.</small></span><input type="checkbox" id="hardwareControlsInput"><i aria-hidden="true"></i></label>
+                </section>
+
+                <section class="settings-section" aria-labelledby="dataHeading">
+                    <h3 id="dataHeading" data-i18n="yourData">Your data</h3>
+                    <p class="setting-desc" data-i18n="yourDataHint">Books and reading progress stay on this device. Export a backup or permanently erase the app's local data.</p>
+                    <div class="settings-data-actions">
+                        <button id="settingsExportBtn" class="secondary-btn" type="button" data-i18n="exportBackup">Export backup</button>
+                        <button id="deleteAllDataBtn" class="danger-btn" type="button" data-i18n="deleteAllData">Delete all local data</button>
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="aboutHeading">
+                    <h3 id="aboutHeading" data-i18n="aboutPrivacy">About and privacy</h3>
+                    <p class="setting-desc" data-i18n="aboutPrivacyHint">Review how local data is handled, get support, and check the installed version.</p>
+                    <div class="settings-data-actions">
+                        <a class="secondary-btn settings-link" href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a>
+                        <a class="secondary-btn settings-link" href="support.html" data-i18n="support">Support</a>
+                    </div>
+                    <small class="settings-version" data-i18n="versionLabel">Version 1.0</small>
+                </section>
+
+                <button id="resetSettingsBtn" class="secondary-btn full-width" type="button" data-i18n="resetSettings">Restore defaults</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bookmarksModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="bookmarksTitle">
+        <div class="modal-content">
+            <div class="modal-header"><h2 id="bookmarksTitle" data-i18n="bookmarks">Bookmarks</h2><button id="closeBookmarksBtn" class="close-btn" type="button" data-i18n-aria="close">×</button></div>
+            <div class="modal-body">
+                <div class="bookmark-toolbar"><button id="saveBookmarkBtn" class="primary-btn" type="button" data-i18n="addCurrentBookmark">Add current position</button></div>
+                <ul id="bookmarksList" class="bookmark-list" aria-live="polite"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="tocModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="tocTitle">
+        <div class="modal-content toc-sheet">
+            <div class="modal-header"><h2 id="tocTitle" data-i18n="contents">Contents</h2><button id="closeTocBtn" class="close-btn" type="button" data-i18n-aria="close">×</button></div>
+            <div class="modal-body"><ol id="tocList" class="toc-list" aria-live="polite"></ol></div>
+        </div>
+    </div>
+
+    <div id="actionDialog" class="modal action-dialog" role="dialog" aria-modal="true" aria-labelledby="actionDialogTitle" aria-describedby="actionDialogMessage">
+        <div class="modal-content action-dialog-sheet">
+            <form id="actionDialogForm">
+                <div class="modal-header">
+                    <h2 id="actionDialogTitle">Confirm</h2>
+                    <button id="actionDialogCloseBtn" class="close-btn" type="button" data-i18n-aria="close">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="actionDialogMessage" class="action-dialog-message"></p>
+                    <div id="actionDialogInputGroup" class="setting-group" hidden>
+                        <label id="actionDialogInputLabel" for="actionDialogInput"></label>
+                        <input id="actionDialogInput" type="text" maxlength="240" autocomplete="off">
+                    </div>
+                    <div class="action-dialog-actions">
+                        <button id="actionDialogCancelBtn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+                        <button id="actionDialogConfirmBtn" class="primary-btn" type="submit" data-i18n="confirm">Confirm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="i18n.js?v=48"></script>
+    <script src="vendor/jszip.min.js?v=48"></script>
+    <script src="epub-parser.js?v=48"></script>
+    <script src="app.js?v=48"></script>
+</body>
+</html>
