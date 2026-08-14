@@ -159,7 +159,8 @@ async function stopAllEmulators() {
         if (devs.length === 0 && !checkQemu) break;
         await sleep(1000);
     }
-    await sleep(12000);
+    console.log('Waiting 20s for Linux KVM kernel page unmapping...');
+    await sleep(20000);
 }
 
 async function launchAVDIfNeeded(avdName) {
