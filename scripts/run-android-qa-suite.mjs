@@ -184,8 +184,9 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
+    const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
     const gpuMode = process.platform === 'linux' ? 'swiftshader_indirect' : 'host';
-    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -memory 1536 -no-window -no-audio -no-boot-anim -read-only -gpu ${gpuMode} </dev/null >"${emuLogPath}" 2>&1 &) &`;
+    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -memory 1536 -no-window -no-audio -no-boot-anim -read-only -grpc ${grpcPort} -gpu ${gpuMode} </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
     console.log(`Waiting for AVD ${avdName} to finish booting...`);
