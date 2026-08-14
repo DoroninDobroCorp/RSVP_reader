@@ -42,7 +42,7 @@ function sleep(ms) {
 
 function getRunningDevices() {
     const out = execSync('adb devices', { encoding: 'utf8', cwd: root, env: process.env, timeout: 10000 });
-    const lines = out.split('\n').filter(l => l.includes('\tdevice'));
+    const lines = out.split('\n').filter(l => l.includes('\tdevice') || l.includes('\toffline'));
     return lines.map(l => l.split('\t')[0]);
 }
 
