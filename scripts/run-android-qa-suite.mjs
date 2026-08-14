@@ -158,7 +158,8 @@ async function stopAllEmulators() {
         if (!check) break;
         await sleep(1000);
     }
-    await sleep(2000);
+    console.log('Waiting 20s for KVM kernel memory page unmapping...');
+    await sleep(20000);
     try { execSync('rm -f ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
