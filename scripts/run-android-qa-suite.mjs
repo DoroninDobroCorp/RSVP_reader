@@ -191,10 +191,9 @@ async function launchAVDIfNeeded(avdName) {
     let booted = false;
     for (let i = 0; i < 180; i++) {
         await sleep(1000);
-        const devs = getRunningDevices();
-        if (devs.length > 0) {
-            activeDeviceSerial = devs[0];
-            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 1000 }).trim();
+        const state = runCmd(`adb get-state`, { allowFail: true, timeout: 5000 }).trim();
+        if (state === 'device') {
+            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 5000 }).trim();
             if (statusSys === '1') {
                 booted = true;
                 break;
