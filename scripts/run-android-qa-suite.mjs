@@ -143,6 +143,18 @@ async function ensureAppReady(client) {
     throw new Error('ensureAppReady timed out waiting for window.rsvpReader');
 }
 
+function fixAvdRamSize(avdName) {
+    const homeDir = process.env.HOME || '/home/ubuntu';
+    const avdConfigPath = join(homeDir, '.android', 'avd', `${avdName}.avd`, 'config.ini');
+    if (existsSync(avdConfigPath)) {
+        let content = readFileSync(avdConfigPath, 'utf8');
+        if (content.includes('hw.ramSize = 4096') || content.includes('1536M')) {
+            content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
+            writeFileSync(avdConfigPath, content, 'utf8');
+        }
+    }
+}
+
 async function stopAllEmulators() {
     activeDeviceSerial = null;
     try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
@@ -164,6 +176,7 @@ async function stopAllEmulators() {
 }
 
 async function launchAVDIfNeeded(avdName) {
+    fixAvdRamSize(avdName);
     const devices = getRunningDevices();
     if (devices.length === 1) {
         activeDeviceSerial = devices[0];
