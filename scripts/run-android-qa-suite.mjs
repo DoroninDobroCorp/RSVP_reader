@@ -184,7 +184,7 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Launching AVD ${avdName} on port ${portNum}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
-    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -port ${portNum} -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
+    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -port ${portNum} -cores 2 -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
     console.log(`Waiting 5s for ${avdName} to initialize KVM...`);
