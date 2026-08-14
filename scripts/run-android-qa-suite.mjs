@@ -147,6 +147,9 @@ async function stopAllEmulators() {
     activeDeviceSerial = null;
     try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     const devices = getRunningDevices();
+    if (devices.length === 0) return;
+
+    console.log('Stopping all running emulators cleanly...');
     for (const d of devices) {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
@@ -156,7 +159,8 @@ async function stopAllEmulators() {
         if (!check) break;
         await sleep(1000);
     }
-    await sleep(3000);
+    console.log('Waiting 15s for Linux KVM kernel page table cleanup...');
+    await sleep(15000);
     try { execSync('rm -rf /run/user/1000/avd/running/* ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     try { execSync('adb kill-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     try { execSync('adb start-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
