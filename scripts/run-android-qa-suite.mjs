@@ -158,7 +158,9 @@ async function stopAllEmulators() {
     }
     await sleep(3000);
     try { execSync('rm -rf /run/user/1000/avd/running/* ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
-    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb kill-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    try { execSync('adb start-server', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    await sleep(2000);
 }
 
 async function launchAVDIfNeeded(avdName) {
