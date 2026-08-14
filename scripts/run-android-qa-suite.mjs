@@ -163,13 +163,10 @@ async function stopAllEmulators() {
 }
 
 async function launchAVDIfNeeded(avdName) {
-    const targetSerial = avdName.includes('tablet') ? 'emulator-5556' : 'emulator-5554';
     const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
-    const portNum = avdName.includes('tablet') ? 5556 : 5554;
-
     const devices = getRunningDevices();
-    if (devices.includes(targetSerial)) {
-        activeDeviceSerial = targetSerial;
+    if (devices.length === 1) {
+        activeDeviceSerial = devices[0];
         const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 2000 }).trim();
         if (activeAvd === avdName) {
             console.log(`AVD ${avdName} already active on ADB device ${activeDeviceSerial}.`);
@@ -180,17 +177,18 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Stopping running emulators before launching "${avdName}"...`);
     await stopAllEmulators();
 
-    console.log(`Launching AVD ${avdName} on port ${portNum}...`);
+    console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
-    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -port ${portNum} -memory 2048 -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
+    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
-    console.log(`Waiting for AVD ${avdName} (${targetSerial}) to connect to ADB...`);
-    execSync(`adb -s ${targetSerial} wait-for-device`, { cwd: root, env: process.env, timeout: 90000 });
-    activeDeviceSerial = targetSerial;
+    console.log(`Waiting for AVD ${avdName} to connect to ADB...`);
+    execSync(`adb wait-for-device`, { cwd: root, env: process.env, timeout: 90000 });
+    const activeDevs = getRunningDevices();
+    activeDeviceSerial = activeDevs.length > 0 ? activeDevs[0] : null;
 
-    console.log(`Waiting for AVD ${avdName} (${targetSerial}) system boot completion...`);
+    console.log(`Waiting for AVD ${avdName} (${activeDeviceSerial}) system boot completion...`);
     let booted = false;
     for (let i = 0; i < 60; i++) {
         const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
