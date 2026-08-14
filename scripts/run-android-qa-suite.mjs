@@ -145,12 +145,15 @@ async function ensureAppReady(client) {
 
 function fixAvdRamSize(avdName) {
     const homeDir = process.env.HOME || '/home/ubuntu';
-    const avdConfigPath = join(homeDir, '.android', 'avd', `${avdName}.avd`, 'config.ini');
-    if (existsSync(avdConfigPath)) {
-        let content = readFileSync(avdConfigPath, 'utf8');
-        if (content.includes('hw.ramSize = 4096') || content.includes('1536M')) {
-            content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
-            writeFileSync(avdConfigPath, content, 'utf8');
+    const avdDir = join(homeDir, '.android', 'avd', `${avdName}.avd`);
+    for (const file of ['config.ini', 'hardware-qemu.ini']) {
+        const p = join(avdDir, file);
+        if (existsSync(p)) {
+            let content = readFileSync(p, 'utf8');
+            if (content.includes('hw.ramSize = 4096') || content.includes('1536M')) {
+                content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
+                writeFileSync(p, content, 'utf8');
+            }
         }
     }
 }
