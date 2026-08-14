@@ -184,25 +184,24 @@ async function launchAVDIfNeeded(avdName) {
     console.log(`Launching AVD ${avdName}...`);
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
-    const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
-    const gpuMode = process.platform === 'linux' ? 'swiftshader_indirect' : 'host';
-    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -memory 1536 -no-window -no-audio -no-boot-anim -read-only -grpc ${grpcPort} -gpu ${gpuMode} </dev/null >"${emuLogPath}" 2>&1 &) &`;
+    const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -read-only </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
-    console.log(`Waiting for AVD ${avdName} to finish booting...`);
+    console.log(`Waiting for AVD ${avdName} to connect to ADB...`);
+    execSync(`adb wait-for-device`, { cwd: root, env: process.env, timeout: 90000 });
+    const activeDevs = getRunningDevices();
+    activeDeviceSerial = activeDevs.length > 0 ? activeDevs[0] : null;
+
+    console.log(`Waiting for AVD ${avdName} system boot completion...`);
     let booted = false;
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 90; i++) {
         await sleep(1000);
-        const devs = getRunningDevices();
-        if (devs.length > 0) {
-            activeDeviceSerial = devs[0];
-            const state = execSync(`adb -s ${activeDeviceSerial} get-state 2>/dev/null || true`, { encoding: 'utf8', env: process.env }).trim();
-            if (state === 'device') {
-                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
-                if (statusSys === '1') {
-                    booted = true;
-                    break;
-                }
+        const state = execSync(`adb get-state 2>/dev/null || true`, { encoding: 'utf8', env: process.env }).trim();
+        if (state === 'device') {
+            const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+            if (statusSys === '1') {
+                booted = true;
+                break;
             }
         }
     }
