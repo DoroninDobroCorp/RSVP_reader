@@ -150,14 +150,17 @@ function fixAvdRamSize(avdName) {
     const hwPath = join(avdDir, 'hardware-qemu.ini');
     if (existsSync(configPath)) {
         let content = readFileSync(configPath, 'utf8');
-        content = content.replace(/hw\.device\.name\s*=\s*.+/g, 'hw.device.name = pixel_6');
-        content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
-        writeFileSync(configPath, content, 'utf8');
+        if (content.includes('hw.ramSize = 4096') || content.includes('1536M')) {
+            content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
+            writeFileSync(configPath, content, 'utf8');
+        }
     }
     if (existsSync(hwPath)) {
         let content = readFileSync(hwPath, 'utf8');
-        content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
-        writeFileSync(hwPath, content, 'utf8');
+        if (content.includes('hw.ramSize = 4096') || content.includes('1536M')) {
+            content = content.replace(/hw\.ramSize\s*=\s*.+/g, 'hw.ramSize = 2048');
+            writeFileSync(hwPath, content, 'utf8');
+        }
     }
 }
 
