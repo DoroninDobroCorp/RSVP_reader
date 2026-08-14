@@ -187,26 +187,19 @@ async function launchAVDIfNeeded(avdName) {
     const emuCmd = `(setsid nohup ${emulatorBin} -avd ${avdName} -port ${portNum} -memory 2048 -no-window -no-audio -no-boot-anim -no-snapshot -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 &) &`;
     execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' });
 
-    console.log(`Waiting 5s for ${avdName} to initialize KVM...`);
-    await sleep(5000);
+    console.log(`Waiting for AVD ${avdName} (${targetSerial}) to connect to ADB...`);
+    execSync(`adb -s ${targetSerial} wait-for-device`, { cwd: root, env: process.env, timeout: 90000 });
+    activeDeviceSerial = targetSerial;
 
-    console.log(`Waiting for AVD ${avdName} (${targetSerial}) to finish booting...`);
+    console.log(`Waiting for AVD ${avdName} (${targetSerial}) system boot completion...`);
     let booted = false;
-    for (let i = 0; i < 120; i++) {
-        await sleep(1000);
-        const devs = getRunningDevices();
-        if (devs.includes(targetSerial)) {
-            activeDeviceSerial = targetSerial;
-            const state = execSync(`adb -s ${targetSerial} get-state 2>/dev/null || true`, { encoding: 'utf8', env: process.env }).trim();
-            if (i % 10 === 0) console.log(`   Booting ${avdName} (tick ${i}, state: "${state}")...`);
-            if (state === 'device') {
-                const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
-                if (statusSys === '1') {
-                    booted = true;
-                    break;
-                }
-            }
+    for (let i = 0; i < 60; i++) {
+        const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+        if (statusSys === '1') {
+            booted = true;
+            break;
         }
+        await sleep(1000);
     }
 
     if (!booted) throw new Error(`Failed to boot AVD ${avdName} within timeout.`);
