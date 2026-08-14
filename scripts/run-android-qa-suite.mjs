@@ -647,9 +647,10 @@ async function main() {
     await client.evaluate(`(async () => {
         if (window.rsvpReader.wpmInput) window.rsvpReader.wpmInput.value = 450;
         window.rsvpReader.settings.wpm = 450;
-        window.rsvpReader.settings.defaultWpm = 450;
         window.rsvpReader.settings.settingsVersion = 8;
         if (window.rsvpReader.saveSettings) await window.rsvpReader.saveSettings();
+        if (window.rsvpReader.settingsWritePromise) await window.rsvpReader.settingsWritePromise;
+
         try {
             localStorage.setItem('rsvp_settings', JSON.stringify(window.rsvpReader.settings));
             localStorage.setItem('rsvp_settings_updated_at', window.rsvpReader.settingsUpdatedAt || new Date().toISOString());
@@ -658,6 +659,13 @@ async function main() {
                 updatedAt: window.rsvpReader.settingsUpdatedAt || new Date().toISOString()
             }));
         } catch (e) {}
+
+        if (window.rsvpReader.setKV && window.rsvpReader.db) {
+            try {
+                await window.rsvpReader.setKV('settings', window.rsvpReader.settings);
+                await window.rsvpReader.setKV('settingsUpdatedAt', window.rsvpReader.settingsUpdatedAt || new Date().toISOString());
+            } catch (e) {}
+        }
 
         const parsed = { text: "Word1 Word2 Word3 Word4 Word5 Word6 Word7 Word8 Word9 Word10 Word11 Word12 Word13 Word14 Word15 Word16 Word17 Word18 Word19 Word20 Word21 Word22 Word23 Word24 Word25 Word26 Word27 Word28 Word29 Word30" };
         await window.rsvpReader.addParsedBookToLibrary("Kill Test Book", parsed, "txt", { select: true });
