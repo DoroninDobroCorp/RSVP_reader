@@ -159,7 +159,7 @@ async function stopAllEmulators() {
         if (!check) break;
         await sleep(1000);
     }
-    await sleep(10000);
+    await sleep(6000);
     try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
