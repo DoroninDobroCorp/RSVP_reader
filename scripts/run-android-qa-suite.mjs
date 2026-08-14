@@ -153,14 +153,13 @@ async function stopAllEmulators() {
         try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
     }
 
-    for (let i = 0; i < 30; i++) {
-        const devs = getRunningDevices();
-        const checkQemu = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
-        if (devs.length === 0 && !checkQemu) break;
+    for (let i = 0; i < 20; i++) {
+        const check = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
+        if (!check) break;
         await sleep(1000);
     }
-    console.log('Waiting 25s for Linux KVM RAM unmapping and page table stabilization...');
-    await sleep(25000);
+    await sleep(2000);
+    try { execSync('rm -f ~/.android/avd/*.avd/*.lock ~/.android/avd/*.avd/*.lock.pid 2>/dev/null || true', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
 async function launchAVDIfNeeded(avdName) {
