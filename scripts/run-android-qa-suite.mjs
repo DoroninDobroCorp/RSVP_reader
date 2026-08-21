@@ -434,7 +434,6 @@ export async function runAndroidQaSuite(options = {}) {
             }
             const devicePath = `/sdcard/Download/${fix.name}`;
             runCmd(`adb push ${tempLocalPath} ${devicePath}`);
-            runCmd(`adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://${devicePath}`, { allowFail: true });
             pushedFiles.push({ fmt, name: fix.name, devicePath });
         }
         console.log(`   Pushed ${pushedFiles.length} physical test fixtures to /sdcard/Download/ on device.`);
