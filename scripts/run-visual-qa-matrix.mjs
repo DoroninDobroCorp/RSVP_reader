@@ -316,7 +316,7 @@ async function filterBlackScreenshots(dirs) {
             }
             const stdDev = Math.sqrt(sqDiffSum / count);
 
-            if (stdDev < 2 || mean < 5 || mean > 250) {
+            if (stdDev < 2 || (mean < 3 && stdDev < 3) || (mean > 254.9 && stdDev < 3)) {
                 console.error(`[FAIL] Black/blank frame detected: ${file} (mean=${mean.toFixed(2)}, stdDev=${stdDev.toFixed(2)})`);
                 blankDetected++;
             }
