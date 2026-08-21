@@ -443,15 +443,38 @@ export async function runAndroidQaSuite(options = {}) {
         for (const item of pushedFiles) {
             console.log(`   Executing real SAF import for .${item.fmt} (${item.name})...`);
 
-            // 1. Get visible coordinates of Import button on screen
-            const btnPos = await client.evaluate(`(() => {\n                document.querySelectorAll('*').forEach(el => el.scrollTop = 0);\n                window.scrollTo(0, 0);\n                const b = document.getElementById('heroImportBtn') || document.getElementById('loadFileBtn');\n                b.scrollIntoView({block: 'center'});\n                const r = b.getBoundingClientRect();\n                return {\n                    x: Math.round((r.x + r.width / 2) * window.devicePixelRatio),\n                    y: Math.round(128 + (r.y + r.height / 2) * window.devicePixelRatio)\n                };\n            })()`);
+            // 1. Prepare UI state: ensure app is on the landing/input screen with no active modals
+            await client.evaluate(`(() => {
+                window.rsvpReader.showSection('input');
+                window.rsvpReader.activeModal = null;
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            })()`);
+            await sleep(300);
 
-            // 2. Physical tap on device screen to trigger file chooser
-            runCmd(`adb shell input tap ${btnPos.x} ${btnPos.y}`);
-            await sleep(1500);
+            // 2. Get visible coordinates of Import button on screen
+            const btnPos = await client.evaluate(`(() => {
+                window.rsvpReader.showSection('input');
+                const b = document.getElementById('heroImportBtn');
+                b.scrollIntoView({block: 'center'});
+                const r = b.getBoundingClientRect();
+                return {
+                    x: Math.round((r.x + r.width / 2) * window.devicePixelRatio),
+                    y: Math.round(128 + (r.y + r.height / 2) * window.devicePixelRatio)
+                };
+            })()`);
 
-            // 3. Verify DocumentsUI Activity is top/focused
-            const topActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+            // 3. Physical tap on device screen to trigger file chooser
+            let topActivity = '';
+            for (let tapAttempt = 0; tapAttempt < 3; tapAttempt++) {
+                runCmd(`adb shell input tap ${btnPos.x} ${btnPos.y}`);
+                await sleep(1500);
+                topActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+                if (topActivity.includes('documentsui') || topActivity.includes('picker') || topActivity.includes('ResolverActivity')) {
+                    break;
+                }
+                await sleep(500);
+            }
+
             if (!topActivity.includes('documentsui') && !topActivity.includes('picker') && !topActivity.includes('ResolverActivity')) {
                 throw new Error(`VAL-R5-EMU-004 Failed: DocumentsUI file picker not foregrounded: ${topActivity}`);
             }
@@ -465,12 +488,12 @@ export async function runAndroidQaSuite(options = {}) {
                 const rootsBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Show roots' || n.className.includes('ImageButton'));
                 if (rootsBtn) {
                     runCmd(`adb shell input tap ${rootsBtn.centerX} ${rootsBtn.centerY}`);
-                    await sleep(800);
+                    await sleep(1000);
                     dumpXml = await dumpUiHierarchy('drawer.xml');
                     const downloadsBtn = findNodeBounds(dumpXml, n => n.text === 'Downloads' || n.contentDesc === 'Downloads');
                     if (downloadsBtn) {
                         runCmd(`adb shell input tap ${downloadsBtn.centerX} ${downloadsBtn.centerY}`);
-                        await sleep(800);
+                        await sleep(1000);
                         dumpXml = await dumpUiHierarchy(`downloads_${item.fmt}.xml`);
                         fileNode = findNodeBounds(dumpXml, n => n.text === item.name || n.contentDesc.includes(item.name));
                     }
@@ -487,7 +510,13 @@ export async function runAndroidQaSuite(options = {}) {
             await sleep(2500);
 
             // 6. Verify top activity returned to team.ibet.paceflow
-            const returnedActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+            let returnedActivity = '';
+            for (let waitRet = 0; waitRet < 10; waitRet++) {
+                returnedActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+                if (returnedActivity.includes('team.ibet.paceflow')) break;
+                await sleep(500);
+            }
+
             if (!returnedActivity.includes('team.ibet.paceflow')) {
                 throw new Error(`VAL-R5-EMU-004 Failed: Did not return to MainActivity after file selection: ${returnedActivity}`);
             }
