@@ -41,7 +41,7 @@ export function resolveToolchain(options = {}) {
 
     if (shouldCheckHostAndBranch) {
         const canonicalPath = '/srv/RSVP_reader-r2';
-        const canonicalBranch = customEnv.EXPECTED_BRANCH || options.expectedBranch || 'mission/android-r4-qa-truth-20260813';
+        const canonicalBranch = customEnv.EXPECTED_BRANCH || options.expectedBranch || 'mission/android-r5-recovery-20260814';
 
         let actualPath = root;
         try {

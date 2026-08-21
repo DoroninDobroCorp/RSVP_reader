@@ -59,7 +59,7 @@ export function verifyGitShaMatch(localSha, remoteSha) {
 
 export function fetchRemoteGitSha(options = {}) {
     const remoteUrl = options.remoteUrl || 'origin';
-    const branch = options.branch || 'mission/android-r4-qa-truth-20260813';
+    const branch = options.branch || 'mission/android-r5-recovery-20260814';
     const res = spawnSync('git', ['ls-remote', '--heads', remoteUrl, branch], { cwd: root, encoding: 'utf8' });
     if (res.status !== 0 || !res.stdout) {
         throw new Error(`Failed to fetch remote Git SHA from ${remoteUrl} ${branch}: ${res.stderr || 'Network or remote unreachable'}`);
@@ -69,6 +69,58 @@ export function fetchRemoteGitSha(options = {}) {
         throw new Error(`Invalid remote SHA returned from ${remoteUrl} ${branch}: ${res.stdout}`);
     }
     return parts[0];
+}
+
+export function verifyCleanCloneNoPreexisting(clonePath) {
+    const forbidden = ['node_modules', 'dist', 'dist-native', 'artifacts', 'evidence'];
+    for (const dir of forbidden) {
+        if (existsSync(join(clonePath, dir))) {
+            throw new Error(`Clean checkout clone contains pre-existing forbidden directory: ${dir}`);
+        }
+    }
+}
+
+export function verifyUnitTestSummary({ testsCount, passCount, failCount, skipCount, cancelledCount = 0, todoCount = 0 }) {
+    if (failCount > 0) throw new Error(`Unit test failures detected: ${failCount} failed`);
+    if (skipCount > 0) throw new Error(`Unit test skips detected: ${skipCount} skipped`);
+    if (cancelledCount > 0) throw new Error(`Unit test cancellations detected: ${cancelledCount} cancelled`);
+    if (todoCount > 0) throw new Error(`Unit test todos detected: ${todoCount} todo`);
+    if (passCount < 98) throw new Error(`Unit tests passed count (${passCount}) less than required 98`);
+    if (passCount !== testsCount) throw new Error(`Total tests count (${testsCount}) does not match pass count (${passCount})`);
+}
+
+export function verifyDistinctUpgradeApks(oldApkHash, newApkHash, oldVersionCode, newVersionCode) {
+    if (!oldApkHash || !newApkHash || oldApkHash === newApkHash) {
+        throw new Error(`Upgrade test requires distinct APK hashes: old=${oldApkHash}, new=${newApkHash}`);
+    }
+    if (typeof oldVersionCode === 'number' && typeof newVersionCode === 'number' && oldVersionCode >= newVersionCode) {
+        throw new Error(`Upgrade test requires higher new versionCode: old=${oldVersionCode}, new=${newVersionCode}`);
+    }
+}
+
+export function verifyDeviceClassGeometry(profile, width, height) {
+    if (profile === 'tablet' || profile === 'pixel_tablet' || profile === 'test_tablet_api36') {
+        const minDim = Math.min(width, height);
+        const maxDim = Math.max(width, height);
+        if (minDim < 1200 || maxDim < 1920) {
+            throw new Error(`Tablet profile ${profile} has invalid phone-like geometry: ${width}x${height}`);
+        }
+    }
+}
+
+export function verifyR5NamespaceIsolation(targetDir) {
+    const normalized = targetDir.replace(/\\/g, '/');
+    if (normalized.includes('/android-r2') || normalized.includes('/android-r3') || normalized.includes('/android-r4')) {
+        throw new Error(`Cross-milestone write violation: R5 pipeline must not write into prior milestone directories: ${targetDir}`);
+    }
+}
+
+export function verifyMandatoryChildCommands(executedStepIds, requiredStepIds) {
+    for (const req of requiredStepIds) {
+        if (!executedStepIds.includes(req)) {
+            throw new Error(`Mandatory verification step omitted from master gate: ${req}`);
+        }
+    }
 }
 
 export function verifyLogProvenance(assertionsMap, logsDir) {
@@ -146,7 +198,7 @@ export function verifyExecutionRecord(record) {
 export function verifyExecutedAssertions(assertionsMap, executedChecks) {
     for (const [assertion, status] of Object.entries(assertionsMap)) {
         if (status === 'PASSED') {
-            if (assertion === 'VAL-R4-NEG-001') continue;
+            if (assertion === 'VAL-R5-NEG-001' || assertion === 'VAL-R4-NEG-001') continue;
             const hasCheck = executedChecks.some(c =>
                 c.status === 'PASS' && (
                     (c.assertions && c.assertions.includes(assertion)) ||
@@ -203,7 +255,7 @@ function executeCheckStep(stepId, name, command, args, logsDir, masterLogPath, o
         durationMs,
         exitCode,
         status,
-        logPath: `artifacts/android-r4/logs/${logFileName}`,
+        logPath: `artifacts/android-r5/logs/${logFileName}`,
         stdoutSnippet: stdoutText.slice(0, 300).trim(),
         stderrSnippet: stderrText.slice(0, 300).trim()
     };
@@ -221,8 +273,8 @@ export async function runMasterVerificationPipeline(options = {}) {
     console.log('=== Starting Fail-Closed Master Verifier Pipeline (verify-all.mjs) ===\n');
 
     const allowDirty = options.allowDirty || process.argv.includes('--allow-dirty');
-    const logsDir = join(root, 'artifacts', 'android-r4', 'logs');
-    const artifactsDir = join(root, 'artifacts', 'android-r4');
+    const logsDir = join(root, 'artifacts', 'android-r5', 'logs');
+    const artifactsDir = join(root, 'artifacts', 'android-r5');
 
     mkdirSync(logsDir, { recursive: true });
     mkdirSync(artifactsDir, { recursive: true });
@@ -230,8 +282,8 @@ export async function runMasterVerificationPipeline(options = {}) {
     const masterLogPath = join(logsDir, 'verify-all.log');
     writeFileSync(masterLogPath, `=== Master Verification Pipeline Log ===\nStart: ${new Date().toISOString()}\n\n`, 'utf8');
 
-    // 1. Clean Working Tree and Git Commit SHA Pre-Check (VAL-R4-VERIFY-003)
-    console.log('1. Checking VAL-R4-VERIFY-003: Fresh Git SHA & Clean Working Tree Invariant...');
+    // 1. Clean Working Tree and Git Commit SHA Pre-Check
+    console.log('1. Checking Fresh Git SHA & Clean Working Tree Invariant...');
     const statusRes = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
     if (statusRes.status !== 0) {
         console.error('[FAIL] Failed to execute git status --porcelain');
@@ -240,7 +292,7 @@ export async function runMasterVerificationPipeline(options = {}) {
 
     const dirtyOutput = statusRes.stdout ? statusRes.stdout.trim() : '';
     if (dirtyOutput && !allowDirty) {
-        console.error('[FAIL] VAL-R4-VERIFY-003 Failed: Dirty working tree detected! Uncommitted changes are present:');
+        console.error('[FAIL] Dirty working tree detected! Uncommitted changes are present:');
         console.error(dirtyOutput);
         console.error('\nVerifier pipeline fails if working tree is dirty. Commit or stash changes before running verify:all.');
         process.exit(1);
@@ -255,24 +307,24 @@ export async function runMasterVerificationPipeline(options = {}) {
     console.log(`   Git commit SHA: ${currentGitSha}`);
     console.log(`   Working tree status: ${dirtyOutput ? 'DIRTY (bypassed with --allow-dirty)' : 'CLEAN'}\n`);
 
-    // 2. Sequential Execution of 13 Verification Steps
+    // 2. Sequential Execution of Verification Steps
     const nodeBin = process.execPath;
     const executedChecks = [];
 
     const steps = [
-        { id: 'step-01-toolchain-doctor', name: '01 Toolchain Doctor Diagnostic', cmd: nodeBin, args: ['scripts/toolchain-doctor.mjs'], assertions: ['VAL-R4-ENV-001', 'VAL-R4-ENV-002', 'VAL-R4-ENV-003', 'VAL-R4-ENV-004'] },
-        { id: 'step-02-verify-brand', name: '02 Brand & Placeholder Integrity', cmd: nodeBin, args: ['scripts/verify-brand.mjs'], assertions: ['VAL-R4-BRAND-001'] },
-        { id: 'step-03-verify-notices', name: '03 Third-Party Notices & License Integrity', cmd: nodeBin, args: ['scripts/verify-notices.mjs'], assertions: ['VAL-R4-NOTICES-001'] },
-        { id: 'step-04-verify-packaged-assets', name: '04 Packaged Asset Stripping & Security', cmd: nodeBin, args: ['scripts/verify-packaged-assets.mjs'], assertions: ['VAL-R4-SEC-001'] },
-        { id: 'step-05-verify-android-privacy', name: '05 Android Local Privacy & Permissions Audit', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R4-SEC-001', 'VAL-R4-SEC-002', 'VAL-R4-SEC-003'] },
-        { id: 'step-06-verify-android-package', name: '06 Android Package & SHA-256 Checksum Gate', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R4-SEC-003', 'VAL-R4-BUILD-004'] },
-        { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R4-EXT-001', 'VAL-R4-EXT-002'] },
-        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R4-PWA-002'] },
-        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R4-PWA-001'] },
-        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R4-BUILD-001', 'VAL-R4-BUILD-002', 'VAL-R4-BUILD-003', 'VAL-R4-BUILD-004'] },
-        { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R4-STORE-001'] },
-        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R4-HERMETIC-001', 'VAL-R4-HERMETIC-002', 'VAL-R4-NEG-002', 'VAL-R4-PWA-004'] },
-        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R4-PWA-001', 'VAL-R4-PWA-002', 'VAL-R4-PWA-003', 'VAL-R4-PWA-004'] }
+        { id: 'step-01-toolchain-doctor', name: '01 Toolchain Doctor Diagnostic', cmd: nodeBin, args: ['scripts/toolchain-doctor.mjs'], assertions: ['VAL-R5-ENV-001', 'VAL-R5-ENV-002', 'VAL-R5-ENV-003', 'VAL-R5-ENV-004'] },
+        { id: 'step-02-verify-brand', name: '02 Brand & Placeholder Integrity', cmd: nodeBin, args: ['scripts/verify-brand.mjs'], assertions: ['VAL-R5-BRAND-001'] },
+        { id: 'step-03-verify-notices', name: '03 Third-Party Notices & License Integrity', cmd: nodeBin, args: ['scripts/verify-notices.mjs'], assertions: ['VAL-R5-NOTICES-001'] },
+        { id: 'step-04-verify-packaged-assets', name: '04 Packaged Asset Stripping & Security', cmd: nodeBin, args: ['scripts/verify-packaged-assets.mjs'], assertions: ['VAL-R5-SEC-001'] },
+        { id: 'step-05-verify-android-privacy', name: '05 Android Local Privacy & Permissions Audit', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R5-SEC-001', 'VAL-R5-SEC-002', 'VAL-R5-SEC-003'] },
+        { id: 'step-06-verify-android-package', name: '06 Android Package & SHA-256 Checksum Gate', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R5-SEC-003', 'VAL-R5-BUILD-004'] },
+        { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R5-EXT-001', 'VAL-R5-EXT-002'] },
+        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R5-PWA-002'] },
+        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R5-PWA-001'] },
+        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R5-BUILD-001', 'VAL-R5-BUILD-002', 'VAL-R5-BUILD-003', 'VAL-R5-BUILD-004'] },
+        { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R5-STORE-001'] },
+        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R5-HERMETIC-001', 'VAL-R5-HERMETIC-002', 'VAL-R5-NEG-002', 'VAL-R5-PWA-004'] },
+        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R5-PWA-001', 'VAL-R5-PWA-002', 'VAL-R5-PWA-003', 'VAL-R5-PWA-004'] }
     ];
 
     let overallPassed = true;
@@ -299,11 +351,11 @@ export async function runMasterVerificationPipeline(options = {}) {
     const overallStatus = overallPassed && failedCount === 0 ? 'PASSED' : 'FAILED';
 
     if (overallStatus === 'PASSED') {
-        const negLogPath = join(logsDir, 'val-r4-neg-001.log');
+        const negLogPath = join(logsDir, 'val-r5-neg-001.log');
         writeFileSync(negLogPath, readFileSync(masterLogPath, 'utf8'), 'utf8');
     }
 
-    const assertionsMap = { 'VAL-R4-NEG-001': overallStatus };
+    const assertionsMap = { 'VAL-R5-NEG-001': overallStatus };
     for (const check of executedChecks) {
         if (check.assertions && check.status === 'PASS') {
             for (const ass of check.assertions) {
@@ -343,18 +395,6 @@ export async function runMasterVerificationPipeline(options = {}) {
     };
 
     writeFileSync(join(artifactsDir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
-
-    // Also update artifacts/android-r3 and artifacts/android-r2 for backward compatibility if present
-    const r3Dir = join(root, 'artifacts', 'android-r3');
-    if (existsSync(r3Dir)) {
-        writeFileSync(join(r3Dir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
-        writeFileSync(join(r3Dir, 'validation-state.json'), JSON.stringify(validationState, null, 2), 'utf8');
-    }
-    const r2Dir = join(root, 'artifacts', 'android-r2');
-    if (existsSync(r2Dir)) {
-        writeFileSync(join(r2Dir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
-        writeFileSync(join(r2Dir, 'validation-state.json'), JSON.stringify(validationState, null, 2), 'utf8');
-    }
 
     if (!overallPassed) {
         console.error('\n====================================================');

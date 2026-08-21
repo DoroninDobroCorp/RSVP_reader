@@ -132,13 +132,14 @@ async function runPackageAudit() {
 
     // 6. VAL-R2-VERIFY-004 & VAL-R2-ARTIFACT-001/002: APK & AAB Existence & SHA-256 Checksum Verification Gate
     console.log('6. Checking VAL-R2-VERIFY-004: APK & AAB Existence and SHA-256 Checksum Validation...');
+    const r5Apk = join(root, 'artifacts', 'android-r5', 'HummingRead-R5-debug.apk');
     const r4Apk = join(root, 'artifacts', 'android-r4', 'HummingRead-R4-debug.apk');
     const r3Apk = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-debug.apk');
     const primaryApk = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
     const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
     let targetApk = null;
 
-    for (const cand of [r4Apk, buildApk, r3Apk, primaryApk]) {
+    for (const cand of [r5Apk, r4Apk, buildApk, r3Apk, primaryApk]) {
         if (existsSync(cand)) {
             try {
                 const stat = (await import('node:fs')).statSync(cand);
@@ -159,13 +160,14 @@ async function runPackageAudit() {
     console.log(`   Target APK located: ${targetApk}`);
     console.log(`   Computed APK SHA-256: ${actualSha256}`);
 
+    const r5Aab = join(root, 'artifacts', 'android-r5', 'HummingRead-R5-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const r4Aab = join(root, 'artifacts', 'android-r4', 'HummingRead-R4-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const r3Aab = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const primaryAab = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-review-UNSIGNED-NOT-FOR-UPLOAD.aab');
     const buildAab = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
     let targetAab = null;
 
-    for (const cand of [r4Aab, buildAab, r3Aab, primaryAab]) {
+    for (const cand of [r5Aab, r4Aab, buildAab, r3Aab, primaryAab]) {
         if (existsSync(cand)) {
             try {
                 const stat = (await import('node:fs')).statSync(cand);
@@ -187,10 +189,11 @@ async function runPackageAudit() {
     console.log(`   Computed AAB SHA-256: ${aabSha256}`);
 
     // Check evidence-summary.json
+    const r5Summary = join(root, 'artifacts', 'android-r5', 'evidence-summary.json');
     const r4Summary = join(root, 'artifacts', 'android-r4', 'evidence-summary.json');
     const r3Summary = join(root, 'artifacts', 'android-r3', 'evidence-summary.json');
     const r2Summary = join(root, 'artifacts', 'android-r2', 'evidence-summary.json');
-    const summaryPaths = [r4Summary, targetApk.includes('android-r3') ? r3Summary : null, targetApk.includes('android-r2') ? r2Summary : null].filter(Boolean);
+    const summaryPaths = [r5Summary, r4Summary, targetApk.includes('android-r3') ? r3Summary : null, targetApk.includes('android-r2') ? r2Summary : null].filter(Boolean);
 
     let summaryData = null;
     for (const sp of summaryPaths) {

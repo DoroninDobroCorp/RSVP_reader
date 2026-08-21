@@ -8,11 +8,10 @@ import sharp from 'sharp';
 import { checkToolchain } from './toolchain-doctor.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const r3ArtifactsDir = join(root, 'artifacts', 'android-r3');
-const r2ArtifactsDir = join(root, 'artifacts', 'android-r2');
-const r3EvidenceDir = join(r3ArtifactsDir, 'evidence');
-const r3ScreenshotsDir = join(r3EvidenceDir, 'screenshots');
-const legacyEvidenceDir = join(root, 'evidence', 'android');
+const r5ArtifactsDir = join(root, 'artifacts', 'android-r5');
+const r5EvidenceDir = join(r5ArtifactsDir, 'evidence');
+const r5ScreenshotsDir = join(r5EvidenceDir, 'screenshots');
+const legacyEvidenceDir = join(root, 'evidence', 'android-r5');
 
 const toolchain = checkToolchain();
 Object.assign(process.env, toolchain.env);
@@ -210,14 +209,14 @@ async function setupAdbForwardingAndConnect() {
 
 // Generate Screenshot and Sidecar Manifest JSON Pair Across Artifact Locations
 async function saveScreenshotAndSidecar(relSubdir, fileName, meta) {
-    const r3Subdir = join(r3ScreenshotsDir, relSubdir);
+    const r5Subdir = join(r5ScreenshotsDir, relSubdir);
     const legacySubdir = join(legacyEvidenceDir, 'screenshots', relSubdir);
 
-    await mkdir(r3Subdir, { recursive: true });
-    await mkdir(r3ScreenshotsDir, { recursive: true });
+    await mkdir(r5Subdir, { recursive: true });
+    await mkdir(r5ScreenshotsDir, { recursive: true });
     await mkdir(legacySubdir, { recursive: true });
 
-    const primaryPng = join(r3Subdir, fileName);
+    const primaryPng = join(r5Subdir, fileName);
     runCmd(`adb exec-out screencap -p > "${primaryPng}"`);
 
     const pngBuffer = await readFile(primaryPng);
@@ -244,15 +243,15 @@ async function saveScreenshotAndSidecar(relSubdir, fileName, meta) {
 
     const sidecarJson = JSON.stringify(manifest, null, 2);
 
-    // Save sidecars in r3Subdir
+    // Save sidecars in r5Subdir
     await writeFile(`${primaryPng}.json`, sidecarJson, 'utf8');
     await writeFile(primaryPng.slice(0, -4) + '.json', sidecarJson, 'utf8');
 
-    // Copy PNG and sidecars to r3ScreenshotsDir root (flat)
-    const r3FlatPng = join(r3ScreenshotsDir, fileName);
-    await writeFile(r3FlatPng, pngBuffer);
-    await writeFile(`${r3FlatPng}.json`, sidecarJson, 'utf8');
-    await writeFile(r3FlatPng.slice(0, -4) + '.json', sidecarJson, 'utf8');
+    // Copy PNG and sidecars to r5ScreenshotsDir root (flat)
+    const r5FlatPng = join(r5ScreenshotsDir, fileName);
+    await writeFile(r5FlatPng, pngBuffer);
+    await writeFile(`${r5FlatPng}.json`, sidecarJson, 'utf8');
+    await writeFile(r5FlatPng.slice(0, -4) + '.json', sidecarJson, 'utf8');
 
     // Copy PNG and sidecars to legacySubdir
     const legacyPng = join(legacySubdir, fileName);
@@ -400,8 +399,8 @@ async function runAccessibilityAudit(client) {
         auditTimestamp: new Date().toISOString()
     };
 
-    await writeFile(join(r3EvidenceDir, 'accessibility-report.json'), JSON.stringify(auditData, null, 2), 'utf8');
-    await writeFile(join(r3EvidenceDir, 'accessibility-audit.json'), JSON.stringify(auditData, null, 2), 'utf8');
+    await writeFile(join(r5EvidenceDir, 'accessibility-report.json'), JSON.stringify(auditData, null, 2), 'utf8');
+    await writeFile(join(r5EvidenceDir, 'accessibility-audit.json'), JSON.stringify(auditData, null, 2), 'utf8');
     await writeFile(join(legacyEvidenceDir, 'accessibility-audit.json'), JSON.stringify(auditData, null, 2), 'utf8');
 
     console.log(`   Audited ${auditRes.totalControls} visible interactive controls.`);
@@ -482,26 +481,25 @@ All tested action targets remain at least 44 CSS px (or 48 dp native equivalent)
 async function main() {
     console.log('=== Starting Visual QA Matrix & Accessibility Gate Suite (VAL-R3-SCREEN-001..004, VAL-R3-A11Y-001..002) ===\n');
 
-    await mkdir(r3ArtifactsDir, { recursive: true });
-    await mkdir(r2ArtifactsDir, { recursive: true });
-    await mkdir(r3EvidenceDir, { recursive: true });
-    await mkdir(r3ScreenshotsDir, { recursive: true });
+    await mkdir(r5ArtifactsDir, { recursive: true });
+    await mkdir(r5EvidenceDir, { recursive: true });
+    await mkdir(r5ScreenshotsDir, { recursive: true });
     await mkdir(legacyEvidenceDir, { recursive: true });
 
-    const r3Apk = join(r3ArtifactsDir, 'HummingRead-R3-debug.apk');
-    const r2Apk = join(r2ArtifactsDir, 'HummingRead-R2-debug.apk');
+    const r5Apk = join(r5ArtifactsDir, 'HummingRead-R5-debug.apk');
     const buildApk = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
 
-    let primaryApk = existsSync(r3Apk) ? r3Apk : (existsSync(r2Apk) ? r2Apk : buildApk);
+    let primaryApk = existsSync(r5Apk) ? r5Apk : buildApk;
 
     if (!existsSync(primaryApk)) {
         console.log('Building debug APK via Gradle...');
+        runCmd('npm run build:native && npx cap sync android');
         runCmd('cd android && ./gradlew assembleDebug');
         primaryApk = buildApk;
     }
-    if (primaryApk !== r3Apk) {
-        await cp(primaryApk, r3Apk);
-        primaryApk = r3Apk;
+    if (primaryApk !== r5Apk) {
+        await cp(primaryApk, r5Apk);
+        primaryApk = r5Apk;
     }
 
     const apkBuffer = await readFile(primaryApk);
@@ -756,11 +754,11 @@ async function main() {
 
     // 3. Black / Blank Frame Detection Filter
     const matrixDirs = [
-        join(r3ScreenshotsDir, 'matrix'),
+        join(r5ScreenshotsDir, 'matrix'),
         join(legacyEvidenceDir, 'screenshots', 'matrix')
     ];
     const workflowDirs = [
-        join(r3ScreenshotsDir, 'workflow'),
+        join(r5ScreenshotsDir, 'workflow'),
         join(legacyEvidenceDir, 'screenshots', 'workflow')
     ];
 
