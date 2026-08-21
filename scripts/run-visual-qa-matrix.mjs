@@ -674,18 +674,21 @@ async function main() {
     // Step 4: Bookmark Saved
     await client.evaluate(`(async () => {
         window.rsvpReader.pause();
-        window.rsvpReader.showActionDialog = async () => 'Workflow Bookmark';
-        if (typeof window.rsvpReader.addBookmarkAtCurrentPosition === 'function') {
-            await window.rsvpReader.addBookmarkAtCurrentPosition();
+        const book = window.rsvpReader.library[0] || (await window.rsvpReader.getAllBooks())[0];
+        if (book) {
+            window.rsvpReader.openBookmarks(book.id);
         }
     })()`);
-    await sleep(300);
+    await sleep(600);
     await saveScreenshotAndSidecar('workflow', 'step_4_bookmark_saved.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'bookmark_saved', orientation: 'portrait'
     });
 
     // Step 5: Search Results
     await client.evaluate(`(async () => {
+        window.rsvpReader.closeBookmarks();
+        window.rsvpReader.activeModal = null;
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
         window.rsvpReader.showSection('library');
         const searchInput = document.querySelector('#librarySearchInput');
         if (searchInput) {
@@ -693,22 +696,17 @@ async function main() {
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
     })()`);
-    await sleep(300);
+    await sleep(600);
     await saveScreenshotAndSidecar('workflow', 'step_5_search_results.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'search_results', orientation: 'portrait'
     });
 
-    // Step 6: Export Triggered
+    // Step 6: Export Triggered / Settings Modal Open
     await client.evaluate(`(async () => {
+        window.rsvpReader.showSection('input');
         window.rsvpReader.openSettings();
-        const modal = document.getElementById('settingsModal');
-        if (modal) {
-            modal.classList.add('active');
-            const exportBtn = document.getElementById('settingsExportBtn');
-            if (exportBtn) exportBtn.scrollIntoView({ block: 'center' });
-        }
     })()`);
-    await sleep(500);
+    await sleep(800);
     await saveScreenshotAndSidecar('workflow', 'step_6_export_triggered.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'export_triggered', orientation: 'portrait'
     });
