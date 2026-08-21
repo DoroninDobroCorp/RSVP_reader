@@ -181,7 +181,7 @@ async function launchAVDIfNeeded(avdName) {
 
     // Launch headless emulator with bounded gRPC port and direct stderr/stdout capture
     const emuCmd = `nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 & echo $!`;
-    const pidOut = execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash' }).trim();
+    const pidOut = execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash', encoding: 'utf8' }).trim();
     activeEmulatorPid = pidOut.split('\n')[0].trim();
     console.log(`   Emulator launched with PID ${activeEmulatorPid}, logs: ${emuLogPath}`);
 
