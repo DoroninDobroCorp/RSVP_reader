@@ -482,9 +482,9 @@ export async function runAndroidQaSuite(options = {}) {
                 throw new Error(`VAL-R5-EMU-004 Failed: DocumentsUI file picker not foregrounded: ${topActivity}`);
             }
 
-            // 4. Dump UI hierarchy of DocumentsUI and locate the file node
+            // 4. Dump UI hierarchy of DocumentsUI and locate the file node (ignoring Preview buttons)
             let dumpXml = await dumpUiHierarchy(`saf_${item.fmt}.xml`);
-            let fileNode = findNodeBounds(dumpXml, n => n.text === item.name || n.contentDesc.includes(item.name));
+            let fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
 
             // If in Recent and file not shown, open Downloads from drawer
             if (!fileNode) {
@@ -498,7 +498,7 @@ export async function runAndroidQaSuite(options = {}) {
                         runCmd(`adb shell input tap ${downloadsBtn.centerX} ${downloadsBtn.centerY}`);
                         await sleep(1000);
                         dumpXml = await dumpUiHierarchy(`downloads_${item.fmt}.xml`);
-                        fileNode = findNodeBounds(dumpXml, n => n.text === item.name || n.contentDesc.includes(item.name));
+                        fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
                     }
                 }
             }
@@ -509,7 +509,7 @@ export async function runAndroidQaSuite(options = {}) {
                     runCmd('adb shell input swipe 540 1800 540 800 300');
                     await sleep(800);
                     dumpXml = await dumpUiHierarchy(`scroll_${item.fmt}_${scrollAttempt}.xml`);
-                    fileNode = findNodeBounds(dumpXml, n => n.text === item.name || n.contentDesc.includes(item.name));
+                    fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
                     if (fileNode) break;
                 }
             }
