@@ -525,10 +525,27 @@ export async function runAndroidQaSuite(options = {}) {
 
             // 6. Verify top activity returned to team.ibet.paceflow
             let returnedActivity = '';
-            for (let waitRet = 0; waitRet < 10; waitRet++) {
+            for (let waitRet = 0; waitRet < 15; waitRet++) {
                 returnedActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+                if (returnedActivity.includes('ResolverActivity') || returnedActivity.includes('intentresolver')) {
+                    // If Android shows Resolver dialog, select HummingRead or tap 'Just once'
+                    const resDump = await dumpUiHierarchy('resolver.xml');
+                    const justOnceBtn = findNodeBounds(resDump, n => n.text === 'Just once' || n.text === 'Always' || n.resourceId.includes('button_once'));
+                    if (justOnceBtn) {
+                        runCmd(`adb shell input tap ${justOnceBtn.centerX} ${justOnceBtn.centerY}`);
+                    } else {
+                        const appItem = findNodeBounds(resDump, n => n.text.includes('HummingRead') || n.text.includes('paceflow') || n.contentDesc.includes('HummingRead'));
+                        if (appItem) {
+                            runCmd(`adb shell input tap ${appItem.centerX} ${appItem.centerY}`);
+                            await sleep(500);
+                            const secondDump = await dumpUiHierarchy('resolver2.xml');
+                            const once = findNodeBounds(secondDump, n => n.text === 'Just once' || n.text === 'Always');
+                            if (once) runCmd(`adb shell input tap ${once.centerX} ${once.centerY}`);
+                        }
+                    }
+                }
                 if (returnedActivity.includes('team.ibet.paceflow')) break;
-                await sleep(500);
+                await sleep(600);
             }
 
             if (!returnedActivity.includes('team.ibet.paceflow')) {
