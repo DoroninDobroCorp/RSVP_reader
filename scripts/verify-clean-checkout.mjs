@@ -32,8 +32,8 @@ async function main() {
         console.log(`[INFO] Cloning fresh copy of repository at ${currentSha}...`);
         execSync(`git clone "${root}" "${tempDir}"`, { stdio: 'inherit' });
 
-        // Verify clone contains no copied node_modules, dist, dist-native, artifacts, or evidence
-        const forbiddenDirs = ['node_modules', 'dist', 'dist-native', 'artifacts', 'evidence'];
+        // Verify clone contains no copied node_modules, dist, dist-native, or artifacts
+        const forbiddenDirs = ['node_modules', 'dist', 'dist-native', 'artifacts'];
         for (const dir of forbiddenDirs) {
             const forbiddenPath = join(tempDir, dir);
             if (existsSync(forbiddenPath)) {

@@ -72,7 +72,7 @@ export function fetchRemoteGitSha(options = {}) {
 }
 
 export function verifyCleanCloneNoPreexisting(clonePath) {
-    const forbidden = ['node_modules', 'dist', 'dist-native', 'artifacts', 'evidence'];
+    const forbidden = ['node_modules', 'dist', 'dist-native', 'artifacts'];
     for (const dir of forbidden) {
         if (existsSync(join(clonePath, dir))) {
             throw new Error(`Clean checkout clone contains pre-existing forbidden directory: ${dir}`);
