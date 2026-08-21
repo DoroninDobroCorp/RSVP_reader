@@ -443,15 +443,17 @@ export async function runAndroidQaSuite(options = {}) {
         for (const item of pushedFiles) {
             console.log(`   Executing real SAF import for .${item.fmt} (${item.name})...`);
 
-            // 1. Prepare UI state: return to input view and scroll to top (0, 0)
+            // 1. Prepare UI state: clean reset to landing screen with empty inputs and scroll to top (0, 0)
             await client.evaluate(`(() => {
                 if (window.rsvpReader.backToInput) window.rsvpReader.backToInput();
+                if (window.rsvpReader.setTextInputValue) window.rsvpReader.setTextInputValue('');
+                if (window.rsvpReader.bookNameInput) window.rsvpReader.bookNameInput.value = '';
                 window.rsvpReader.showSection('input');
                 window.rsvpReader.activeModal = null;
                 document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
                 window.scrollTo(0, 0);
             })()`);
-            await sleep(300);
+            await sleep(400);
 
             // 2. Get visible coordinates of Import button on screen
             const btnPos = await client.evaluate(`(() => {
