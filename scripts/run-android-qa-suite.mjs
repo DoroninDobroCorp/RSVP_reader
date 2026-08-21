@@ -504,6 +504,17 @@ export async function runAndroidQaSuite(options = {}) {
             }
 
             if (!fileNode) {
+                // Scroll down in DocumentsUI directory list to find items below the fold
+                for (let scrollAttempt = 0; scrollAttempt < 3; scrollAttempt++) {
+                    runCmd('adb shell input swipe 540 1800 540 800 300');
+                    await sleep(800);
+                    dumpXml = await dumpUiHierarchy(`scroll_${item.fmt}_${scrollAttempt}.xml`);
+                    fileNode = findNodeBounds(dumpXml, n => n.text === item.name || n.contentDesc.includes(item.name));
+                    if (fileNode) break;
+                }
+            }
+
+            if (!fileNode) {
                 throw new Error(`VAL-R5-EMU-004 Failed: Fixture ${item.name} not found in DocumentsUI hierarchy`);
             }
 
