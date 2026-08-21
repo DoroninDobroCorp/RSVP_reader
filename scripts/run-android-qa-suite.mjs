@@ -159,14 +159,32 @@ async function stopAllEmulators() {
     try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
 }
 
+async function waitForBootCompleted(timeoutSec = 75) {
+    let booted = false;
+    for (let i = 0; i < timeoutSec; i++) {
+        const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+        const packageMgrReady = runCmd(`adb shell pm path android`, { allowFail: true, timeout: 2000 }).trim();
+        if (statusSys === '1' && packageMgrReady.includes('package:')) {
+            booted = true;
+            break;
+        }
+        await sleep(1000);
+    }
+    return booted;
+}
+
 async function launchAVDIfNeeded(avdName) {
     const devices = getRunningDevices();
     if (devices.length === 1) {
         activeDeviceSerial = devices[0];
         const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 3000 }).trim();
         if (activeAvd === avdName) {
-            console.log(`AVD ${avdName} already active on ADB device ${activeDeviceSerial}.`);
-            return;
+            console.log(`AVD ${avdName} already active on ADB device ${activeDeviceSerial}. Waiting for boot completion...`);
+            const ready = await waitForBootCompleted(60);
+            if (ready) {
+                console.log(`AVD ${avdName} is ready and verified.`);
+                return;
+            }
         }
     }
 
@@ -178,7 +196,7 @@ async function launchAVDIfNeeded(avdName) {
     const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
     const emuLogPath = join(logsDir, `emulator-${avdName}.log`);
     const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
-
+    
     // Launch headless emulator with bounded gRPC port and direct stderr/stdout capture
     const emuCmd = `nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 & echo $!`;
     const pidOut = execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash', encoding: 'utf8' }).trim();
@@ -191,18 +209,9 @@ async function launchAVDIfNeeded(avdName) {
     activeDeviceSerial = activeDevs.length > 0 ? activeDevs[0] : null;
 
     console.log(`Waiting for AVD ${avdName} system boot completion...`);
-    let booted = false;
-    for (let i = 0; i < 75; i++) {
-        const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
-        if (statusSys === '1') {
-            booted = true;
-            break;
-        }
-        await sleep(1000);
-    }
-
+    const booted = await waitForBootCompleted(75);
     if (!booted) throw new Error(`Failed to boot AVD ${avdName} within timeout. Check log at ${emuLogPath}`);
-
+    
     // Verify AVD identity and hardware geometry
     const bootedAvd = runCmd('adb shell getprop ro.boot.qemu.avd_name', { timeout: 3000 }).trim();
     const sizeOut = runCmd('adb shell wm size', { timeout: 3000 }).trim();
@@ -243,7 +252,7 @@ async function setupAdbForwardingAndConnect() {
 
 // Find UIAutomator node bounds by text, content-desc, or resource-id
 function findNodeBounds(xmlContent, predicate) {
-    const nodeRegex = /<node\s+([^>]+)\/>/g;
+    const nodeRegex = /<node\s+([^>]+?)(\/?>)/g;
     let match;
     while ((match = nodeRegex.exec(xmlContent)) !== null) {
         const attrs = match[1];
