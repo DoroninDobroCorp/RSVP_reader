@@ -558,10 +558,24 @@ export async function runAndroidQaSuite(options = {}) {
                 throw new Error(`VAL-R5-EMU-004 Failed: Did not return to MainActivity after file selection: ${returnedActivity}`);
             }
 
-            // 7. Verify book was imported into library
-            const verifyBook = await client.evaluate(`(() => {\n                const baseName = "${item.name}".replace(/\\.[^/.]+$/, "");\n                const found = window.rsvpReader.library.find(b => (b.title && b.title.includes(baseName)) || (b.name && b.name.includes(baseName)));\n                return {\n                    imported: !!found,\n                    title: found ? (found.title || found.name) : '',\n                    libraryLength: window.rsvpReader.library.length,\n                    tokenCount: found ? (found.tokenCount || (found.words && found.words.length) || (found.text && found.text.split(/\\s+/).length) || 0) : 0\n                };\n            })()`);
+            // 7. Verify book was imported into library (with polling for async parse completion)
+            let verifyBook = null;
+            for (let poll = 0; poll < 10; poll++) {
+                verifyBook = await client.evaluate(`(() => {
+                    const baseName = "${item.name}".replace(/\\.[^/.]+$/, "");
+                    const found = window.rsvpReader.library.find(b => (b.title && b.title.includes(baseName)) || (b.name && b.name.includes(baseName)));
+                    return {
+                        imported: !!found,
+                        title: found ? (found.title || found.name) : '',
+                        libraryLength: window.rsvpReader.library.length,
+                        tokenCount: found ? (found.tokenCount || (found.words && found.words.length) || (found.text && found.text.split(/\\s+/).length) || 0) : 0
+                    };
+                })()`);
+                if (verifyBook && verifyBook.imported) break;
+                await sleep(600);
+            }
 
-            if (!verifyBook.imported) {
+            if (!verifyBook || !verifyBook.imported) {
                 throw new Error(`VAL-R5-EMU-004 Failed: Format .${item.fmt} file selection did not populate book in library`);
             }
 
