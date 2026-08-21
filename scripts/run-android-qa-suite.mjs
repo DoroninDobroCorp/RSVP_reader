@@ -465,16 +465,18 @@ export async function runAndroidQaSuite(options = {}) {
                     y: Math.round(128 + (r.y + r.height / 2) * window.devicePixelRatio)
                 };
             })()`);
+            console.log(`     Calculated Import button tap target: (${btnPos.x}, ${btnPos.y})`);
 
             // 3. Physical tap on device screen to trigger file chooser
             let topActivity = '';
             for (let tapAttempt = 0; tapAttempt < 3; tapAttempt++) {
                 runCmd(`adb shell input tap ${btnPos.x} ${btnPos.y}`);
-                await sleep(1500);
+                await sleep(2000);
                 topActivity = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
                 if (topActivity.includes('documentsui') || topActivity.includes('picker') || topActivity.includes('ResolverActivity')) {
                     break;
                 }
+                console.log(`     Tap attempt ${tapAttempt + 1} did not foreground DocumentsUI (current: ${topActivity.trim()}). Retrying tap...`);
                 await sleep(500);
             }
 
