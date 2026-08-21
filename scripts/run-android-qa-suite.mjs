@@ -749,7 +749,17 @@ export async function runAndroidQaSuite(options = {}) {
 
         // 9. VAL-R5-EMU-009: Real Device Rotation & State Survival
         console.log('9. Testing VAL-R5-EMU-009: Real Device Rotation & State Survival...');
-        await client.evaluate(`\n            window.rsvpReader.currentIndex = 15;\n            window.rsvpReader.readingPosition = 15;\n            window.rsvpReader.settings.wpm = 380;\n            window.rsvpReader.updateSettings();\n        `);
+        await client.evaluate(`(async () => {
+            const parsed = { text: "Word 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30" };
+            await window.rsvpReader.addParsedBookToLibrary("Rotation Test Book", parsed, "txt", { select: true });
+            if (window.rsvpReader.wpmInput) window.rsvpReader.wpmInput.value = 380;
+            window.rsvpReader.settings.wpm = 380;
+            window.rsvpReader.currentIndex = 15;
+            window.rsvpReader.readingPosition = 15;
+            window.rsvpReader.updateSettings();
+            if (window.rsvpReader.saveSettings) await window.rsvpReader.saveSettings();
+            if (window.rsvpReader.saveDraft) await window.rsvpReader.saveDraft();
+        })()`);
 
         // Rotate to landscape
         runCmd('adb shell settings put system accelerometer_rotation 0');
