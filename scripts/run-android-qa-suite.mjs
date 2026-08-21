@@ -488,24 +488,24 @@ export async function runAndroidQaSuite(options = {}) {
             let dumpXml = await dumpUiHierarchy(`saf_${item.fmt}.xml`);
             let fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
 
-            // Always ensure we are in Downloads folder if not immediately found
-            if (!fileNode) {
+            // If not in view and not already in Downloads folder, navigate to Downloads root
+            if (!fileNode && !dumpXml.includes('Files in Downloads') && !dumpXml.includes('breadcrumb_text">Downloads')) {
                 const rootsBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Show roots' || n.className.includes('ImageButton')) || { centerX: 73, centerY: 191 };
                 runCmd(`adb shell input tap ${rootsBtn.centerX} ${rootsBtn.centerY}`);
-                await sleep(1000);
-                dumpXml = await dumpUiHierarchy('drawer.xml');
-                const downloadsBtn = findNodeBounds(dumpXml, n => n.text === 'Downloads' || n.contentDesc === 'Downloads') || { centerX: 367, centerY: 642 };
+                await sleep(800);
+                const drawerXml = await dumpUiHierarchy('drawer.xml');
+                const downloadsBtn = findNodeBounds(drawerXml, n => n.text === 'Downloads' || n.contentDesc === 'Downloads') || { centerX: 367, centerY: 642 };
                 runCmd(`adb shell input tap ${downloadsBtn.centerX} ${downloadsBtn.centerY}`);
-                await sleep(1200);
+                await sleep(1000);
                 dumpXml = await dumpUiHierarchy(`downloads_${item.fmt}.xml`);
                 fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
             }
 
-            // If still not visible, scroll down in Downloads list
+            // If still not visible, scroll down in list to find items below fold
             if (!fileNode) {
-                for (let scrollAttempt = 0; scrollAttempt < 4; scrollAttempt++) {
-                    runCmd('adb shell input swipe 540 1800 540 800 400');
-                    await sleep(1000);
+                for (let scrollAttempt = 0; scrollAttempt < 5; scrollAttempt++) {
+                    runCmd('adb shell input swipe 540 1600 540 800 300');
+                    await sleep(800);
                     dumpXml = await dumpUiHierarchy(`scroll_${item.fmt}_${scrollAttempt}.xml`);
                     fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
                     if (fileNode) break;
