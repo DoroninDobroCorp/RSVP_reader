@@ -520,8 +520,14 @@ export async function runAndroidQaSuite(options = {}) {
 
             // 5. Tap the physical file item in DocumentsUI
             console.log(`     Tapping file item "${item.name}" at (${fileNode.centerX}, ${fileNode.centerY}) in DocumentsUI...`);
-            runCmd(`adb shell input tap ${fileNode.centerX} ${fileNode.centerY}`);
-            await sleep(2500);
+            for (let tapSelect = 0; tapSelect < 3; tapSelect++) {
+                runCmd(`adb shell input tap ${fileNode.centerX} ${fileNode.centerY}`);
+                await sleep(2000);
+                const cur = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+                if (!cur.includes('documentsui') && !cur.includes('picker')) break;
+                console.log(`     Retrying item tap in DocumentsUI (current focus: ${cur.trim()})...`);
+                await sleep(500);
+            }
 
             // 6. Verify top activity returned to team.ibet.paceflow
             let returnedActivity = '';
