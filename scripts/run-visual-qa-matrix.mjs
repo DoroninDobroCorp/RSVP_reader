@@ -660,11 +660,13 @@ async function main() {
     // Step 3: RSVP Playing
     await client.evaluate(`(async () => {
         window.paceflowI18n.setLanguage('en');
-        window.rsvpReader.showSection('rsvp');
+        const parsed = { text: "Streaming visual RSVP word demonstration for screenshot verification step three" };
+        await window.rsvpReader.addParsedBookToLibrary("Workflow RSVP Book", parsed, "txt", { select: true });
+        await window.rsvpReader.startNormalReading();
         window.rsvpReader.startRSVP();
         window.rsvpReader.play();
     })()`);
-    await sleep(400);
+    await sleep(500);
     await saveScreenshotAndSidecar('workflow', 'step_3_rsvp_playing.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'rsvp_playing', orientation: 'portrait'
     });
@@ -699,8 +701,14 @@ async function main() {
     // Step 6: Export Triggered
     await client.evaluate(`(async () => {
         window.rsvpReader.openSettings();
+        const modal = document.getElementById('settingsModal');
+        if (modal) {
+            modal.classList.add('active');
+            const exportBtn = document.getElementById('settingsExportBtn');
+            if (exportBtn) exportBtn.scrollIntoView({ block: 'center' });
+        }
     })()`);
-    await sleep(300);
+    await sleep(500);
     await saveScreenshotAndSidecar('workflow', 'step_6_export_triggered.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'export_triggered', orientation: 'portrait'
     });
