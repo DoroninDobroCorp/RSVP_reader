@@ -600,8 +600,16 @@ export async function runAndroidQaSuite(options = {}) {
         runCmd(`adb shell input tap ${exportPos.x} ${exportPos.y}`);
         await sleep(1500);
 
-        // Verify ChooserActivity / Sharesheet foregrounded
-        const chooserWindow = runCmd('adb shell dumpsys window | grep -i mCurrentFocus', { allowFail: true });
+        // Verify ChooserActivity / Sharesheet foregrounded (poll up to 6s for animation)
+        let chooserWindow = '';
+        for (let pollChooser = 0; pollChooser < 10; pollChooser++) {
+            chooserWindow = runCmd('adb shell dumpsys window | grep -i "mCurrentFocus\\|mFocusedApp"', { allowFail: true });
+            if (chooserWindow.includes('ChooserActivity') || chooserWindow.includes('intentresolver') || chooserWindow.includes('ResolverActivity')) {
+                break;
+            }
+            await sleep(600);
+        }
+
         if (!chooserWindow.includes('ChooserActivity') && !chooserWindow.includes('intentresolver') && !chooserWindow.includes('ResolverActivity')) {
             throw new Error(`VAL-R5-EMU-005 Failed: Android ChooserActivity / Sharesheet not foregrounded: ${chooserWindow}`);
         }
