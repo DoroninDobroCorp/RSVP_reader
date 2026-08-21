@@ -443,17 +443,20 @@ export async function runAndroidQaSuite(options = {}) {
         for (const item of pushedFiles) {
             console.log(`   Executing real SAF import for .${item.fmt} (${item.name})...`);
 
-            // 1. Prepare UI state: ensure app is on the landing/input screen with no active modals
+            // 1. Prepare UI state: return to input view and scroll to top
             await client.evaluate(`(() => {
+                if (window.rsvpReader.backToInput) window.rsvpReader.backToInput();
                 window.rsvpReader.showSection('input');
                 window.rsvpReader.activeModal = null;
                 document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+                window.scrollTo(0, 0);
             })()`);
-            await sleep(300);
+            await sleep(400);
 
             // 2. Get visible coordinates of Import button on screen
             const btnPos = await client.evaluate(`(() => {
-                window.rsvpReader.showSection('input');
+                window.rsvpReader.backToInput();
+                window.scrollTo(0, 0);
                 const b = document.getElementById('heroImportBtn');
                 b.scrollIntoView({block: 'center'});
                 const r = b.getBoundingClientRect();
