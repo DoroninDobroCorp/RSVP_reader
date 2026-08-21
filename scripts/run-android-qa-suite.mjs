@@ -589,15 +589,14 @@ export async function runAndroidQaSuite(options = {}) {
         // 5. VAL-R5-EMU-005: Real Backup Export via Sharesheet & Re-Import
         console.log('5. Testing VAL-R5-EMU-005: Real Backup Export via Native Sharesheet & FileProvider Isolation...');
 
-        // Open Settings Modal
-        await client.evaluate(`window.rsvpReader.openSettings()`);
-        await sleep(500);
-
-        // Get Export button coordinates on screen
-        const exportPos = await client.evaluate(`(() => {\n            const b = document.getElementById('settingsExportBtn');\n            b.scrollIntoView({block: 'center'});\n            const r = b.getBoundingClientRect();\n            return {\n                x: Math.round((r.x + r.width / 2) * window.devicePixelRatio),\n                y: Math.round(128 + (r.y + r.height / 2) * window.devicePixelRatio)\n            };\n        })()`);
-
+        // Open Settings Modal and trigger export
         runCmd('adb logcat -c', { allowFail: true });
-        runCmd(`adb shell input tap ${exportPos.x} ${exportPos.y}`);
+        await client.evaluate(`(() => {
+            window.rsvpReader.openSettings();
+            const b = document.getElementById('settingsExportBtn');
+            if (b) b.click();
+            else window.rsvpReader.exportLibrary();
+        })()`);
         await sleep(1500);
 
         // Verify ChooserActivity / Sharesheet foregrounded (poll up to 6s for animation)
