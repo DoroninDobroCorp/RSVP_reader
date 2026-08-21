@@ -637,22 +637,22 @@ async function main() {
     });
 
     // Step 2: Language EN
-    await client.evaluate(`window.paceflowI18n.setLanguage('en')`);
-    await sleep(200);
+    await client.evaluate(`window.rsvpReader.setLanguage('en')`);
+    await sleep(600);
     await saveScreenshotAndSidecar('workflow', 'step_2_lang_en.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'en', viewportDimensions: { width: 390, height: 844 }, appState: 'lang_en', orientation: 'portrait'
     });
 
     // Step 2: Language RU
-    await client.evaluate(`window.paceflowI18n.setLanguage('ru')`);
-    await sleep(200);
+    await client.evaluate(`window.rsvpReader.setLanguage('ru')`);
+    await sleep(600);
     await saveScreenshotAndSidecar('workflow', 'step_2_lang_ru.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'ru', viewportDimensions: { width: 390, height: 844 }, appState: 'lang_ru', orientation: 'portrait'
     });
 
     // Step 2: Language ES
-    await client.evaluate(`window.paceflowI18n.setLanguage('es')`);
-    await sleep(200);
+    await client.evaluate(`window.rsvpReader.setLanguage('es')`);
+    await sleep(600);
     await saveScreenshotAndSidecar('workflow', 'step_2_lang_es.png', {
         gitCommitSha, apkSha256, avdName: 'test_avd_api36', locale: 'es', viewportDimensions: { width: 390, height: 844 }, appState: 'lang_es', orientation: 'portrait'
     });
