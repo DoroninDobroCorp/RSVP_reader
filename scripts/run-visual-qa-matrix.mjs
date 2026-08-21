@@ -676,7 +676,7 @@ async function main() {
         window.rsvpReader.pause();
         const book = window.rsvpReader.library[0] || (await window.rsvpReader.getAllBooks())[0];
         if (book) {
-            window.rsvpReader.openBookmarks(book.id);
+            await window.rsvpReader.openBookmarksForBook(book.id);
         }
     })()`);
     await sleep(600);
