@@ -120,48 +120,72 @@ function getRunningDevices() {
     return lines.map(l => l.split('\t')[0]);
 }
 
-async function launchAVDIfNeeded(avdName) {
-    const devices = getRunningDevices();
-    if (devices.length > 0) {
-        const activeAvd = runCmd('adb shell getprop ro.boot.qemu.avd_name', { allowFail: true }).trim();
-        if (activeAvd === avdName) {
-            console.log(`AVD ${avdName} already active on ADB.`);
-            return;
-        } else {
-            console.log(`Active AVD is "${activeAvd}", stopping emulators to switch to "${avdName}"...`);
-            await stopAllEmulators();
-        }
-    }
-
-    console.log(`Launching AVD ${avdName}...`);
-    const emulatorBin = toolchain.status.emulator.path;
-    const outFd = openSync('/dev/null', 'w');
-    const errFd = openSync('/dev/null', 'w');
-    const emuProc = spawn(emulatorBin, ['-avd', avdName, '-no-window', '-no-audio', '-no-boot-anim', '-gpu', 'swiftshader_indirect'], {
-        detached: true,
-        stdio: ['ignore', outFd, errFd]
-    });
-    emuProc.unref();
-
-    console.log(`Waiting for AVD ${avdName} to finish booting...`);
+async function waitForBootCompleted(timeoutSec = 75) {
     let booted = false;
-    for (let i = 0; i < 90; i++) {
-        const status = runCmd('adb shell getprop sys.boot_completed', { allowFail: true }).trim();
-        if (status === '1') {
+    for (let i = 0; i < timeoutSec; i++) {
+        const statusSys = runCmd(`adb shell getprop sys.boot_completed`, { allowFail: true, timeout: 2000 }).trim();
+        const packageMgrReady = runCmd(`adb shell pm path android`, { allowFail: true, timeout: 2000 }).trim();
+        if (statusSys === '1' && packageMgrReady.includes('package:')) {
             booted = true;
             break;
         }
-        await sleep(500);
+        await sleep(1000);
     }
-
-    if (!booted) throw new Error(`Failed to boot AVD ${avdName} within timeout.`);
-    console.log(`AVD ${avdName} booted successfully.\n`);
+    return booted;
 }
 
 async function stopAllEmulators() {
-    console.log('Stopping all running emulators...');
-    runCmd('adb emu kill', { allowFail: true });
-    await sleep(1500);
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    const devices = getRunningDevices();
+    if (devices.length === 0) return;
+
+    console.log('Stopping running emulators cleanly...');
+    for (const d of devices) {
+        try { execSync(`adb -s ${d} emu kill`, { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+    }
+
+    for (let i = 0; i < 20; i++) {
+        const check = execSync('ps aux | grep qemu-system | grep -v grep || true', { encoding: 'utf8' }).trim();
+        if (!check) break;
+        await sleep(500);
+    }
+    await sleep(2000);
+    try { execSync('adb forward --remove-all', { encoding: 'utf8', timeout: 5000 }); } catch (e) {}
+}
+
+async function launchAVDIfNeeded(avdName) {
+    const devices = getRunningDevices();
+    if (devices.length === 1) {
+        const activeAvd = runCmd(`adb shell getprop ro.boot.qemu.avd_name`, { allowFail: true, timeout: 3000 }).trim();
+        if (activeAvd === avdName) {
+            console.log(`AVD ${avdName} already active on ADB. Waiting for boot completion...`);
+            const ready = await waitForBootCompleted(60);
+            if (ready) {
+                console.log(`AVD ${avdName} is ready and verified.\n`);
+                return;
+            }
+        }
+    }
+
+    console.log(`Stopping running emulators before launching "${avdName}"...`);
+    await stopAllEmulators();
+
+    console.log(`Launching AVD ${avdName}...`);
+    const emulatorBin = toolchain.status?.emulator?.path || 'emulator';
+    const emuLogPath = join(r5ArtifactsDir, 'logs', `emulator-${avdName}.log`);
+    const grpcPort = avdName.includes('tablet') ? 8555 : 8554;
+    
+    const emuCmd = `nohup ${emulatorBin} -avd ${avdName} -no-window -no-audio -no-boot-anim -read-only -grpc ${grpcPort} </dev/null >"${emuLogPath}" 2>&1 & echo $!`;
+    execSync(emuCmd, { cwd: root, env: process.env, shell: '/bin/bash', encoding: 'utf8' });
+
+    console.log(`Waiting for AVD ${avdName} to connect to ADB...`);
+    execSync(`adb wait-for-device`, { cwd: root, env: process.env, timeout: 90000 });
+
+    console.log(`Waiting for AVD ${avdName} system boot completion...`);
+    const booted = await waitForBootCompleted(75);
+    if (!booted) throw new Error(`Failed to boot AVD ${avdName} within timeout.`);
+    
+    console.log(`AVD ${avdName} booted successfully.\n`);
 }
 
 async function getAppPid() {
