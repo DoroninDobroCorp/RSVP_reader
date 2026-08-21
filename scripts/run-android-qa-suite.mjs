@@ -482,11 +482,23 @@ export async function runAndroidQaSuite(options = {}) {
                 throw new Error(`VAL-R5-EMU-004 Failed: DocumentsUI file picker not foregrounded: ${topActivity}`);
             }
 
-            // 4. Dump UI hierarchy of DocumentsUI and locate the file node (ignoring Preview buttons)
+            // 4. Dump UI hierarchy of DocumentsUI and locate the file node
             let dumpXml = await dumpUiHierarchy(`saf_${item.fmt}.xml`);
             let fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
 
-            // If in Recent and file not shown, open Downloads from drawer
+            // If not immediately visible, use Search or Downloads root
+            if (!fileNode) {
+                const searchBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Search' || n.resourceId?.includes('search'));
+                if (searchBtn) {
+                    runCmd(`adb shell input tap ${searchBtn.centerX} ${searchBtn.centerY}`);
+                    await sleep(800);
+                    runCmd(`adb shell input text "${item.name}"`);
+                    await sleep(1000);
+                    dumpXml = await dumpUiHierarchy(`search_${item.fmt}.xml`);
+                    fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
+                }
+            }
+
             if (!fileNode) {
                 const rootsBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Show roots' || n.className.includes('ImageButton'));
                 if (rootsBtn) {
