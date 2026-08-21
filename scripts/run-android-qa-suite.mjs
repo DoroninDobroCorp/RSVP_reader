@@ -486,40 +486,24 @@ export async function runAndroidQaSuite(options = {}) {
             let dumpXml = await dumpUiHierarchy(`saf_${item.fmt}.xml`);
             let fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
 
-            // If not immediately visible, use Search or Downloads root
+            // Always ensure we are in Downloads folder if not immediately found
             if (!fileNode) {
-                const searchBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Search' || n.resourceId?.includes('search'));
-                if (searchBtn) {
-                    runCmd(`adb shell input tap ${searchBtn.centerX} ${searchBtn.centerY}`);
-                    await sleep(800);
-                    runCmd(`adb shell input text "${item.name}"`);
-                    await sleep(1000);
-                    dumpXml = await dumpUiHierarchy(`search_${item.fmt}.xml`);
-                    fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
-                }
+                const rootsBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Show roots' || n.className.includes('ImageButton')) || { centerX: 73, centerY: 191 };
+                runCmd(`adb shell input tap ${rootsBtn.centerX} ${rootsBtn.centerY}`);
+                await sleep(1000);
+                dumpXml = await dumpUiHierarchy('drawer.xml');
+                const downloadsBtn = findNodeBounds(dumpXml, n => n.text === 'Downloads' || n.contentDesc === 'Downloads') || { centerX: 367, centerY: 642 };
+                runCmd(`adb shell input tap ${downloadsBtn.centerX} ${downloadsBtn.centerY}`);
+                await sleep(1200);
+                dumpXml = await dumpUiHierarchy(`downloads_${item.fmt}.xml`);
+                fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
             }
 
+            // If still not visible, scroll down in Downloads list
             if (!fileNode) {
-                const rootsBtn = findNodeBounds(dumpXml, n => n.contentDesc === 'Show roots' || n.className.includes('ImageButton'));
-                if (rootsBtn) {
-                    runCmd(`adb shell input tap ${rootsBtn.centerX} ${rootsBtn.centerY}`);
+                for (let scrollAttempt = 0; scrollAttempt < 4; scrollAttempt++) {
+                    runCmd('adb shell input swipe 540 1800 540 800 400');
                     await sleep(1000);
-                    dumpXml = await dumpUiHierarchy('drawer.xml');
-                    const downloadsBtn = findNodeBounds(dumpXml, n => n.text === 'Downloads' || n.contentDesc === 'Downloads');
-                    if (downloadsBtn) {
-                        runCmd(`adb shell input tap ${downloadsBtn.centerX} ${downloadsBtn.centerY}`);
-                        await sleep(1000);
-                        dumpXml = await dumpUiHierarchy(`downloads_${item.fmt}.xml`);
-                        fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
-                    }
-                }
-            }
-
-            if (!fileNode) {
-                // Scroll down in DocumentsUI directory list to find items below the fold
-                for (let scrollAttempt = 0; scrollAttempt < 3; scrollAttempt++) {
-                    runCmd('adb shell input swipe 540 1800 540 800 300');
-                    await sleep(800);
                     dumpXml = await dumpUiHierarchy(`scroll_${item.fmt}_${scrollAttempt}.xml`);
                     fileNode = findNodeBounds(dumpXml, n => (n.text === item.name || n.text.includes(item.name)) && !n.contentDesc.includes('Preview'));
                     if (fileNode) break;
