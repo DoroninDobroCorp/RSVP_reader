@@ -217,10 +217,11 @@ async function runPackageAudit() {
         }
     }
 
+    const r5ChecksumPath = join(root, 'artifacts', 'android-r5', 'checksums.sha256');
     const r4ChecksumPath = join(root, 'artifacts', 'android-r4', 'checksums.sha256');
     const r3ChecksumPath = join(root, 'artifacts', 'android-r3', 'checksums.sha256');
     const r2ChecksumPath = join(root, 'artifacts', 'android-r2', 'checksums.sha256');
-    const checksumPath = existsSync(r4ChecksumPath) ? r4ChecksumPath : (targetApk.includes('android-r3') ? (existsSync(r3ChecksumPath) ? r3ChecksumPath : null) : (targetApk.includes('android-r2') ? (existsSync(r2ChecksumPath) ? r2ChecksumPath : null) : null));
+    const checksumPath = existsSync(r5ChecksumPath) ? r5ChecksumPath : (existsSync(r4ChecksumPath) ? r4ChecksumPath : (targetApk.includes('android-r3') ? (existsSync(r3ChecksumPath) ? r3ChecksumPath : null) : (targetApk.includes('android-r2') ? (existsSync(r2ChecksumPath) ? r2ChecksumPath : null) : null)));
     if (checksumPath) {
         const checksumContent = await readFile(checksumPath, 'utf8');
         if (!checksumContent.includes(actualSha256)) {
