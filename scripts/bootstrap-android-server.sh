@@ -12,8 +12,8 @@ if [ "${FORCE_BOOTSTRAP:-0}" != "1" ]; then
         exit 1
     fi
     REAL_PWD="$(pwd -P)"
-    if [ "$REAL_PWD" != "/srv/RSVP_reader" ] && [ "$REAL_PWD" != "/srv/RSVP_reader-r2" ]; then
-        echo "[ERROR] Worktree path is '$REAL_PWD', expected '/srv/RSVP_reader'." >&2
+    if [ "$REAL_PWD" != "/srv/hummingread" ] && [ "$REAL_PWD" != "/srv/RSVP_reader" ] && [ "$REAL_PWD" != "/srv/RSVP_reader-r2" ]; then
+        echo "[ERROR] Worktree path is '$REAL_PWD', expected '/srv/hummingread' or '/srv/RSVP_reader'." >&2
         exit 1
     fi
     EXPECTED_BRANCH="${EXPECTED_BRANCH:-mission/android-r4-qa-truth-20260813}"
