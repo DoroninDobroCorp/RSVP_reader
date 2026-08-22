@@ -1150,7 +1150,7 @@ input:focus {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 150ms ease, padding 150ms ease, background 150ms ease, border-color 150ms ease;
+    transition: opacity 150ms ease, background 150ms ease, border-color 150ms ease;
 }
 
 .rsvp-pause-context.is-visible {
