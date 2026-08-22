@@ -6710,10 +6710,14 @@ class RSVPReader {
         document.querySelectorAll('a[href]').forEach((link) => {
             const rawHref = link.getAttribute('href');
             if (!rawHref) return;
-            const match = rawHref.match(/^(?:(?:\.\.\/)*(?:ru\/|es\/)?)?(privacy\.html|support\.html|acknowledgements\.html)(?:#.*)?$/);
+            const match = rawHref.match(/^(?:\/?(?:rsvp\/)?)?(?:(?:\.\.\/)*(?:ru\/|es\/)?)?(privacy\.html|support\.html|acknowledgements\.html)(?:#.*)?$/);
             if (match) {
                 const pageName = match[1];
-                link.setAttribute('href', `${prefix}${pageName}`);
+                const localizedPath = `${prefix}${pageName}`;
+                const href = (typeof window !== 'undefined' && typeof window.resolveAppPath === 'function')
+                    ? window.resolveAppPath(localizedPath)
+                    : localizedPath;
+                link.setAttribute('href', href);
             }
         });
     }

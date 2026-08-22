@@ -72,5 +72,15 @@
             <p><a href="support.html">Contactar a soporte</a></p>
         </article>
     </main>
+    <script>
+        (() => {
+            const appPlugin = window.Capacitor?.Plugins?.App;
+            if (!appPlugin?.addListener) return;
+            appPlugin.addListener('backButton', () => {
+                const backLink = document.querySelector('.legal-back');
+                if (backLink) window.location.assign(backLink.href);
+            });
+        })();
+    </script>
 </body>
 </html>

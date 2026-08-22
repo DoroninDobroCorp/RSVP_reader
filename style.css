@@ -3065,7 +3065,7 @@ body::before {
 }
 
 .article-import.source-card .source-card-heading > div > span {
-    color: rgba(245, 238, 223, .82);
+    color: var(--brand-ink);
 }
 
 .article-import-controls input {
@@ -3471,6 +3471,10 @@ body::before {
         grid-template-columns: minmax(0, 1fr);
         border-radius: 25px;
         box-shadow: 6px 6px 0 var(--brand-line);
+    }
+
+    .pico-hero::before {
+        display: none;
     }
 
     .pico-hero-copy {

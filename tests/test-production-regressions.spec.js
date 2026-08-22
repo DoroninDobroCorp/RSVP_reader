@@ -2197,8 +2197,10 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('.book-title')).toHaveText('Renamed safely');
 
     await page.locator('#settingsBtn').click();
-    await expect(page.locator('.settings-link[href="privacy.html"]')).toHaveText('Privacy policy');
-    await expect(page.locator('.settings-link[href="support.html"]')).toHaveText('Support');
+    await expect(page.locator('.settings-link[href$="/privacy.html"]')).toHaveText('Privacy policy');
+    await expect(page.locator('.settings-link[href$="/privacy.html"]')).toHaveAttribute('href', '/privacy.html');
+    await expect(page.locator('.settings-link[href$="/support.html"]')).toHaveText('Support');
+    await expect(page.locator('.settings-link[href$="/support.html"]')).toHaveAttribute('href', '/support.html');
     await expect(page.locator('[data-i18n="versionLabel"]')).toHaveText('Version 1.0');
     await page.locator('#deleteAllDataBtn').click();
     await expect(page.locator('#actionDialog')).toHaveClass(/active/);

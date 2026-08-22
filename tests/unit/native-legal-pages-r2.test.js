@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
 const { JSDOM } = require('jsdom');
+const { resolveAppPath } = require('../../app-base-url.js');
 
 const root = path.resolve(__dirname, '../../');
 
@@ -132,7 +133,7 @@ test('VAL-R2-LEGAL-003: Legal links update dynamically based on selected languag
       <a id="ackLink" href="acknowledgements.html">Acknowledgements</a>
     </body>
     </html>
-  `);
+  `, { url: 'https://localhost/index.html' });
 
   const { document } = dom.window;
 
@@ -142,31 +143,33 @@ test('VAL-R2-LEGAL-003: Legal links update dynamically based on selected languag
     document.querySelectorAll('a[href]').forEach((link) => {
       const rawHref = link.getAttribute('href');
       if (!rawHref) return;
-      const match = rawHref.match(/^(?:(?:\.\.\/)*(?:ru\/|es\/)?)?(privacy\.html|support\.html|acknowledgements\.html)(?:#.*)?$/);
+      const match = rawHref.match(/^(?:\/?(?:rsvp\/)?)?(?:(?:\.\.\/)*(?:ru\/|es\/)?)?(privacy\.html|support\.html|acknowledgements\.html)(?:#.*)?$/);
       if (match) {
         const pageName = match[1];
-        link.setAttribute('href', `${prefix}${pageName}`);
+        link.setAttribute('href', resolveAppPath(`${prefix}${pageName}`, dom.window.location));
       }
     });
   }
 
   // Switch to Russian
   updateLegalLinks('ru');
-  assert.equal(document.getElementById('privacyLink').getAttribute('href'), 'ru/privacy.html');
-  assert.equal(document.getElementById('supportLink').getAttribute('href'), 'ru/support.html');
-  assert.equal(document.getElementById('ackLink').getAttribute('href'), 'ru/acknowledgements.html');
+  assert.equal(document.getElementById('privacyLink').getAttribute('href'), '/ru/privacy.html');
+  assert.equal(document.getElementById('supportLink').getAttribute('href'), '/ru/support.html');
+  assert.equal(document.getElementById('ackLink').getAttribute('href'), '/ru/acknowledgements.html');
 
   // Switch to Spanish
+  dom.reconfigure({ url: 'https://localhost/ru/' });
   updateLegalLinks('es');
-  assert.equal(document.getElementById('privacyLink').getAttribute('href'), 'es/privacy.html');
-  assert.equal(document.getElementById('supportLink').getAttribute('href'), 'es/support.html');
-  assert.equal(document.getElementById('ackLink').getAttribute('href'), 'es/acknowledgements.html');
+  assert.equal(document.getElementById('privacyLink').getAttribute('href'), '/es/privacy.html');
+  assert.equal(document.getElementById('supportLink').getAttribute('href'), '/es/support.html');
+  assert.equal(document.getElementById('ackLink').getAttribute('href'), '/es/acknowledgements.html');
 
   // Switch back to English
+  dom.reconfigure({ url: 'https://localhost/es/' });
   updateLegalLinks('en');
-  assert.equal(document.getElementById('privacyLink').getAttribute('href'), 'privacy.html');
-  assert.equal(document.getElementById('supportLink').getAttribute('href'), 'support.html');
-  assert.equal(document.getElementById('ackLink').getAttribute('href'), 'acknowledgements.html');
+  assert.equal(document.getElementById('privacyLink').getAttribute('href'), '/privacy.html');
+  assert.equal(document.getElementById('supportLink').getAttribute('href'), '/support.html');
+  assert.equal(document.getElementById('ackLink').getAttribute('href'), '/acknowledgements.html');
 });
 
 // VAL-R2-LEGAL-004 & VAL-R2-LEGAL-005: Native Legal Offline Availability and Back-Stack Target
@@ -182,4 +185,8 @@ test('VAL-R2-LEGAL-004 & VAL-R2-LEGAL-005: Native legal pages link back to index
   assert.equal(docEn.querySelector('.legal-back').getAttribute('href'), 'index.html#settings');
   assert.equal(docRu.querySelector('.legal-back').getAttribute('href'), '../index.html#settings');
   assert.equal(docEs.querySelector('.legal-back').getAttribute('href'), '../index.html#settings');
+  for (const document of [docEn, docRu, docEs]) {
+    const scripts = [...document.querySelectorAll('script')].map((node) => node.textContent).join('\n');
+    assert.match(scripts, /addListener\(['"]backButton['"]/u, 'native legal page must handle Android system Back');
+  }
 });

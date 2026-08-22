@@ -84,5 +84,15 @@
             <p><a href="THIRD_PARTY_NOTICES.txt">Leer los avisos completos a terceros y los textos de licencias</a>. El archivo separa el código de cliente distribuido, las dependencias exclusivas del servidor y las herramientas de desarrollo.</p>
         </article>
     </main>
+    <script>
+        (() => {
+            const appPlugin = window.Capacitor?.Plugins?.App;
+            if (!appPlugin?.addListener) return;
+            appPlugin.addListener('backButton', () => {
+                const backLink = document.querySelector('.legal-back');
+                if (backLink) window.location.assign(backLink.href);
+            });
+        })();
+    </script>
 </body>
 </html>
