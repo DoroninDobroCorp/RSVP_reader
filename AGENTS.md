@@ -4,7 +4,7 @@ The active task is the Android R5 recovery mission in:
 
 `ANDROID_R5_RECOVERY_MISSION.md`
 
-Work only through SSH on `serverforvovka` in `/srv/RSVP_reader-r2`, branch:
+Work only through SSH on `serverforvovka` in `/srv/hummingread`, branch:
 
 `mission/android-r5-recovery-20260814`
 

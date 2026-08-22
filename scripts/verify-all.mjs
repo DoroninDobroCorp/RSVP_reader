@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, sta
 import { createHash } from 'node:crypto';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+export const EXPECTED_UNIT_TESTS = 105;
 
 // ============================================================================
 // Verification Audit Helpers (Exported for fail-closed validation & self-tests)
@@ -72,7 +73,7 @@ export function fetchRemoteGitSha(options = {}) {
 }
 
 export function verifyCleanCloneNoPreexisting(clonePath) {
-    const forbidden = ['node_modules', 'dist', 'dist-native', 'artifacts'];
+    const forbidden = ['node_modules', 'dist', 'dist-native', 'artifacts', 'evidence'];
     for (const dir of forbidden) {
         if (existsSync(join(clonePath, dir))) {
             throw new Error(`Clean checkout clone contains pre-existing forbidden directory: ${dir}`);
@@ -80,12 +81,14 @@ export function verifyCleanCloneNoPreexisting(clonePath) {
     }
 }
 
-export function verifyUnitTestSummary({ testsCount, passCount, failCount, skipCount, cancelledCount = 0, todoCount = 0 }) {
+export function verifyUnitTestSummary({ testsCount, passCount, failCount, skipCount, cancelledCount = 0, todoCount = 0 }, expectedCount = EXPECTED_UNIT_TESTS) {
     if (failCount > 0) throw new Error(`Unit test failures detected: ${failCount} failed`);
     if (skipCount > 0) throw new Error(`Unit test skips detected: ${skipCount} skipped`);
     if (cancelledCount > 0) throw new Error(`Unit test cancellations detected: ${cancelledCount} cancelled`);
     if (todoCount > 0) throw new Error(`Unit test todos detected: ${todoCount} todo`);
-    if (passCount < 98) throw new Error(`Unit tests passed count (${passCount}) less than required 98`);
+    if (testsCount !== expectedCount || passCount !== expectedCount) {
+        throw new Error(`Unit test count mismatch: expected exactly ${expectedCount}, got ${testsCount} total / ${passCount} passed`);
+    }
     if (passCount !== testsCount) throw new Error(`Total tests count (${testsCount}) does not match pass count (${passCount})`);
 }
 
@@ -234,7 +237,7 @@ function executeCheckStep(stepId, name, command, args, logsDir, masterLogPath, o
     const endTime = new Date();
     const durationMs = endTime.getTime() - startTime.getTime();
     const exitCode = result.status ?? (result.signal ? 128 : 1);
-    const status = exitCode === 0 ? 'PASS' : 'FAIL';
+    const status = exitCode === 0 ? 'PASS' : (exitCode === 2 ? 'BLOCKED' : 'FAIL');
 
     const stdoutText = result.stdout || '';
     const stderrText = result.stderr || '';
@@ -270,142 +273,108 @@ function executeCheckStep(stepId, name, command, args, logsDir, masterLogPath, o
 }
 
 export async function runMasterVerificationPipeline(options = {}) {
-    console.log('=== Starting Fail-Closed Master Verifier Pipeline (verify-all.mjs) ===\n');
-
+    console.log('=== Starting Android R5 fail-closed master gate ===\n');
     const allowDirty = options.allowDirty || process.argv.includes('--allow-dirty');
-    const logsDir = join(root, 'artifacts', 'android-r5', 'logs');
+    const logsDir = join(root, 'artifacts', 'android-r5', 'master-logs');
     const artifactsDir = join(root, 'artifacts', 'android-r5');
-
     mkdirSync(logsDir, { recursive: true });
     mkdirSync(artifactsDir, { recursive: true });
-
     const masterLogPath = join(logsDir, 'verify-all.log');
-    writeFileSync(masterLogPath, `=== Master Verification Pipeline Log ===\nStart: ${new Date().toISOString()}\n\n`, 'utf8');
+    writeFileSync(masterLogPath, `=== Android R5 master gate ===\nStart: ${new Date().toISOString()}\n`, 'utf8');
 
-    // 1. Clean Working Tree and Git Commit SHA Pre-Check
-    console.log('1. Checking Fresh Git SHA & Clean Working Tree Invariant...');
     const statusRes = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
-    if (statusRes.status !== 0) {
-        console.error('[FAIL] Failed to execute git status --porcelain');
-        process.exit(1);
-    }
-
-    const dirtyOutput = statusRes.stdout ? statusRes.stdout.trim() : '';
+    if (statusRes.status !== 0) throw new Error(`git status failed: ${statusRes.stderr}`);
+    const dirtyOutput = (statusRes.stdout || '').trim();
     if (dirtyOutput && !allowDirty) {
-        console.error('[FAIL] Dirty working tree detected! Uncommitted changes are present:');
-        console.error(dirtyOutput);
-        console.error('\nVerifier pipeline fails if working tree is dirty. Commit or stash changes before running verify:all.');
+        console.error(`[FAIL] Dirty working tree detected:\n${dirtyOutput}`);
         process.exit(1);
     }
+    const currentGitSha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
+    const remoteGitSha = fetchRemoteGitSha();
+    if (!allowDirty) verifyGitShaMatch(currentGitSha, remoteGitSha);
+    process.env.TESTED_SOURCE_SHA = currentGitSha;
 
-    const shaRes = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
-    if (shaRes.status !== 0) {
-        console.error('[FAIL] Failed to execute git rev-parse HEAD');
-        process.exit(1);
-    }
-    const currentGitSha = shaRes.stdout ? shaRes.stdout.trim() : '';
-    console.log(`   Git commit SHA: ${currentGitSha}`);
-    console.log(`   Working tree status: ${dirtyOutput ? 'DIRTY (bypassed with --allow-dirty)' : 'CLEAN'}\n`);
-
-    // 2. Sequential Execution of Verification Steps
     const nodeBin = process.execPath;
-    const executedChecks = [];
-
+    const npm = (id, name, script, assertions = []) => ({ id, name, cmd: 'npm', args: ['run', script], assertions });
     const steps = [
-        { id: 'step-01-toolchain-doctor', name: '01 Toolchain Doctor Diagnostic', cmd: nodeBin, args: ['scripts/toolchain-doctor.mjs'], assertions: ['VAL-R5-ENV-001', 'VAL-R5-ENV-002', 'VAL-R5-ENV-003', 'VAL-R5-ENV-004'] },
-        { id: 'step-02-verify-brand', name: '02 Brand & Placeholder Integrity', cmd: nodeBin, args: ['scripts/verify-brand.mjs'], assertions: ['VAL-R5-BRAND-001'] },
-        { id: 'step-03-verify-notices', name: '03 Third-Party Notices & License Integrity', cmd: nodeBin, args: ['scripts/verify-notices.mjs'], assertions: ['VAL-R5-NOTICES-001'] },
-        { id: 'step-04-verify-packaged-assets', name: '04 Packaged Asset Stripping & Security', cmd: nodeBin, args: ['scripts/verify-packaged-assets.mjs'], assertions: ['VAL-R5-SEC-001'] },
-        { id: 'step-05-verify-android-privacy', name: '05 Android Local Privacy & Permissions Audit', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R5-SEC-001', 'VAL-R5-SEC-002', 'VAL-R5-SEC-003'] },
-        { id: 'step-06-verify-android-package', name: '06 Android Package & SHA-256 Checksum Gate', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R5-SEC-003', 'VAL-R5-BUILD-004'] },
-        { id: 'step-07-verify-chrome-extension', name: '07 Chrome Extension Manifest & Catalog Verification', cmd: nodeBin, args: ['scripts/verify-chrome-extension.mjs'], assertions: ['VAL-R5-EXT-001', 'VAL-R5-EXT-002'] },
-        { id: 'step-08-verify-service-worker-precache', name: '08 Service Worker App Shell Precache Audit', cmd: nodeBin, args: ['scripts/verify-service-worker-precache.mjs'], assertions: ['VAL-R5-PWA-002'] },
-        { id: 'step-09-verify-deployment', name: '09 Deployment & Security Gate', cmd: nodeBin, args: ['scripts/verify-deployment.mjs'], assertions: ['VAL-R5-PWA-001'] },
-        { id: 'step-10-verify-deterministic-build', name: '10 Deterministic Build Output Audit', cmd: nodeBin, args: ['scripts/verify-deterministic-build.mjs'], assertions: ['VAL-R5-BUILD-001', 'VAL-R5-BUILD-002', 'VAL-R5-BUILD-003', 'VAL-R5-BUILD-004'] },
-        { id: 'step-11-verify-store-copy', name: '11 Store Metadata Copy & Localization Gate', cmd: nodeBin, args: ['scripts/verify-store-copy.mjs'], assertions: ['VAL-R5-STORE-001'] },
-        { id: 'step-12-hermetic-unit-tests', name: '12 Hermetic Unit Tests', cmd: nodeBin, args: ['--test', 'tests/unit/*.test.js'], assertions: ['VAL-R5-HERMETIC-001', 'VAL-R5-HERMETIC-002', 'VAL-R5-NEG-002', 'VAL-R5-PWA-004'] },
-        { id: 'step-13-test-web-built', name: '13 Built-Output Web Tests', cmd: nodeBin, args: ['scripts/test-web-built.mjs'], assertions: ['VAL-R5-PWA-001', 'VAL-R5-PWA-002', 'VAL-R5-PWA-003', 'VAL-R5-PWA-004'] }
+        { id: 'step-01-toolchain-doctor', name: 'Toolchain doctor', cmd: nodeBin, args: ['scripts/toolchain-doctor.mjs'], assertions: ['VAL-R5-ENV-001'] },
+        { id: 'step-02-clean-checkout', name: 'Remote-SHA clean checkout and exact unit gate', cmd: nodeBin, args: ['scripts/verify-clean-checkout.mjs', ...(allowDirty ? ['--dev-overlay'] : [])], assertions: ['VAL-R5-HERMETIC-001', 'VAL-R5-HERMETIC-002'] },
+        npm('step-03-lint', 'JavaScript syntax gate', 'lint'),
+        npm('step-04-build-native', 'Web and native asset build', 'build:native', ['VAL-R5-BUILD-001']),
+        npm('step-05-build-extension', 'Chrome extension build', 'build:extension', ['VAL-R5-EXT-001']),
+        npm('step-06-verify-brand', 'Brand and placeholder verification', 'verify:brand'),
+        npm('step-07-verify-notices', 'Third-party notices verification', 'verify:notices'),
+        npm('step-08-verify-package', 'Packaged asset verification', 'verify:package'),
+        npm('step-09-verify-extension', 'Extension manifest verification', 'verify:extension'),
+        npm('step-10-verify-precache', 'Service-worker precache verification', 'verify:precache'),
+        npm('step-11-verify-deployment', 'Deployment topology dry verification', 'verify:deployment'),
+        npm('step-12-verify-store-copy', 'Store-copy verification', 'verify:store-copy'),
+        npm('step-13-test-web-built', 'Built-output web/native tests', 'test:web-built', ['VAL-R5-PWA-001']),
+        npm('step-14-browser-chromium', 'Chromium production regression', 'test:production'),
+        npm('step-15-browser-webkit-mobile', 'WebKit and Mobile Safari regression', 'test:cross-browser'),
+        npm('step-16-extension-e2e', 'Real extension E2E', 'test:extension', ['VAL-R5-EXT-002']),
+        npm('step-17-lighthouse', 'Lighthouse checks', 'test:lighthouse'),
+        npm('step-18-deterministic-gradle-package', 'Deterministic build plus Gradle clean/test/lint/APK/AAB package', 'verify:determinism', ['VAL-R5-BUILD-002', 'VAL-R5-BUILD-003', 'VAL-R5-BUILD-004']),
+        { id: 'step-19-android-privacy', name: 'Android privacy and permissions', cmd: nodeBin, args: ['scripts/verify-android-privacy.mjs'], assertions: ['VAL-R5-SEC-001'] },
+        { id: 'step-20-android-package', name: 'Android artifact checksum and signing-state verification', cmd: nodeBin, args: ['scripts/verify-android-package.mjs'], assertions: ['VAL-R5-SEC-002'] },
+        { id: 'step-21-negative-self-tests', name: 'R5 production-verifier negative demonstrations', cmd: nodeBin, args: ['--test', '--test-reporter=tap', 'tests/unit/negative-self-tests.test.js'], assertions: ['VAL-R5-NEG-002'] },
+        { id: 'step-22-android-qa-suite', name: 'Android API 36 phone and tablet runtime QA', cmd: nodeBin, args: ['scripts/run-android-qa-suite.mjs'], assertions: ['VAL-R5-ANDROID-RUNTIME'] },
+        { id: 'step-23-android-visual-matrix', name: 'Android visual and accessibility capture', cmd: nodeBin, args: ['scripts/run-visual-qa-matrix.mjs'], assertions: ['VAL-R5-ANDROID-VISUAL'] },
+        { id: 'step-24-android-evidence', name: 'Fresh Android evidence provenance verification', cmd: nodeBin, args: ['scripts/verify-android-r5-evidence.mjs'], assertions: ['VAL-R5-ANDROID-EVIDENCE'] }
     ];
 
-    let overallPassed = true;
+    verifyMandatoryChildCommands(steps.map((step) => step.id), [
+        'step-02-clean-checkout', 'step-14-browser-chromium', 'step-15-browser-webkit-mobile',
+        'step-16-extension-e2e', 'step-17-lighthouse', 'step-18-deterministic-gradle-package',
+        'step-21-negative-self-tests', 'step-22-android-qa-suite', 'step-23-android-visual-matrix',
+        'step-24-android-evidence'
+    ]);
+
+    const executedChecks = [];
     for (const step of steps) {
         const record = executeCheckStep(step.id, step.name, step.cmd, step.args, logsDir, masterLogPath, options);
         record.assertions = step.assertions;
         executedChecks.push(record);
-
-        if (record.status !== 'PASS') {
-            overallPassed = false;
-            break;
-        }
-
-        // Write individual assertion logs for log provenance verification
-        for (const ass of step.assertions) {
-            const assLogPath = join(logsDir, `${ass.toLowerCase()}.log`);
-            const logContent = readFileSync(join(logsDir, `${step.id}.log`), 'utf8');
-            writeFileSync(assLogPath, logContent, 'utf8');
-        }
+        if (record.status !== 'PASS') break;
     }
 
-    const passedCount = executedChecks.filter(c => c.status === 'PASS').length;
-    const failedCount = executedChecks.filter(c => c.status === 'FAIL').length;
-    const overallStatus = overallPassed && failedCount === 0 ? 'PASSED' : 'FAILED';
-
-    if (overallStatus === 'PASSED') {
-        const negLogPath = join(logsDir, 'val-r5-neg-001.log');
-        writeFileSync(negLogPath, readFileSync(masterLogPath, 'utf8'), 'utf8');
-    }
-
-    const assertionsMap = { 'VAL-R5-NEG-001': overallStatus };
+    const passCount = executedChecks.filter((item) => item.status === 'PASS').length;
+    const failCount = executedChecks.filter((item) => item.status === 'FAIL').length;
+    const blockedCount = executedChecks.filter((item) => item.status === 'BLOCKED').length;
+    const skippedCount = steps.length - executedChecks.length;
+    const overallStatus = failCount ? 'FAILED' : (blockedCount ? 'NOT_READY' : (skippedCount ? 'FAILED' : 'PASSED'));
+    const assertionsMap = {};
     for (const check of executedChecks) {
-        if (check.assertions && check.status === 'PASS') {
-            for (const ass of check.assertions) {
-                assertionsMap[ass] = 'PASSED';
-            }
+        for (const assertion of check.assertions || []) {
+            assertionsMap[assertion] = check.status === 'PASS' ? 'PASSED' : check.status;
         }
     }
-
-    // Fail-closed validation of executed assertions and log provenance
     verifyExecutedAssertions(assertionsMap, executedChecks);
-    verifyLogProvenance(assertionsMap, logsDir);
 
-    const validationState = {
+    let build = null;
+    const buildSummaryPath = join(artifactsDir, 'build-summary.json');
+    if (existsSync(buildSummaryPath)) {
+        try { build = JSON.parse(readFileSync(buildSummaryPath, 'utf8')); } catch {}
+    }
+    const payload = {
+        schemaVersion: 2,
         timestamp: new Date().toISOString(),
-        commitSha: currentGitSha,
-        gitSha: currentGitSha,
-        cleanWorkingTree: !dirtyOutput,
-        overallStatus,
-        totalExecutedSteps: executedChecks.length,
-        passedSteps: passedCount,
-        failedSteps: failedCount,
-        executedChecks,
-        assertions: assertionsMap
-    };
-
-    writeFileSync(join(artifactsDir, 'validation-state.json'), JSON.stringify(validationState, null, 2), 'utf8');
-
-    const summaryPayload = {
-        timestamp: new Date().toISOString(),
-        commitSha: currentGitSha,
-        gitSha: currentGitSha,
+        reviewBranch: 'mission/android-r5-recovery-20260814',
+        testedSourceSha: currentGitSha,
+        remoteSourceSha: remoteGitSha,
         cleanWorkingTree: !dirtyOutput,
         masterVerificationStatus: overallStatus,
-        totalStepsCompleted: executedChecks.length,
+        counts: { planned: steps.length, executed: executedChecks.length, passed: passCount, failed: failCount, blocked: blockedCount, skipped: skippedCount },
+        artifact: build ? { apkPath: build.apkPath, apkSha256: build.apkSha256, aabPath: build.aabPath, aabSha256: build.aabSha256 } : null,
         executedChecks,
         assertions: assertionsMap
     };
-
-    writeFileSync(join(artifactsDir, 'evidence-summary.json'), JSON.stringify(summaryPayload, null, 2), 'utf8');
-
-    if (!overallPassed) {
-        console.error('\n====================================================');
-        console.error(`MASTER VERIFICATION PIPELINE FAILED (${failedCount} step(s) failed)`);
-        console.error('====================================================\n');
-        process.exit(1);
-    }
-
-    console.log('\n====================================================');
-    console.log('MASTER VERIFICATION SUITE PASSED (0 errors, 13 executed steps)');
-    console.log('====================================================\n');
+    writeFileSync(join(artifactsDir, 'validation-state.json'), JSON.stringify(payload, null, 2), 'utf8');
+    writeFileSync(join(artifactsDir, 'evidence-summary.json'), JSON.stringify(payload, null, 2), 'utf8');
+    console.log(`\nAndroid R5 master gate: ${overallStatus}`);
+    console.log(`Passed ${passCount}; failed ${failCount}; blocked ${blockedCount}; skipped ${skippedCount}.`);
+    if (overallStatus !== 'PASSED') process.exit(blockedCount && !failCount ? 2 : 1);
+    return payload;
 }
 
 // Execute as script when invoked directly

@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const EXPECTED_UNIT_TESTS = 105;
+const RELEASE_BRANCH = 'mission/android-r5-recovery-20260814';
 
 async function main() {
     console.log('=== Starting Automated Clean Checkout Verification (VAL-R5-HERMETIC-002) ===');
@@ -24,16 +26,29 @@ async function main() {
         throw new Error(`Clean checkout release gate requires clean worktree. Uncommitted changes detected:\n${statusOutput}\nCommit or stash changes or pass --dev-overlay for non-release local testing.`);
     }
 
+    if (!allowDevOverlay) {
+        const remoteRes = spawnSync('git', ['ls-remote', '--heads', 'origin', RELEASE_BRANCH], { cwd: root, encoding: 'utf8' });
+        const remoteSha = remoteRes.status === 0 ? (remoteRes.stdout || '').trim().split(/\s+/u)[0] : '';
+        if (!remoteSha || remoteSha !== currentSha) {
+            throw new Error(`Clean checkout release gate requires remote ${RELEASE_BRANCH} at ${currentSha}; observed ${remoteSha || 'missing'}`);
+        }
+    }
+
     const tempDir = await mkdtemp(join(tmpdir(), 'hummingread-clean-checkout-'));
     console.log(`[INFO] Created clean validation clone directory: ${tempDir}`);
 
     try {
         // 2. Clone fresh copy of repository into tempDir
         console.log(`[INFO] Cloning fresh copy of repository at ${currentSha}...`);
-        execSync(`git clone "${root}" "${tempDir}"`, { stdio: 'inherit' });
+        execSync(`git clone --no-hardlinks "${root}" "${tempDir}"`, { stdio: 'inherit' });
+        execSync(`git checkout --detach ${currentSha}`, { cwd: tempDir, stdio: 'inherit' });
+        const clonedSha = execSync('git rev-parse HEAD', { cwd: tempDir, encoding: 'utf8' }).trim();
+        if (clonedSha !== currentSha) {
+            throw new Error(`Clean checkout SHA mismatch: expected ${currentSha}, got ${clonedSha}`);
+        }
 
-        // Verify clone contains no copied node_modules, dist, dist-native, or artifacts
-        const forbiddenDirs = ['node_modules', 'dist', 'dist-native', 'artifacts'];
+        // Verify clone contains no copied node_modules, dist, dist-native, artifacts, or evidence
+        const forbiddenDirs = ['node_modules', 'dist', 'dist-native', 'artifacts', 'evidence'];
         for (const dir of forbiddenDirs) {
             const forbiddenPath = join(tempDir, dir);
             if (existsSync(forbiddenPath)) {
@@ -98,8 +113,8 @@ async function main() {
 
         console.log(`[INFO] Clean checkout test results: ${testsCount} total, ${passCount} passed, ${failCount} failed, ${cancelledCount} cancelled, ${skipCount} skipped, ${todoCount} todo.`);
 
-        if (passCount < 98) {
-            throw new Error(`Expected at least 98 unit subtests passed, got ${passCount}`);
+        if (testsCount !== EXPECTED_UNIT_TESTS || passCount !== EXPECTED_UNIT_TESTS) {
+            throw new Error(`Expected exactly ${EXPECTED_UNIT_TESTS} unit subtests, got ${testsCount} total / ${passCount} passed`);
         }
         if (failCount !== 0) {
             throw new Error(`Expected 0 unit subtest failures, got ${failCount}`);

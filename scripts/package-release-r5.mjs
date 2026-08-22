@@ -240,9 +240,10 @@ export async function packageReleaseR5(options = {}) {
             apkSha256: apkHash,
             aabPath: 'artifacts/android-r5/HummingRead-R5-review-UNSIGNED-NOT-FOR-UPLOAD.aab',
             aabSha256: aabHash,
-            unitTestStatus: 'PASSED',
+            testedSourceSha: localSha,
+            unitTestStatus: 'NOT_RUN_BY_BUILD_STEP',
             gradleBuildStatus: 'PASSED',
-            masterVerificationStatus: 'PASSED',
+            masterVerificationStatus: 'NOT_RUN_BY_BUILD_STEP',
             assertions: {
                 'VAL-R5-BUILD-001': 'PASSED',
                 'VAL-R5-BUILD-002': 'PASSED',
@@ -251,9 +252,9 @@ export async function packageReleaseR5(options = {}) {
             }
         };
 
-        const summaryPath = join(targetDir, 'evidence-summary.json');
+        const summaryPath = join(targetDir, 'build-summary.json');
         await writeFile(summaryPath, JSON.stringify(summaryPayload, null, 2), 'utf8');
-        console.log(`[PASS] Updated evidence summary at ${summaryPath}`);
+        console.log(`[PASS] Updated build summary at ${summaryPath}`);
 
         console.log('\n=== HummingRead Android R5 Reproducible Build & Release Packaging Complete ===\n');
         return summaryPayload;

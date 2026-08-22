@@ -28,6 +28,7 @@ import {
     verifyR5NamespaceIsolation,
     verifyMandatoryChildCommands
 } from '../../scripts/verify-all.mjs';
+import { verifyScenarioRecord } from '../../scripts/verify-android-r5-evidence.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -229,32 +230,48 @@ test('VAL-R5-NEG-002 / NEG-15: sidecar source SHA mismatch fails closed', () => 
 
 // 16. CDP Substitution for Native QA (VAL-R5-NEG-002 / Requirement 12)
 test('VAL-R5-NEG-002 / NEG-16: CDP substitution for native QA fails closed', () => {
-    const cdpScenario = { id: 'VAL-R5-EMU-004', name: 'Real SAF document import', status: 'PASSED', usedCdp: true };
+    const cdpScenario = {
+        id: 'VAL-R5-EMU-004',
+        name: 'Real SAF document import',
+        status: 'PASS',
+        startTime: '2026-08-22T00:00:00.000Z',
+        endTime: '2026-08-22T00:01:00.000Z',
+        rawLogPath: 'artifacts/android-r5/logs/saf.log',
+        serial: 'emulator-5554',
+        profile: 'test_avd_api36',
+        sourceSha: 'a'.repeat(40),
+        apkSha256: 'b'.repeat(64),
+        apiLevel: 36,
+        geometry: { width: 1080, height: 2400 },
+        exitCode: 0,
+        actions: [{ performedBy: 'CDP', exitCode: 0, rawLogPath: 'artifacts/android-r5/logs/cdp.log' }]
+    };
     assert.throws(() => {
-        verifyNoCdpSubstitution(cdpScenario);
-    }, /CDP substitution detected for native QA scenario/);
-
-    const scenarios = [
-        { id: 'VAL-R5-EMU-001', status: 'PASSED' },
-        { id: 'VAL-R5-EMU-004', status: 'PASSED', cdpSubstituted: true }
-    ];
-    assert.throws(() => {
-        verifyQaResults(scenarios);
-    }, /CDP substitution/);
+        verifyScenarioRecord(cdpScenario, 'a'.repeat(40), 'b'.repeat(64));
+    }, /CDP performed a native boundary action/);
 });
 
 // 17. An allowFail Platform Command Used as Proof (VAL-R5-NEG-002 / Requirement 13)
 test('VAL-R5-NEG-002 / NEG-17: allowFail platform command used as proof fails closed', () => {
     const record = {
-        id: 'step-01',
-        name: 'Emulator Run',
-        allowFail: true,
-        exitCode: 1,
-        status: 'FAIL'
+        id: 'VAL-R5-EMU-008',
+        name: 'Airplane mode playback',
+        status: 'PASS',
+        startTime: '2026-08-22T00:00:00.000Z',
+        endTime: '2026-08-22T00:01:00.000Z',
+        rawLogPath: 'artifacts/android-r5/logs/airplane.log',
+        serial: 'emulator-5554',
+        profile: 'test_avd_api36',
+        sourceSha: 'a'.repeat(40),
+        apkSha256: 'b'.repeat(64),
+        apiLevel: 36,
+        geometry: { width: 1080, height: 2400 },
+        exitCode: 0,
+        actions: [{ performedBy: 'ADB', allowFail: true, exitCode: 0, rawLogPath: 'artifacts/android-r5/logs/airplane-command.log' }]
     };
     assert.throws(() => {
-        verifyExecutionRecord(record);
-    }, /Execution record uses allowFail: true/);
+        verifyScenarioRecord(record, 'a'.repeat(40), 'b'.repeat(64));
+    }, /proof action uses allowFail/);
 });
 
 // 18. Hard-Coded PASSED Assertion Without an Executed Check Record (VAL-R5-NEG-002 / Requirement 14)
@@ -287,14 +304,14 @@ test('VAL-R5-NEG-002 / NEG-20: phone profile geometry used as tablet fails close
     }, /Tablet profile pixel_tablet has invalid phone-like geometry: 1080x2400/);
 });
 
-// 21. Copied / Pre-existing node_modules or dist in Validation Clone (VAL-R5-NEG-002 / Requirement 5)
-test('VAL-R5-NEG-002 / NEG-21: copied/pre-existing node_modules or dist in validation clone fails closed', async () => {
+// 21. Copied / Pre-existing generated output in Validation Clone (VAL-R5-NEG-002 / Requirement 5)
+test('VAL-R5-NEG-002 / NEG-21: copied/pre-existing generated output in validation clone fails closed', async () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'neg-clone-'));
     try {
-        await mkdir(join(tempDir, 'dist'), { recursive: true });
+        await mkdir(join(tempDir, 'evidence'), { recursive: true });
         assert.throws(() => {
             verifyCleanCloneNoPreexisting(tempDir);
-        }, /Clean checkout clone contains pre-existing forbidden directory: dist/);
+        }, /Clean checkout clone contains pre-existing forbidden directory: evidence/);
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }
@@ -311,8 +328,8 @@ test('VAL-R5-NEG-002 / NEG-22: unit test count mismatch, failure, or skip fails 
     }, /Unit test skips detected/);
 
     assert.throws(() => {
-        verifyUnitTestSummary({ testsCount: 50, passCount: 50, failCount: 0, skipCount: 0 });
-    }, /Unit tests passed count \(50\) less than required 98/);
+        verifyUnitTestSummary({ testsCount: 104, passCount: 104, failCount: 0, skipCount: 0 });
+    }, /Unit test count mismatch: expected exactly 105/);
 });
 
 // 23. Cross-Writing R5 Results into R2/R3/R4 Directories (VAL-R5-NEG-002 / Requirement 20)
@@ -343,8 +360,8 @@ test('VAL-R5-NEG-002 / NEG-24: empty log for claimed assertion fails closed', as
 // 25. Android QA Child Command Omitted from Master Gate (VAL-R5-NEG-002 / Requirement 22)
 test('VAL-R5-NEG-002 / NEG-25: Android QA child command omitted from master gate fails closed', () => {
     const executed = ['step-01-toolchain-doctor', 'step-02-verify-brand'];
-    const required = ['step-01-toolchain-doctor', 'step-02-verify-brand', 'step-14-android-qa-suite'];
+    const required = ['step-01-toolchain-doctor', 'step-02-verify-brand', 'step-22-android-qa-suite'];
     assert.throws(() => {
         verifyMandatoryChildCommands(executed, required);
-    }, /Mandatory verification step omitted from master gate: step-14-android-qa-suite/);
+    }, /Mandatory verification step omitted from master gate: step-22-android-qa-suite/);
 });

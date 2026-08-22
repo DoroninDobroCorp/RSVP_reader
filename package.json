@@ -45,7 +45,8 @@
     "test:local": "playwright test tests/test-production-regressions.spec.js --project=chromium",
     "test:headed": "playwright test tests/test-production-regressions.spec.js --project=chromium --headed",
     "test:debug": "playwright test tests/test-production-regressions.spec.js --project=chromium --debug",
-    "test:prod": "playwright test --config=playwright.prod.config.js"
+    "test:prod": "playwright test --config=playwright.prod.config.js",
+    "verify:android-r5-evidence": "node scripts/verify-android-r5-evidence.mjs"
   },
   "keywords": [
     "rsvp",

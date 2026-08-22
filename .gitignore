@@ -32,6 +32,6 @@ android/local.properties
 # Build & work directories
 .build/
 contract-work/
-evidence/android-r5/
+evidence/
 current
 
