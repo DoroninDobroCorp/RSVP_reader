@@ -40,7 +40,7 @@ export function resolveToolchain(options = {}) {
         (process.platform === 'linux' && !customEnv.ALLOW_ANY_HOST_OR_BRANCH && !customEnv.SKIP_HOST_CHECK && !options.skipHostCheck);
 
     if (shouldCheckHostAndBranch) {
-        const canonicalPath = '/srv/RSVP_reader-r2';
+        const canonicalPaths = ['/srv/RSVP_reader', '/srv/RSVP_reader-r2'];
         const canonicalBranch = customEnv.EXPECTED_BRANCH || options.expectedBranch || 'mission/android-r5-recovery-20260814';
 
         let actualPath = root;
@@ -53,8 +53,8 @@ export function resolveToolchain(options = {}) {
             // fallback
         }
 
-        if (actualPath !== canonicalPath) {
-            errors.push(`Canonical worktree path mismatch: expected '${canonicalPath}', got '${actualPath}'.`);
+        if (!canonicalPaths.includes(actualPath)) {
+            errors.push(`Canonical worktree path mismatch: expected '/srv/RSVP_reader', got '${actualPath}'.`);
         } else {
             status.worktree = { path: actualPath, valid: true };
         }
