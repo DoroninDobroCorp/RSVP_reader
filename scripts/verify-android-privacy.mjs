@@ -3,6 +3,7 @@ import { existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import JSZip from 'jszip';
 import { JSDOM } from 'jsdom';
 import { checkToolchain } from './toolchain-doctor.mjs';
@@ -18,27 +19,23 @@ async function runPrivacyAudit() {
         throw new Error(`Toolchain verification failed prior to privacy audit:\n${toolchain.errors.join('\n')}`);
     }
 
-    // Determine APK Location
-    const r4ApkPath = join(root, 'artifacts', 'android-r4', 'HummingRead-R4-debug.apk');
-    const r3ApkPath = join(root, 'artifacts', 'android-r3', 'HummingRead-R3-debug.apk');
-    const primaryApkPath = join(root, 'artifacts', 'android-r2', 'HummingRead-R2-debug.apk');
-    const fallbackApkPath = join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    let apkPath = null;
-
-    for (const cand of [r4ApkPath, fallbackApkPath, r3ApkPath, primaryApkPath]) {
-        if (existsSync(cand)) {
-            try {
-                const stat = statSync(cand);
-                if (stat.size > 100000) {
-                    apkPath = cand;
-                    break;
-                }
-            } catch (e) {}
-        }
+    // Require the fresh R5 artifact produced by the SHA-bound build step.
+    const apkPath = join(root, 'artifacts', 'android-r5', 'HummingRead-R5-debug.apk');
+    const buildSummaryPath = join(root, 'artifacts', 'android-r5', 'build-summary.json');
+    if (!existsSync(apkPath) || statSync(apkPath).size <= 100000) {
+        throw new Error(`Android R5 privacy audit failed: fresh APK missing at ${apkPath}. Run the R5 build step first.`);
     }
-
-    if (!apkPath) {
-        throw new Error(`Android privacy audit failed: APK file missing. Expected at ${r4ApkPath}, ${fallbackApkPath}, ${r3ApkPath} or ${primaryApkPath}. Compile APK first.`);
+    if (!existsSync(buildSummaryPath)) {
+        throw new Error(`Android R5 privacy audit failed: build summary missing at ${buildSummaryPath}.`);
+    }
+    const buildSummary = JSON.parse(await readFile(buildSummaryPath, 'utf8'));
+    const testedSourceSha = process.env.TESTED_SOURCE_SHA;
+    const apkSha256 = createHash('sha256').update(await readFile(apkPath)).digest('hex');
+    if (!testedSourceSha || buildSummary.testedSourceSha !== testedSourceSha) {
+        throw new Error(`Android R5 privacy audit source mismatch: expected ${testedSourceSha || 'TESTED_SOURCE_SHA missing'}, got ${buildSummary.testedSourceSha || 'unknown'}.`);
+    }
+    if (buildSummary.apkSha256 !== apkSha256) {
+        throw new Error(`Android R5 privacy audit APK hash mismatch: computed ${apkSha256}, declared ${buildSummary.apkSha256 || 'unknown'}.`);
     }
 
     // 1. VAL-R2-PRIV-001 & VAL-R2-PRIV-002: Zero Dangerous Permissions & Network Permission Audit Invariant
