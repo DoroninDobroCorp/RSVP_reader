@@ -104,43 +104,59 @@ try {
 
   for (const route of localeRoutes) {
     const slug = route.replace(/\//g, '') || 'en';
-    const outputPath = join(artifactRoot, `lighthouse-mobile-${slug}.json`);
-    const args = [
-      ...(useNpx ? ['lighthouse'] : []),
-      `${origin}${route}`,
-      '--quiet',
-      '--output=json',
-      `--output-path=${outputPath}`,
-      '--only-categories=performance,accessibility,best-practices,seo',
-      '--chrome-flags=--headless=new --no-sandbox'
-    ];
-    const child = spawn(lighthouseBin, args, {
-      cwd: root,
-      env: { ...process.env, CHROME_PATH: process.env.CHROME_PATH || chromium.executablePath() },
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
+    const attempts = [];
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const outputPath = join(artifactRoot, `lighthouse-mobile-${slug}-run-${attempt}.json`);
+      const args = [
+        ...(useNpx ? ['lighthouse'] : []),
+        `${origin}${route}`,
+        '--quiet',
+        '--output=json',
+        `--output-path=${outputPath}`,
+        '--only-categories=performance,accessibility,best-practices,seo',
+        '--chrome-flags=--headless=new --no-sandbox'
+      ];
+      const child = spawn(lighthouseBin, args, {
+        cwd: root,
+        env: { ...process.env, CHROME_PATH: process.env.CHROME_PATH || chromium.executablePath() },
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
 
-    let standardError = '';
-    child.stderr.on('data', (chunk) => { standardError += chunk; });
-    const exitCode = await new Promise((resolve) => child.once('exit', resolve));
-    if (exitCode !== 0) throw new Error(`Lighthouse failed for ${route} (${exitCode}): ${standardError.trim()}`);
+      let standardError = '';
+      child.stderr.on('data', (chunk) => { standardError += chunk; });
+      const exitCode = await new Promise((resolve) => child.once('exit', resolve));
+      if (exitCode !== 0) throw new Error(`Lighthouse failed for ${route} run ${attempt} (${exitCode}): ${standardError.trim()}`);
 
-    const report = JSON.parse(await readFile(outputPath, 'utf8'));
-    const scores = Object.fromEntries(
-      ['performance', 'accessibility', 'best-practices', 'seo'].map((name) => [
-        name,
-        Math.round((report.categories[name]?.score || 0) * 100)
-      ])
-    );
+      const report = JSON.parse(await readFile(outputPath, 'utf8'));
+      const scores = Object.fromEntries(
+        ['performance', 'accessibility', 'best-practices', 'seo'].map((name) => [
+          name,
+          Math.round((report.categories[name]?.score || 0) * 100)
+        ])
+      );
+      attempts.push({ attempt, scores, outputPath });
+    }
+
+    const byPerformance = [...attempts].sort((left, right) => left.scores.performance - right.scores.performance);
+    const medianAttempt = byPerformance[1];
+    const scores = {
+      performance: medianAttempt.scores.performance,
+      accessibility: Math.min(...attempts.map((item) => item.scores.accessibility)),
+      'best-practices': Math.min(...attempts.map((item) => item.scores['best-practices'])),
+      seo: Math.min(...attempts.map((item) => item.scores.seo))
+    };
+    await cp(medianAttempt.outputPath, join(artifactRoot, `lighthouse-mobile-${slug}.json`));
 
     localeResults[slug] = {
       url: `${origin}${route}`,
-      scores
+      aggregation: 'median performance of 3; minimum score of 3 for other categories',
+      scores,
+      attempts: attempts.map(({ attempt, scores: attemptScores }) => ({ attempt, scores: attemptScores }))
     };
 
     for (const [category, threshold] of Object.entries(thresholds)) {
       if (scores[category] < threshold) {
-        throw new Error(`Lighthouse ${category} score ${scores[category]} on ${route} is below required ${threshold}.`);
+        throw new Error(`Lighthouse ${category} aggregate score ${scores[category]} on ${route} is below required ${threshold}.`);
       }
     }
   }
