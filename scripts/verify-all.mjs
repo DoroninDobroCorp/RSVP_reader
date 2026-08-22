@@ -293,6 +293,10 @@ export async function runMasterVerificationPipeline(options = {}) {
     const remoteGitSha = fetchRemoteGitSha();
     if (!allowDirty) verifyGitShaMatch(currentGitSha, remoteGitSha);
     process.env.TESTED_SOURCE_SHA = currentGitSha;
+    const canonicalWorktrees = ['/srv/hummingread', '/srv/RSVP_reader', '/srv/RSVP_reader-r2'];
+    if (!canonicalWorktrees.includes(root)) {
+        process.env.VALIDATION_CLONE = '1';
+    }
 
     const nodeBin = process.execPath;
     const npm = (id, name, script, assertions = []) => ({ id, name, cmd: 'npm', args: ['run', script], assertions });

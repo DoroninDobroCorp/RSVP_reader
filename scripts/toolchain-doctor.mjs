@@ -40,6 +40,7 @@ export function resolveToolchain(options = {}) {
         (process.platform === 'linux' && !customEnv.ALLOW_ANY_HOST_OR_BRANCH && !customEnv.SKIP_HOST_CHECK && !options.skipHostCheck);
 
     if (shouldCheckHostAndBranch) {
+        const validationClone = options.validationClone || customEnv.VALIDATION_CLONE === '1';
         const canonicalPaths = ['/srv/hummingread', '/srv/RSVP_reader', '/srv/RSVP_reader-r2'];
         const canonicalBranch = customEnv.EXPECTED_BRANCH || options.expectedBranch || 'mission/android-r5-recovery-20260814';
 
@@ -53,26 +54,48 @@ export function resolveToolchain(options = {}) {
             // fallback
         }
 
-        if (!canonicalPaths.includes(actualPath)) {
-            errors.push(`Canonical worktree path mismatch: expected '/srv/hummingread' or '/srv/RSVP_reader', got '${actualPath}'.`);
-        } else {
-            status.worktree = { path: actualPath, valid: true };
-        }
+        if (validationClone) {
+            const shaRes = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+            const statusRes = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+            const remoteRes = spawnSync('git', ['ls-remote', '--heads', 'origin', canonicalBranch], { cwd: root, encoding: 'utf8' });
+            const localSha = shaRes.status === 0 ? shaRes.stdout.trim() : '';
+            const remoteSha = remoteRes.status === 0 ? remoteRes.stdout.trim().split(/\s+/)[0] : '';
 
-        let actualBranch = '';
-        try {
-            const branchRes = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
-            if (branchRes.status === 0) {
-                actualBranch = branchRes.stdout.trim();
+            if (!localSha || !remoteSha || localSha !== remoteSha) {
+                errors.push(`Validation clone SHA mismatch: local '${localSha || 'unknown'}', remote '${remoteSha || 'unknown'}'.`);
             }
-        } catch (e) {
-            // fallback
-        }
-
-        if (actualBranch !== canonicalBranch) {
-            errors.push(`Canonical git branch mismatch: expected '${canonicalBranch}', got '${actualBranch || 'unknown'}'.`);
+            if (statusRes.status !== 0 || statusRes.stdout.trim()) {
+                errors.push('Validation clone worktree is dirty or git status failed.');
+            }
+            if (canonicalPaths.includes(actualPath)) {
+                errors.push(`Validation-clone mode cannot be used from canonical worktree '${actualPath}'.`);
+            }
+            if (localSha && remoteSha && localSha === remoteSha && statusRes.status === 0 && !statusRes.stdout.trim() && !canonicalPaths.includes(actualPath)) {
+                status.worktree = { path: actualPath, mode: 'clean-validation-clone', valid: true };
+                status.branch = { name: `detached@${localSha}`, remoteBranch: canonicalBranch, valid: true };
+            }
         } else {
-            status.branch = { name: actualBranch, valid: true };
+            if (!canonicalPaths.includes(actualPath)) {
+                errors.push(`Canonical worktree path mismatch: expected '/srv/hummingread' or '/srv/RSVP_reader', got '${actualPath}'.`);
+            } else {
+                status.worktree = { path: actualPath, valid: true };
+            }
+
+            let actualBranch = '';
+            try {
+                const branchRes = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' });
+                if (branchRes.status === 0) {
+                    actualBranch = branchRes.stdout.trim();
+                }
+            } catch (e) {
+                // fallback
+            }
+
+            if (actualBranch !== canonicalBranch) {
+                errors.push(`Canonical git branch mismatch: expected '${canonicalBranch}', got '${actualBranch || 'unknown'}'.`);
+            } else {
+                status.branch = { name: actualBranch, valid: true };
+            }
         }
     }
 
@@ -346,7 +369,8 @@ export function checkToolchain(options = {}) {
 // Execute as script when invoked directly
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log('=== Running Toolchain Doctor Environment Diagnostic ===\n');
-    const result = checkToolchain();
+    const validationClone = process.argv.includes('--validation-clone') || process.env.VALIDATION_CLONE === '1';
+    const result = checkToolchain({ validationClone });
 
     if (!result.success) {
         console.error('FAILED: Required toolchain components missing or invalid:');
