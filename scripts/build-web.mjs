@@ -100,6 +100,7 @@ const localeConfigs = {
             short_name: 'HummingRead',
             description: 'Read long books and articles in rhythm with Pico, your local-first focus pilot.',
             start_url: './',
+            scope: './',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
@@ -107,6 +108,12 @@ const localeConfigs = {
             id: 'hummingread-pwa-app',
             lang: 'en',
             icons: [
+                {
+                    src: 'assets/icons/app-icon-180.png',
+                    sizes: '180x180',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
                 {
                     src: 'assets/icons/app-icon-192.png',
                     sizes: '192x192',
@@ -144,7 +151,8 @@ const localeConfigs = {
             name: 'HummingRead: Скорочиталка',
             short_name: 'HummingRead',
             description: 'HummingRead — спокойная RSVP-скорочиталка для книг, вставленного текста и чтения по одному слову с Пико.',
-            start_url: './ru/',
+            start_url: './',
+            scope: './',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
@@ -152,6 +160,12 @@ const localeConfigs = {
             id: 'hummingread-pwa-app',
             lang: 'ru',
             icons: [
+                {
+                    src: '../assets/icons/app-icon-180.png',
+                    sizes: '180x180',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
                 {
                     src: '../assets/icons/app-icon-192.png',
                     sizes: '192x192',
@@ -199,7 +213,8 @@ const localeConfigs = {
             name: 'HummingRead: Lector de velocidad',
             short_name: 'HummingRead',
             description: 'HummingRead es un lector de velocidad RSVP para libros, texto pegado y lectura enfocada palabra por palabra con Pico.',
-            start_url: './es/',
+            start_url: './',
+            scope: './',
             display: 'standalone',
             background_color: '#f5eedf',
             theme_color: '#101529',
@@ -207,6 +222,12 @@ const localeConfigs = {
             id: 'hummingread-pwa-app',
             lang: 'es',
             icons: [
+                {
+                    src: '../assets/icons/app-icon-180.png',
+                    sizes: '180x180',
+                    type: 'image/png',
+                    purpose: 'any'
+                },
                 {
                     src: '../assets/icons/app-icon-192.png',
                     sizes: '192x192',

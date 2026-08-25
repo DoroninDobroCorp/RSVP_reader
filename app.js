@@ -6689,11 +6689,8 @@ class RSVPReader {
 
     getLocaleRoutePath(language) {
         try {
-            const currentPathname = window.location.pathname || '/';
-            let basePath = '/';
-            if (currentPathname.startsWith('/rsvp/')) {
-                basePath = '/rsvp/';
-            }
+            const rawBase = (typeof window !== 'undefined' && window.getAppBaseUrl) ? window.getAppBaseUrl() : '';
+            let basePath = rawBase ? (rawBase.endsWith('/') ? rawBase : rawBase + '/') : '/';
             let subPath = '';
             if (language === 'ru') subPath = 'ru/';
             else if (language === 'es') subPath = 'es/';

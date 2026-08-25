@@ -23,6 +23,7 @@ const APP_SHELL = [
   `./epub-parser.js?${ASSET_VERSION}`,
   `./vendor/jszip.min.js?${ASSET_VERSION}`,
   `./manifest.json?${ASSET_VERSION}`,
+  './manifest.json',
   './manifest.webmanifest',
   './ru/manifest.webmanifest',
   './es/manifest.webmanifest',

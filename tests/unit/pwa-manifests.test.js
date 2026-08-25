@@ -67,8 +67,11 @@ test('VAL-WEB-PWA-002 / VAL-R2-PWA-004 / VAL-R3-PWA-004 / VAL-R4-PWA-004: Stable
     assert.equal(ruManifest.id, esManifest.id);
 
     assert.equal(enManifest.start_url, './');
-    assert.equal(ruManifest.start_url, './ru/');
-    assert.equal(esManifest.start_url, './es/');
+    assert.equal(ruManifest.start_url, './');
+    assert.equal(esManifest.start_url, './');
+    assert.equal(enManifest.scope, './');
+    assert.equal(ruManifest.scope, './');
+    assert.equal(esManifest.scope, './');
 });
 
 // VAL-WEB-PWA-003: HTML Manifest Link References per Locale Route

@@ -3,6 +3,7 @@
   "short_name": "HummingRead",
   "description": "Read long books and articles in rhythm with Pico, your local-first focus pilot.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5eedf",
   "theme_color": "#101529",
@@ -10,6 +11,12 @@
   "id": "hummingread-pwa-app",
   "lang": "en",
   "icons": [
+    {
+      "src": "assets/icons/app-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "assets/icons/app-icon-192.png",
       "sizes": "192x192",
