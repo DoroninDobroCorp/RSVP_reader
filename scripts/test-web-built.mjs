@@ -74,7 +74,7 @@ try {
     const baseUrl = `http://localhost:${port}${mountPath}`;
 
     // 1. Verify landing pages return HTTP 200 (VAL-R4-PWA-001)
-    for (const route of ['/', '/index.html', '/ru/', '/ru/index.html', '/es/', '/es/index.html', '/privacy.html', '/support.html', '/acknowledgements.html']) {
+    for (const route of ['/', '/index.html', '/reset.html', '/ru/', '/ru/index.html', '/es/', '/es/index.html', '/privacy.html', '/support.html', '/acknowledgements.html']) {
       const url = `${baseUrl}${route}`;
       const res = await fetch(url);
       assert.equal(res.status, 200, `Expected 200 for ${url}, got ${res.status}`);
@@ -84,12 +84,12 @@ try {
 
     // 2. Verify static assets return HTTP 200 (VAL-R4-PWA-001)
     const staticAssets = [
-      '/style.css?v=50',
-      '/app-base-url.js?v=50',
-      '/i18n.js?v=50',
-      '/app.js?v=50',
-      '/epub-parser.js?v=50',
-      '/vendor/jszip.min.js?v=50',
+      '/style.css?v=51',
+      '/app-base-url.js?v=51',
+      '/i18n.js?v=51',
+      '/app.js?v=51',
+      '/epub-parser.js?v=51',
+      '/vendor/jszip.min.js?v=51',
       '/assets/icons/app-icon-32.png',
       '/assets/icons/app-icon-64.png',
       '/assets/icons/app-icon-180.png',
@@ -127,8 +127,8 @@ try {
 
     const match = swCode.match(/const APP_SHELL = \[([\s\S]*?)\];/);
     assert.ok(match, 'service-worker.js must define APP_SHELL');
-    const ASSET_VERSION = 'v=50';
-    const precacheList = eval(`const ASSET_VERSION = 'v=50'; [${match[1]}]`);
+    const ASSET_VERSION = 'v=51';
+    const precacheList = eval(`const ASSET_VERSION = 'v=51'; [${match[1]}]`);
 
     for (const relAsset of precacheList) {
       const resolvedUrl = new URL(relAsset, swUrl).href;
@@ -143,7 +143,7 @@ try {
       assert.equal(swScope, '/rsvp/', 'Service Worker scope under subpath /rsvp must be /rsvp/');
     }
 
-    const appJsUrl = `${baseUrl}/app.js?v=50`;
+    const appJsUrl = `${baseUrl}/app.js?v=51`;
     const appJsRes = await fetch(appJsUrl);
     assert.equal(appJsRes.status, 200, `app.js must return 200 at ${appJsUrl}`);
     const appJsCode = await appJsRes.text();
@@ -173,6 +173,7 @@ try {
   const nativeIndexPath = join(distNativeAndroidDir, 'index.html');
   const nativeIndexHtml = await readFile(nativeIndexPath, 'utf8');
   assert.ok(nativeIndexHtml.includes('data-platform="native"'), 'Native index.html must set data-platform="native"');
+  await assert.rejects(stat(join(root, 'dist-native', 'reset.html')), 'Native build must exclude the web-only cache reset page');
   assert.ok(!nativeIndexHtml.includes('<!-- WEB_ONLY_START -->'), 'Native index.html must strip WEB_ONLY blocks');
   assert.ok(nativeIndexHtml.includes('Pico turns local books'), 'Native index.html must use native copy');
 

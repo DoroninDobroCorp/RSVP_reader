@@ -31,6 +31,7 @@ const ARTICLE_NATIVE_ENDPOINT_ORIGINS = new Set([
 ]);
 const PUBLIC_FILES = new Set([
   'index.html',
+  'reset.html',
   'privacy.html',
   'support.html',
   'acknowledgements.html',

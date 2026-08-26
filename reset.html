@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#101529">
+    <title>HummingRead · Refresh</title>
+    <style>
+        :root { color-scheme: light; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100svh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); background: #f5eedf; color: #101529; }
+        main { width: min(100%, 430px); padding: 30px 24px; border: 2px solid #101529; border-radius: 28px; background: #fffaf0; box-shadow: 8px 8px 0 #101529; text-align: center; }
+        .mark { width: 68px; height: 68px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 22px; background: #ffd75e; font-size: 36px; }
+        h1 { margin: 0 0 10px; font-size: clamp(24px, 7vw, 32px); }
+        p { margin: 0; line-height: 1.5; }
+        #status { min-height: 3em; color: #46506b; }
+        button { width: 100%; margin-top: 22px; padding: 14px 18px; border: 2px solid #101529; border-radius: 16px; background: #5ae0bd; color: #101529; font: inherit; font-weight: 800; cursor: pointer; box-shadow: 4px 4px 0 #101529; }
+        button:disabled { opacity: .65; cursor: wait; }
+        small { display: block; margin-top: 18px; color: #65708b; }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="mark" aria-hidden="true">↻</div>
+        <h1 id="title">Refreshing HummingRead</h1>
+        <p id="status" role="status" aria-live="polite">Removing the old app cache…</p>
+        <button id="retry" type="button" hidden>Try again</button>
+        <small id="safety">Your books, progress and settings stay on this device.</small>
+    </main>
+    <script>
+        (() => {
+            const language = (navigator.language || 'en').toLowerCase();
+            const copy = language.startsWith('ru')
+                ? {
+                    title: 'Обновляем HummingRead',
+                    working: 'Удаляем старый кэш приложения…',
+                    done: 'Готово. Открываем свежую версию…',
+                    failed: 'Не получилось обновить автоматически.',
+                    retry: 'Попробовать снова',
+                    safety: 'Книги, прогресс и настройки останутся на этом устройстве.'
+                }
+                : {
+                    title: 'Refreshing HummingRead',
+                    working: 'Removing the old app cache…',
+                    done: 'Done. Opening the fresh version…',
+                    failed: 'Automatic refresh failed.',
+                    retry: 'Try again',
+                    safety: 'Your books, progress and settings stay on this device.'
+                };
+
+            const title = document.querySelector('#title');
+            const status = document.querySelector('#status');
+            const retry = document.querySelector('#retry');
+            const safety = document.querySelector('#safety');
+            title.textContent = copy.title;
+            safety.textContent = copy.safety;
+            retry.textContent = copy.retry;
+
+            async function refresh() {
+                retry.hidden = true;
+                retry.disabled = true;
+                status.textContent = copy.working;
+                try {
+                    if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        const appScopePath = new URL('./', location.href).pathname;
+                        const appRegistrations = registrations.filter((registration) => (
+                            new URL(registration.scope).pathname === appScopePath
+                        ));
+                        await Promise.all(appRegistrations.map((registration) => registration.unregister()));
+                    }
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        const appCaches = cacheNames.filter((name) => /^(?:hummingread|paceflow)-reader-/i.test(name));
+                        await Promise.all(appCaches.map((name) => caches.delete(name)));
+                    }
+                    status.textContent = copy.done;
+                    const target = new URL('./', location.href);
+                    target.searchParams.set('cache-reset', Date.now().toString());
+                    location.replace(target.href);
+                } catch (error) {
+                    console.error('HummingRead cache refresh failed', error);
+                    status.textContent = copy.failed;
+                    retry.hidden = false;
+                    retry.disabled = false;
+                }
+            }
+
+            retry.addEventListener('click', refresh);
+            refresh();
+        })();
+    </script>
+</body>
+</html>
