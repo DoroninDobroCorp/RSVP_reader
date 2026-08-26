@@ -153,6 +153,25 @@ async function makeEpub({ sameFileFragments = false } = {}) {
   return zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip' });
 }
 
+async function makeNonconformingEpub() {
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+  zip.file('meta-inf/CONTAINER.XML', `<?xml version="1.0"?>
+    <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+      <rootfiles><rootfile full-path="/OPS/My%20Book.OPF"/></rootfiles>
+    </container>`);
+  zip.file('ops/My Book.opf', `<?xml version="1.0" encoding="UTF-8"?>
+    <package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+      <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Compatibility EPUB</dc:title></metadata>
+      <manifest><item id="chapter" href="Text/Chapter%201.XHTML?download=1" media-type="application/octet-stream"/></manifest>
+      <spine><itemref idref="chapter"/></spine>
+    </package>`);
+  zip.file('OPS/text/Chapter 1.xhtml', `<!doctype html><html><body>
+    <h1>Recovered chapter</h1><p>This real world EPUB path is now readable despite producer mistakes.</p>
+  </body></html>`);
+  return zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip' });
+}
+
 function encodeWindows1251(text) {
   const bytes = [];
   for (const character of text) {
@@ -983,6 +1002,44 @@ test.describe('production reader regressions', () => {
     ]);
     const chapterIndexes = await page.evaluate(() => window.rsvpReader.currentChapters.map(({ wordIndex }) => wordIndex));
     expect(chapterIndexes[1]).toBeGreaterThan(chapterIndexes[0]);
+  });
+
+  test('EPUB import tolerates encoded paths, case mismatches and incorrect manifest MIME types', async ({ page }) => {
+    await openReader(page);
+    const epub = await makeNonconformingEpub();
+    await page.locator('#fileInput').setInputFiles({
+      name: 'producer-mistakes.epub',
+      mimeType: 'application/octet-stream',
+      buffer: epub
+    });
+    await expect(page.locator('#textInput')).toHaveValue(/Recovered chapter[\s\S]*producer mistakes/);
+    await expect.poll(() => page.evaluate(() => window.rsvpReader.currentChapters.map(({ title }) => title))).toEqual([
+      'Recovered chapter'
+    ]);
+  });
+
+  test('native picker exposes provider-generic FB2 files and tolerant FB2 parsing recovers common entities', async ({ page }) => {
+    await openReader(page);
+    const picker = await page.evaluate(() => {
+      window.Capacitor = {
+        ...(window.Capacitor || {}),
+        isNativePlatform: () => true,
+        getPlatform: () => 'android'
+      };
+      const input = document.querySelector('#fileInput');
+      let clicked = false;
+      input.click = () => { clicked = true; };
+      window.rsvpReader.openFilePicker(input);
+      return { accept: input.getAttribute('accept'), clicked };
+    });
+    expect(picker).toEqual({ accept: '*/*', clicked: true });
+
+    const fb2 = Buffer.from(`<?xml version="1.0" encoding="utf-8"?>
+      <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><body><section>
+        <title><p>Visible FB2</p></title><p>Rock & Roll&nbsp;is readable after tolerant XML recovery.</p>
+      </section></body></FictionBook>`);
+    await page.locator('#fileInput').setInputFiles({ name: 'provider-generic.fb2', mimeType: 'application/octet-stream', buffer: fb2 });
+    await expect(page.locator('#textInput')).toHaveValue(/Visible FB2[\s\S]*Rock & Roll[\s\S]*readable/);
   });
 
   test('zipped FB2 imports preserve section titles for the table of contents', async ({ page }) => {

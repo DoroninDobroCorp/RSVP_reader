@@ -20,6 +20,6 @@ Web/PWA sends only an explicit user-entered credential-free HTTP(S) URL. The ser
 
 ## Builds and upgrade safety
 
-`product.config.json` is the name/version/URL source of truth. Preview artifacts allow the documented temporary origin; production-mode verification fails until owner-approved final URLs exist. Cache generation `v49` precaches the app shell, acknowledgements, and required artwork while removing old/current branded cache prefixes. The separately downloadable tester ZIP and article/sync API responses are never cached.
+`product.config.json` is the name/version/URL source of truth. Preview artifacts allow the documented temporary origin; production-mode verification fails until owner-approved final URLs exist. Cache generation `v50` precaches the app shell, acknowledgements, and required artwork while removing old/current branded cache prefixes. The separately downloadable tester ZIP and article/sync API responses are never cached.
 
 Web and extension builds are deterministic. Package, brand, notices, service-worker, extension, deployment, and determinism verifiers enforce allowlists, transforms, permissions, placeholders, licenses, native bundle gates, private-root isolation, and byte-stable release outputs.

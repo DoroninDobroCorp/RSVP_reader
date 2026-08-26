@@ -93,9 +93,11 @@ class EPUBParser {
             let characterOffset = 0;
 
             for (const item of packageInfo.spine) {
-                const filePath = this.resolveFilePath(opfFile, item.href);
-                const entry = contents.file(filePath);
-                if (!entry || !/(x?html)/i.test(item.mediaType || '')) continue;
+                const requestedPath = this.resolveFilePath(opfFile, item.href);
+                const located = this.findArchiveEntry(contents, requestedPath);
+                const filePath = located?.path || requestedPath;
+                const entry = located?.entry;
+                if (!entry || !this.isHtmlManifestItem(item, filePath)) continue;
                 if (this.shouldSkipFile(filePath, item)) continue;
 
                 const html = await this.readEntryText(entry);
@@ -172,24 +174,38 @@ class EPUBParser {
     }
 
     async findOPFFile(zip) {
-        const containerFile = zip.file('META-INF/container.xml');
-        if (containerFile) {
-            const containerXML = await this.readEntryText(containerFile);
+        const container = this.findArchiveEntry(zip, 'META-INF/container.xml');
+        if (container?.entry) {
+            const containerXML = await this.readEntryText(container.entry);
             const documentNode = new DOMParser().parseFromString(containerXML, 'text/xml');
-            const rootfile = documentNode.querySelector('rootfile');
-            if (rootfile?.getAttribute('full-path')) return rootfile.getAttribute('full-path');
+            const rootfile = Array.from(documentNode.getElementsByTagName('*'))
+                .find((element) => element.localName?.toLowerCase() === 'rootfile');
+            const declaredPath = rootfile?.getAttribute('full-path');
+            if (declaredPath) {
+                const located = this.findArchiveEntry(zip, declaredPath);
+                if (located) return located.path;
+            }
             const match = containerXML.match(/full-path=["']([^"']+)["']/i);
-            if (match) return match[1];
+            if (match) {
+                const located = this.findArchiveEntry(zip, match[1]);
+                if (located) return located.path;
+            }
         }
-        return Object.keys(zip.files).find((name) => name.toLowerCase().endsWith('.opf')) || null;
+        return Object.values(zip.files)
+            .find((entry) => !entry.dir && this.normalizeArchivePath(entry.name).toLowerCase().endsWith('.opf'))?.name || null;
     }
 
     parsePackage(opfContent) {
         const doc = new DOMParser().parseFromString(opfContent, 'text/xml');
         if (doc.querySelector('parsererror')) throw new Error(this.t('epubReadFailed', { message: 'Invalid package XML' }));
+        const elements = Array.from(doc.getElementsByTagName('*'));
         const manifestItems = {};
-        Array.from(doc.querySelectorAll('manifest > item')).forEach((item) => {
+        elements.filter((element) => (
+            element.localName?.toLowerCase() === 'item'
+            && element.parentElement?.localName?.toLowerCase() === 'manifest'
+        )).forEach((item) => {
             const id = item.getAttribute('id');
+            if (!id) return;
             manifestItems[id] = {
                 id,
                 href: item.getAttribute('href') || '',
@@ -198,14 +214,19 @@ class EPUBParser {
             };
         });
 
-        const spine = Array.from(doc.querySelectorAll('spine > itemref'))
+        const spine = elements.filter((element) => (
+            element.localName?.toLowerCase() === 'itemref'
+            && element.parentElement?.localName?.toLowerCase() === 'spine'
+        ))
             .map((itemref) => manifestItems[itemref.getAttribute('idref')])
             .filter(Boolean);
-        const titleNode = Array.from(doc.getElementsByTagName('*')).find((node) => node.localName === 'title');
-        const creatorNode = Array.from(doc.getElementsByTagName('*')).find((node) => node.localName === 'creator');
+        const titleNode = elements.find((node) => node.localName?.toLowerCase() === 'title');
+        const creatorNode = elements.find((node) => node.localName?.toLowerCase() === 'creator');
 
         return {
-            spine: spine.length > 0 ? spine : Object.values(manifestItems).filter((item) => /(x?html)/i.test(item.mediaType)),
+            spine: spine.length > 0
+                ? spine
+                : Object.values(manifestItems).filter((item) => this.isHtmlManifestItem(item, item.href)),
             manifestItems,
             navItem: Object.values(manifestItems).find((item) => item.properties.split(/\s+/).includes('nav')) || null,
             ncxItem: Object.values(manifestItems).find((item) => /ncx/i.test(item.mediaType)) || null,
@@ -224,10 +245,11 @@ class EPUBParser {
     async parseNavigation(zip, opfFile, packageInfo) {
         const entries = [];
         if (packageInfo.navItem) {
-            const navPath = this.resolveFilePath(opfFile, packageInfo.navItem.href);
-            const navFile = zip.file(navPath);
-            if (navFile) {
-                const navHtml = await this.readEntryText(navFile);
+            const requestedNavPath = this.resolveFilePath(opfFile, packageInfo.navItem.href);
+            const locatedNav = this.findArchiveEntry(zip, requestedNavPath);
+            const navPath = locatedNav?.path || requestedNavPath;
+            if (locatedNav?.entry) {
+                const navHtml = await this.readEntryText(locatedNav.entry);
                 const doc = new DOMParser().parseFromString(navHtml, 'text/html');
                 const nav = doc.querySelector('nav[epub\\:type="toc"]')
                     || doc.querySelector('nav[role="doc-toc"]')
@@ -235,9 +257,10 @@ class EPUBParser {
                 Array.from(nav?.querySelectorAll('a[href]') || []).forEach((link) => {
                     const href = link.getAttribute('href') || '';
                     const resolved = this.resolveFilePath(navPath, href);
+                    const located = this.findArchiveEntry(zip, resolved);
                     entries.push({
                         title: link.textContent.replace(/\s+/g, ' ').trim(),
-                        filePath: resolved.split('#')[0],
+                        filePath: located?.path || resolved,
                         fragment: href.includes('#') ? this.decodePathComponent(href.split('#').slice(1).join('#')) : '',
                         level: Math.min(6, link.closest('li') ? this.listDepth(link.closest('li')) : 1)
                     });
@@ -246,17 +269,19 @@ class EPUBParser {
         }
 
         if (entries.length === 0 && packageInfo.ncxItem) {
-            const ncxPath = this.resolveFilePath(opfFile, packageInfo.ncxItem.href);
-            const ncxFile = zip.file(ncxPath);
-            if (ncxFile) {
-                const xml = await this.readEntryText(ncxFile);
+            const requestedNcxPath = this.resolveFilePath(opfFile, packageInfo.ncxItem.href);
+            const locatedNcx = this.findArchiveEntry(zip, requestedNcxPath);
+            const ncxPath = locatedNcx?.path || requestedNcxPath;
+            if (locatedNcx?.entry) {
+                const xml = await this.readEntryText(locatedNcx.entry);
                 const doc = new DOMParser().parseFromString(xml, 'text/xml');
                 Array.from(doc.querySelectorAll('navPoint')).forEach((point) => {
                     const href = point.querySelector('content')?.getAttribute('src') || '';
                     const resolved = this.resolveFilePath(ncxPath, href);
+                    const located = this.findArchiveEntry(zip, resolved);
                     entries.push({
                         title: point.querySelector('navLabel text')?.textContent?.replace(/\s+/g, ' ').trim() || '',
-                        filePath: resolved.split('#')[0],
+                        filePath: located?.path || resolved,
                         fragment: href.includes('#') ? this.decodePathComponent(href.split('#').slice(1).join('#')) : '',
                         level: this.navPointDepth(point)
                     });
@@ -292,17 +317,43 @@ class EPUBParser {
         return /(^|[/_.-])(cover|toc|nav)([/_.-]|$)/i.test(lower);
     }
 
-    resolveFilePath(basePath, href) {
-        const cleanHref = this.decodePathComponent(String(href || '').split('#')[0]);
-        const baseDir = basePath.substring(0, basePath.lastIndexOf('/') + 1);
-        if (cleanHref.startsWith('/')) return cleanHref.substring(1);
-        const parts = `${baseDir}${cleanHref}`.split('/');
+    isHtmlManifestItem(item, filePath) {
+        return /(x?html)/i.test(item?.mediaType || '') || /\.(?:xhtml|html|htm)$/i.test(filePath || item?.href || '');
+    }
+
+    normalizeArchivePath(value) {
+        let source = String(value || '').split('#')[0].split('?')[0].replace(/\\/g, '/').replace(/^\/+/, '');
+        source = this.decodePathComponent(source);
         const clean = [];
-        for (const part of parts) {
+        for (const part of source.split('/')) {
+            if (!part || part === '.') continue;
             if (part === '..') clean.pop();
-            else if (part && part !== '.') clean.push(part);
+            else clean.push(part);
         }
-        return clean.join('/');
+        return clean.join('/').normalize('NFC');
+    }
+
+    findArchiveEntry(zip, requestedPath) {
+        const normalized = this.normalizeArchivePath(requestedPath);
+        if (!normalized) return null;
+        const direct = zip.file(normalized);
+        if (direct && !direct.dir) return { path: direct.name, entry: direct };
+        const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+        const exact = entries.find((entry) => this.normalizeArchivePath(entry.name) === normalized);
+        if (exact) return { path: exact.name, entry: exact };
+        const folded = normalized.toLocaleLowerCase('en-US');
+        const compatible = entries.find((entry) => (
+            this.normalizeArchivePath(entry.name).toLocaleLowerCase('en-US') === folded
+        ));
+        return compatible ? { path: compatible.name, entry: compatible } : null;
+    }
+
+    resolveFilePath(basePath, href) {
+        const rawHref = String(href || '').split('#')[0].split('?')[0];
+        if (rawHref.replace(/\\/g, '/').startsWith('/')) return this.normalizeArchivePath(rawHref);
+        const normalizedBase = this.normalizeArchivePath(basePath);
+        const baseDir = normalizedBase.substring(0, normalizedBase.lastIndexOf('/') + 1);
+        return this.normalizeArchivePath(`${baseDir}${rawHref}`);
     }
 
     decodePathComponent(value) {

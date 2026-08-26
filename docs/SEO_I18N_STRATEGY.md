@@ -113,7 +113,7 @@ HummingRead adheres strictly to search engine webmaster quality guidelines:
 1. **Zero Thin / Doorway Pages:** No auto-generated locale pages, programmatic location landing pages, or thin affiliate pages are built.
 2. **Full Functional Parity:** Every locale URL (`/`, `/ru/`, `/es/`) renders a fully functional web/PWA reader application with working demo content, format import, library, and settings.
 3. **No Dynamic Keyword Stuffing:** Content across all locales reflects natural, human-crafted product messaging preserving the calm, helpful HummingRead/Pico brand voice.
-4. **Offline Resilience:** App shell and catalogs are precached by Service Worker v49, ensuring instantaneous page rendering offline.
+4. **Offline Resilience:** App shell and catalogs are precached by Service Worker v50, ensuring instantaneous page rendering offline.
 
 ---
 

@@ -313,15 +313,15 @@ class RSVPReader {
 
     attachEventListeners() {
         this.i18n.apply();
-        this.loadFileBtn.addEventListener('click', () => this.fileInput.click());
-        this.heroImportBtn.addEventListener('click', () => this.fileInput.click());
+        this.loadFileBtn.addEventListener('click', () => this.openFilePicker(this.fileInput));
+        this.heroImportBtn.addEventListener('click', () => this.openFilePicker(this.fileInput));
         this.fileInput.addEventListener('change', (event) => this.runAsync(() => this.handleFileUpload(event)));
 
         this.addToLibraryBtn.addEventListener('click', () => this.runAsync(() => this.saveCurrentTextAsBook()));
         this.libraryBtn.addEventListener('click', () => this.runAsync(() => this.showLibrary()));
         this.backFromLibraryBtn.addEventListener('click', () => this.backToInput());
         this.exportLibraryBtn.addEventListener('click', () => this.runAsync(() => this.exportLibrary()));
-        this.importLibraryBtn.addEventListener('click', () => this.libraryImportInput.click());
+        this.importLibraryBtn.addEventListener('click', () => this.openFilePicker(this.libraryImportInput));
         this.libraryImportInput.addEventListener('change', (event) => this.runAsync(() => this.importLibrary(event)));
         this.librarySearchInput.addEventListener('input', () => {
             this.libraryFilter = this.librarySearchInput.value.trim().toLowerCase();
@@ -528,6 +528,14 @@ class RSVPReader {
         window.addEventListener('resize', () => {
             if (this.mode === 'rsvp') this.displayCurrentWord();
         });
+    }
+
+    openFilePicker(input) {
+        if (!input) return;
+        // Android document providers commonly expose FB2 as application/octet-stream.
+        // A MIME-filtered WebView picker hides those files even when .fb2 is listed.
+        if (this.isNativePlatform()) input.setAttribute('accept', '*/*');
+        input.click();
     }
 
     async bootstrap() {
@@ -2643,7 +2651,7 @@ class RSVPReader {
         if (!file) return;
 
         const fileName = file.name;
-        const extension = this.getFileExtension(file.name);
+        const extension = this.getFileExtension(file.name, file.type);
         const composerRevision = this.composerRevision;
 
         try {
@@ -2758,7 +2766,7 @@ class RSVPReader {
             this.finishDemoGuide();
             this.stopRSVP();
             this.backToInput();
-            this.fileInput.click();
+            this.openFilePicker(this.fileInput);
             return;
         }
         this.renderDemoGuide();
@@ -2906,11 +2914,24 @@ class RSVPReader {
         }
     }
 
-    getFileExtension(fileName) {
-        const lower = fileName.toLowerCase();
+    getFileExtension(fileName, mimeType = '') {
+        const lower = String(fileName || '').trim().toLowerCase();
         if (lower.endsWith('.fb2.zip')) return 'fb2.zip';
         const match = lower.match(/\.([a-z0-9]+)$/);
-        return match ? match[1] : 'txt';
+        if (match) return match[1];
+        const normalizedMime = String(mimeType || '').split(';')[0].trim().toLowerCase();
+        const mimeExtensions = {
+            'application/epub+zip': 'epub',
+            'application/x-fictionbook+xml': 'fb2',
+            'application/x-fictionbook': 'fb2',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+            'application/pdf': 'pdf',
+            'application/json': 'json',
+            'text/html': 'html',
+            'text/markdown': 'md',
+            'application/rtf': 'rtf'
+        };
+        return mimeExtensions[normalizedMime] || 'txt';
     }
 
     readTextWithEncoding(arrayBuffer) {
@@ -3382,21 +3403,47 @@ class RSVPReader {
         return this.extractBookFromFB2(xmlText).text;
     }
 
+    parseFb2Document(xmlText) {
+        const parse = (source) => new DOMParser().parseFromString(source, 'text/xml');
+        let doc = parse(xmlText);
+        if (!doc.querySelector('parsererror')) return doc;
+
+        // Some FB2 generators emit HTML entities or a bare ampersand even though
+        // FB2 is XML. Retry once with those common producer mistakes made literal.
+        const repaired = xmlText
+            .replace(/&(nbsp|copy|reg|trade|mdash|ndash|hellip|laquo|raquo);/giu, (entity, name) => ({
+                nbsp: '&#160;', copy: '&#169;', reg: '&#174;', trade: '&#8482;',
+                mdash: '&#8212;', ndash: '&#8211;', hellip: '&#8230;',
+                laquo: '&#171;', raquo: '&#187;'
+            })[name.toLowerCase()] || entity)
+            .replace(/&([a-z][a-z0-9._-]*);/giu, (entity, name) => (
+                ['amp', 'lt', 'gt', 'quot', 'apos'].includes(name.toLowerCase()) ? entity : `&amp;${name};`
+            ))
+            .replace(/&(?!#\d+;|#x[\da-f]+;|amp;|lt;|gt;|quot;|apos;)/giu, '&amp;');
+        doc = parse(repaired);
+        return doc;
+    }
+
     extractBookFromFB2(xmlText) {
         this.assertMarkupSourceSafe(xmlText);
-        const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+        const doc = this.parseFb2Document(xmlText);
         if (doc.querySelector('parsererror') || doc.documentElement?.localName?.toLowerCase() !== 'fictionbook') {
             throw new Error(this.t('invalidFb2Xml'));
         }
 
-        doc.querySelectorAll('binary, stylesheet').forEach((element) => element.remove());
+        const allElements = () => Array.from(doc.getElementsByTagName('*'));
+        allElements()
+            .filter((element) => ['binary', 'stylesheet'].includes(element.localName?.toLowerCase()))
+            .forEach((element) => element.remove());
 
-        const body = doc.querySelector('body') || doc.documentElement;
+        const body = allElements().find((element) => element.localName?.toLowerCase() === 'body') || doc.documentElement;
         const blocks = [];
         const rawChapters = [];
         let characterOffset = 0;
 
-        Array.from(body.querySelectorAll('title, subtitle, p, v, text-author')).forEach((element) => {
+        Array.from(body.getElementsByTagName('*'))
+            .filter((element) => ['title', 'subtitle', 'p', 'v', 'text-author'].includes(element.localName?.toLowerCase()))
+            .forEach((element) => {
             const localName = element.localName.toLowerCase();
             if (localName === 'p' && element.parentElement?.localName?.toLowerCase() === 'title') return;
             const value = element.textContent.replace(/\s+/g, ' ').trim();
@@ -3408,7 +3455,11 @@ class RSVPReader {
                 rawChapters.push({
                     id: `fb2-${rawChapters.length + 1}`,
                     title: value.slice(0, 160),
-                    level: Math.min(6, (element.closest('section') ? this.elementDepthWithinSections(element.closest('section')) : 1)),
+                    level: Math.min(6, (() => {
+                        let section = element.parentElement;
+                        while (section && section.localName?.toLowerCase() !== 'section') section = section.parentElement;
+                        return section ? this.elementDepthWithinSections(section) : 1;
+                    })()),
                     charOffset: blockStartOffset
                 });
             }
@@ -6384,7 +6435,7 @@ class RSVPReader {
 
         try {
             this.assertSourceFileSafe(file);
-            const extension = this.getFileExtension(file.name);
+            const extension = this.getFileExtension(file.name, file.type);
             if (extension !== 'json') {
                 const parsedBook = await this.extractBookFromFile(file, extension);
                 await this.addParsedBookToLibrary(this.nameFromFile(file.name), parsedBook, extension);

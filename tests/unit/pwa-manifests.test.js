@@ -128,6 +128,6 @@ test('VAL-WEB-PWA-005: Service worker identifies all locale routes as app shell 
 test('VAL-WEB-PWA-006: Service worker defines cache versioning and invalidation regex boundary', async () => {
     const swContent = await readFile(join(root, 'service-worker.js'), 'utf8');
 
-    assert.match(swContent, /const CACHE_NAME = 'hummingread-reader-v49'/);
+    assert.match(swContent, /const CACHE_NAME = 'hummingread-reader-v50'/);
     assert.match(swContent, /\/\^\(\?:paceflow\|hummingread\)-reader-\/u/);
 });

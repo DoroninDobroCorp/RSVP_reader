@@ -40,20 +40,22 @@ export async function generateSyntheticFixtures() {
     fixtures['fb2'] = {
         name: 'sample.fb2',
         ext: 'fb2',
-        content: '<?xml version="1.0" encoding="utf-8"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info><book-title>HummingRead FB2 Test</book-title></title-info></description><body><title><p>Chapter 1</p></title><section><p>This is a sample FictionBook FB2 file content for testing.</p></section></body></FictionBook>'
+        // Deliberately includes two common producer mistakes: a bare ampersand
+        // and an HTML-only entity. The tolerant FB2 fallback must recover both.
+        content: '<?xml version="1.0" encoding="utf-8"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info><book-title>HummingRead FB2 Test</book-title></title-info></description><body><title><p>Chapter 1</p></title><section><p>HummingRead & Friends&nbsp;can import a provider-generic FB2 file.</p></section></body></FictionBook>'
     };
 
     // 6. EPUB
     const epubZip = new JSZip();
     epubZip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
-    epubZip.folder('META-INF').file('container.xml', `<?xml version="1.0"?>
+    epubZip.folder('meta-inf').file('CONTAINER.XML', `<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+    <rootfile full-path="/OEBPS/My%20Book.OPF" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`);
-    const oebps = epubZip.folder('OEBPS');
-    oebps.file('content.opf', `<?xml version="1.0" encoding="utf-8"?>
+    const oebps = epubZip.folder('oebps');
+    oebps.file('My Book.opf', `<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>HummingRead EPUB Test</dc:title>
@@ -61,14 +63,14 @@ export async function generateSyntheticFixtures() {
     <dc:language>en</dc:language>
   </metadata>
   <manifest>
-    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
-    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="chapter1" href="Text/Chapter%201.XHTML?source=provider" media-type="application/octet-stream"/>
+    <item id="ncx" href="TOC.NCX" media-type="application/x-dtbncx+xml"/>
   </manifest>
   <spine toc="ncx">
     <itemref idref="chapter1"/>
   </spine>
 </package>`);
-    oebps.file('chapter1.xhtml', `<?xml version="1.0" encoding="utf-8"?>
+    oebps.file('text/chapter 1.xhtml', `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head><title>Chapter 1</title></head>
@@ -81,7 +83,7 @@ export async function generateSyntheticFixtures() {
   <navMap>
     <navPoint id="navpoint-1" playOrder="1">
       <navLabel><text>Chapter 1</text></navLabel>
-      <content src="chapter1.xhtml"/>
+      <content src="Text/Chapter%201.XHTML"/>
     </navPoint>
   </navMap>
 </ncx>`);

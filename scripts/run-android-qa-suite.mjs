@@ -395,7 +395,10 @@ async function runScenario(ctx, id, name, body) {
 
 function pushToDownloads(serial, localPath, fileName) {
     const extension = fileName.split('.').at(-1).toLowerCase();
-    const mimeTypes = { txt: 'text/plain', md: 'text/markdown', html: 'text/html', rtf: 'application/rtf', fb2: 'application/xml', epub: 'application/epub+zip', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', json: 'application/json' };
+    // Real Android document providers frequently classify .fb2 as a generic
+    // binary. Keep the fixture generic so the native picker regression proves
+    // file visibility instead of relying on a friendly XML MIME registration.
+    const mimeTypes = { txt: 'text/plain', md: 'text/markdown', html: 'text/html', rtf: 'application/rtf', fb2: 'application/octet-stream', epub: 'application/epub+zip', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', json: 'application/json' };
     const mimeType = mimeTypes[extension] || 'application/octet-stream';
     shell(serial, 'content', 'insert',
         '--uri', 'content://media/external/file',
@@ -537,7 +540,18 @@ async function phoneSuite(base) {
             state(record, `fixture hash ${fixture.name}`, fixture.sha256);
         }
         await tapSelector(ctx, record, '#heroImportBtn');
-        await sleep(600);
+        let pickerFocus = '';
+        let currentFocus = '';
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+            pickerFocus = String(shell(ctx.serial, 'dumpsys', 'window'));
+            currentFocus = pickerFocus.match(/mCurrentFocus=.*$/mu)?.[0] || '';
+            if (/com\.google\.android\.documentsui|DocumentsActivity/iu.test(currentFocus)) break;
+            await sleep(300);
+        }
+        if (!/com\.google\.android\.documentsui|DocumentsActivity/iu.test(currentFocus)) {
+            throw new Error(`DocumentsUI did not remain visible for format-picker evidence: ${currentFocus}`);
+        }
+        state(record, 'DocumentsUI focus after generic-MIME imports', currentFocus);
         await capture(ctx, record, 'documentsui-seven-formats');
         shell(ctx.serial, 'input', 'keyevent', '4'); action(record, 'Back from DocumentsUI after evidence capture', 'ADB');
         await sleep(400); await reconnect(ctx);
