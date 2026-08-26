@@ -68,12 +68,20 @@ test('VAL-R2-PRIV-003 / VAL-R4-SEC-002: Restricted App-Private Cache Scope in Fi
 
 test('VAL-R2-PRIV-004: SAF Document Picker import handles EPUB, FB2, DOCX, TXT, HTML, MD, RTF formats', async () => {
     const indexHtmlContent = await readFile(join(root, 'index.html'), 'utf8');
+    const appJsContent = await readFile(join(root, 'app.js'), 'utf8');
 
-    const requiredFormats = ['.epub', '.fb2', '.docx', '.txt', '.html', '.md', '.rtf'];
+    for (const inputId of ['fileInput', 'libraryImportInput']) {
+        const inputTag = indexHtmlContent.match(new RegExp(`<input[^>]*id="${inputId}"[^>]*>`, 'i'))?.[0] || '';
+        assert.ok(inputTag, `VAL-R2-PRIV-004 Failed: ${inputId} must exist`);
+        assert.doesNotMatch(inputTag, /\saccept=/i, `VAL-R2-PRIV-004 Failed: ${inputId} must not hide unknown FB2 UTIs`);
+    }
+    assert.match(appJsContent, /removeAttribute\('accept'\)/, 'VAL-R2-PRIV-004 Failed: picker must clear stale filters');
+    const requiredFormats = ['epub', 'fb2', 'docx', 'txt', 'html', 'md', 'rtf'];
     for (const format of requiredFormats) {
-        assert.ok(
-            indexHtmlContent.includes(format),
-            `VAL-R2-PRIV-004 Failed: index.html document input accept attribute must include ${format}`
+        assert.match(
+            appJsContent,
+            new RegExp(`case '${format}':`),
+            `VAL-R2-PRIV-004 Failed: extractBookFromFile must handle ${format}`
         );
     }
 });

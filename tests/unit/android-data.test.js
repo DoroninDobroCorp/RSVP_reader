@@ -29,15 +29,17 @@ test('VAL-AND-DATA-001..006 / VAL-R4-SEC-003: Android Document Picker, Pinning, 
     assert.equal(productConfig.android.applicationIdApproved, false);
     assert.throws(() => assertAndroidUploadApproved(), /applicationIdApproved is false/);
 
-    // 1. VAL-AND-DATA-001 & VAL-AND-DATA-006: Document picker configuration & 7 document formats
-    assert.match(indexHtmlContent, /id="fileInput"[^>]*accept="[^"]*\.pdf/i, 'fileInput accept must include .pdf');
-    assert.match(indexHtmlContent, /id="fileInput"[^>]*accept="[^"]*application\/pdf/i, 'fileInput accept must include application/pdf');
-    assert.match(indexHtmlContent, /id="libraryImportInput"[^>]*accept="[^"]*\.pdf/i, 'libraryImportInput accept must include .pdf');
-    assert.match(indexHtmlContent, /id="libraryImportInput"[^>]*accept="[^"]*application\/pdf/i, 'libraryImportInput accept must include application/pdf');
-
-    const required7Formats = ['.epub', '.fb2', '.docx', '.txt', '.html', '.md', '.rtf'];
-    for (const format of required7Formats) {
-        assert.ok(indexHtmlContent.includes(format), `index.html input accept attribute must include ${format}`);
+    // 1. VAL-AND-DATA-001 & VAL-AND-DATA-006: unfiltered SAF picker & supported document formats.
+    // Unknown FB2 UTI/MIME mappings are hidden by Safari and some Android providers
+    // whenever an accept filter is present, so format support belongs in the parser.
+    for (const inputId of ['fileInput', 'libraryImportInput']) {
+        const inputTag = indexHtmlContent.match(new RegExp(`<input[^>]*id="${inputId}"[^>]*>`, 'i'))?.[0] || '';
+        assert.ok(inputTag, `${inputId} must exist`);
+        assert.doesNotMatch(inputTag, /\saccept=/i, `${inputId} must not filter the system document picker`);
+    }
+    assert.match(appJsContent, /removeAttribute\('accept'\)/, 'openFilePicker must remove stale accept filters before click');
+    for (const format of ['epub', 'fb2', 'docx', 'txt', 'html', 'md', 'rtf', 'pdf']) {
+        assert.match(appJsContent, new RegExp(`case '${format}':`), `extractBookFromFile must handle ${format}`);
     }
 
     // 2. VAL-AND-DATA-002 & VAL-AND-DATA-005: File extraction & safety limits

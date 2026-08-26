@@ -1057,12 +1057,16 @@ test.describe('production reader regressions', () => {
         getPlatform: () => 'android'
       };
       const input = document.querySelector('#fileInput');
+      const libraryInput = document.querySelector('#libraryImportInput');
+      const initialAccept = input.getAttribute('accept');
+      const initialLibraryAccept = libraryInput.getAttribute('accept');
+      input.setAttribute('accept', '.epub');
       let clicked = false;
       input.click = () => { clicked = true; };
       window.rsvpReader.openFilePicker(input);
-      return { accept: input.getAttribute('accept'), clicked };
+      return { initialAccept, initialLibraryAccept, accept: input.getAttribute('accept'), clicked };
     });
-    expect(picker).toEqual({ accept: '*/*', clicked: true });
+    expect(picker).toEqual({ initialAccept: null, initialLibraryAccept: null, accept: null, clicked: true });
 
     const fb2 = Buffer.from(`<?xml version="1.0" encoding="utf-8"?>
       <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><body><section>

@@ -155,16 +155,20 @@ for (const id of ['articleImportForm', 'chromeExtensionPanel']) {
     }
 }
 
+const sourceIndexDom = new JSDOM(sourceIndex);
 for (const id of ['fileInput', 'libraryImportInput']) {
-    const match = sourceIndex.match(new RegExp(`id="${id}"[^>]*accept="([^"]+)"`, 'u'));
-    if (!match) throw new Error(`${id} must keep an explicit file-type allowlist.`);
-    const acceptedTypes = match[1].split(',').map((value) => value.trim());
-    if (acceptedTypes.includes('*/*')) {
-        throw new Error(`${id} must not request every media type; iOS should open the document picker directly.`);
+    const input = sourceIndexDom.window.document.getElementById(id);
+    if (!input) throw new Error(`${id} must exist.`);
+    if (input.hasAttribute('accept')) {
+        throw new Error(`${id} must not filter the system picker; unknown FB2 UTI/MIME mappings must stay selectable.`);
     }
-    for (const extension of ['.epub', '.fb2', '.docx', '.txt', '.html', '.md', '.rtf']) {
-        if (!acceptedTypes.includes(extension)) throw new Error(`${id} is missing ${extension}.`);
-    }
+}
+const sourceApp = await readFile(join(root, 'app.js'), 'utf8');
+if (!sourceApp.includes("input.removeAttribute('accept')")) {
+    throw new Error('openFilePicker must clear stale accept filters before opening the system picker.');
+}
+for (const format of ['epub', 'fb2', 'docx', 'txt', 'html', 'md', 'rtf', 'pdf']) {
+    if (!sourceApp.includes(`case '${format}':`)) throw new Error(`Book parser is missing ${format} support.`);
 }
 
 const previewIndex = await readFile(join(root, 'dist', 'index.html'), 'utf8');

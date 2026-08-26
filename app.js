@@ -532,9 +532,10 @@ class RSVPReader {
 
     openFilePicker(input) {
         if (!input) return;
-        // Android document providers commonly expose FB2 as application/octet-stream.
-        // A MIME-filtered WebView picker hides those files even when .fb2 is listed.
-        if (this.isNativePlatform()) input.setAttribute('accept', '*/*');
+        // Safari/iOS and Android providers can map FB2 to an unknown UTI or
+        // application/octet-stream. No accept attribute is the only reliable
+        // way to keep those documents selectable across system pickers.
+        input.removeAttribute('accept');
         input.click();
     }
 
