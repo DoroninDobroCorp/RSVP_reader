@@ -13,7 +13,7 @@
     "build:native": "npm run build:web && node scripts/build-native.mjs",
     "build:extension": "node scripts/build-chrome-extension.mjs",
     "build:all": "npm run build:native",
-    "cap:sync": "npm run build:native && cap sync",
+    "cap:sync": "npm run build:native && cap sync && node scripts/restore-ios-native-assets.mjs",
     "verify:package": "node scripts/verify-packaged-assets.mjs",
     "verify:extension": "node scripts/verify-chrome-extension.mjs",
     "verify:brand": "node scripts/verify-brand.mjs",
