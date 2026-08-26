@@ -3064,6 +3064,15 @@ class RSVPReader {
 
     async extractBookFromFile(file, extension) {
         this.assertSourceFileSafe(file);
+        // Telegram and several ebook catalogs distribute a ZIP archive whose
+        // outer filename still ends in `.fb2`. Detect the container from its
+        // bytes instead of trusting the provider-controlled extension/MIME.
+        if (extension === 'fb2' || extension === 'xml') {
+            const header = await this.readArrayBuffer(file.slice(0, 4));
+            if (this.hasZipSignature(header)) {
+                return this.validateParsedBook(await this.extractBookFromZip(file));
+            }
+        }
         this.assertSourceFormatSafe(file, extension);
         let text;
         let chapters = [];
@@ -3203,6 +3212,14 @@ class RSVPReader {
             reader.onerror = () => reject(reader.error || new Error(this.t('fileReadFailed')));
             reader.readAsArrayBuffer(file);
         });
+    }
+
+    hasZipSignature(arrayBuffer) {
+        const bytes = new Uint8Array(arrayBuffer || new ArrayBuffer(0));
+        if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4B) return false;
+        return (bytes[2] === 0x03 && bytes[3] === 0x04)
+            || (bytes[2] === 0x05 && bytes[3] === 0x06)
+            || (bytes[2] === 0x07 && bytes[3] === 0x08);
     }
 
     async loadZipLibrary() {

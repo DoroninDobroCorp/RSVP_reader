@@ -84,12 +84,12 @@ try {
 
     // 2. Verify static assets return HTTP 200 (VAL-R4-PWA-001)
     const staticAssets = [
-      '/style.css?v=51',
-      '/app-base-url.js?v=51',
-      '/i18n.js?v=51',
-      '/app.js?v=51',
-      '/epub-parser.js?v=51',
-      '/vendor/jszip.min.js?v=51',
+      '/style.css?v=52',
+      '/app-base-url.js?v=52',
+      '/i18n.js?v=52',
+      '/app.js?v=52',
+      '/epub-parser.js?v=52',
+      '/vendor/jszip.min.js?v=52',
       '/assets/icons/app-icon-32.png',
       '/assets/icons/app-icon-64.png',
       '/assets/icons/app-icon-180.png',
@@ -127,8 +127,8 @@ try {
 
     const match = swCode.match(/const APP_SHELL = \[([\s\S]*?)\];/);
     assert.ok(match, 'service-worker.js must define APP_SHELL');
-    const ASSET_VERSION = 'v=51';
-    const precacheList = eval(`const ASSET_VERSION = 'v=51'; [${match[1]}]`);
+    const ASSET_VERSION = 'v=52';
+    const precacheList = eval(`const ASSET_VERSION = 'v=52'; [${match[1]}]`);
 
     for (const relAsset of precacheList) {
       const resolvedUrl = new URL(relAsset, swUrl).href;
@@ -143,7 +143,7 @@ try {
       assert.equal(swScope, '/rsvp/', 'Service Worker scope under subpath /rsvp must be /rsvp/');
     }
 
-    const appJsUrl = `${baseUrl}/app.js?v=51`;
+    const appJsUrl = `${baseUrl}/app.js?v=52`;
     const appJsRes = await fetch(appJsUrl);
     assert.equal(appJsRes.status, 200, `app.js must return 200 at ${appJsUrl}`);
     const appJsCode = await appJsRes.text();

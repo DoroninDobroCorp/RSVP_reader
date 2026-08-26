@@ -1,5 +1,5 @@
-const CACHE_NAME = 'hummingread-reader-v51';
-const ASSET_VERSION = 'v=51';
+const CACHE_NAME = 'hummingread-reader-v52';
+const ASSET_VERSION = 'v=52';
 const APP_SHELL = [
   './',
   './index.html',

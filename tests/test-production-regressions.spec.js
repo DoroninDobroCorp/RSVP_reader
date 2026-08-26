@@ -172,6 +172,25 @@ async function makeNonconformingEpub() {
   return zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip' });
 }
 
+async function makeXhtmlSelfClosingTitleEpub() {
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+  zip.file('META-INF/container.xml', `<?xml version="1.0"?>
+    <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+      <rootfiles><rootfile full-path="OPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+    </container>`);
+  zip.file('OPS/content.opf', `<?xml version="1.0" encoding="UTF-8"?>
+    <package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+      <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Telegram-style EPUB</dc:title></metadata>
+      <manifest><item id="chapter" href="chapter.xhtml" media-type="application/xhtml+xml"/></manifest>
+      <spine><itemref idref="chapter"/></spine>
+    </package>`);
+  zip.file('OPS/chapter.xhtml', `<?xml version="1.0" encoding="UTF-8"?>
+    <html xmlns="http://www.w3.org/1999/xhtml"><head><title/><link rel="stylesheet" href="style.css" type="text/css"/></head>
+    <body><div class="title1"><p>Recovered XHTML chapter</p></div><p>The body after a self-closing title remains readable.</p></body></html>`);
+  return zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip' });
+}
+
 function encodeWindows1251(text) {
   const bytes = [];
   for (const character of text) {
@@ -1018,6 +1037,17 @@ test.describe('production reader regressions', () => {
     ]);
   });
 
+  test('EPUB XHTML with a self-closing title keeps its readable body', async ({ page }) => {
+    await openReader(page);
+    const epub = await makeXhtmlSelfClosingTitleEpub();
+    await page.locator('#fileInput').setInputFiles({
+      name: 'telegram-style.epub',
+      mimeType: 'application/epub+zip',
+      buffer: epub
+    });
+    await expect(page.locator('#textInput')).toHaveValue(/Recovered XHTML chapter[\s\S]*self-closing title remains readable/);
+  });
+
   test('native picker exposes provider-generic FB2 files and tolerant FB2 parsing recovers common entities', async ({ page }) => {
     await openReader(page);
     const picker = await page.evaluate(() => {
@@ -1040,6 +1070,22 @@ test.describe('production reader regressions', () => {
       </section></body></FictionBook>`);
     await page.locator('#fileInput').setInputFiles({ name: 'provider-generic.fb2', mimeType: 'application/octet-stream', buffer: fb2 });
     await expect(page.locator('#textInput')).toHaveValue(/Visible FB2[\s\S]*Rock & Roll[\s\S]*readable/);
+  });
+
+  test('ZIP-wrapped FB2 imports even when Telegram leaves the outer filename as .fb2', async ({ page }) => {
+    await openReader(page);
+    const zip = new JSZip();
+    zip.file('catalog-download.fb2', `<?xml version="1.0" encoding="utf-8"?>
+      <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><body><section>
+        <title><p>Wrapped FB2</p></title><p>The ZIP signature wins over the misleading outer extension.</p>
+      </section></body></FictionBook>`);
+    const buffer = await zip.generateAsync({ type: 'nodebuffer' });
+    await page.locator('#fileInput').setInputFiles({
+      name: 'telegram-download.fb2',
+      mimeType: 'application/octet-stream',
+      buffer
+    });
+    await expect(page.locator('#textInput')).toHaveValue(/Wrapped FB2[\s\S]*ZIP signature wins/);
   });
 
   test('zipped FB2 imports preserve section titles for the table of contents', async ({ page }) => {

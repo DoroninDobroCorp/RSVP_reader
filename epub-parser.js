@@ -369,10 +369,33 @@ class EPUBParser {
     }
 
     extractChapterFromHTML(html) {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        doc.querySelectorAll('script, style, link, meta, svg, img, image, nav, [role="doc-endnotes"], .footnotes, [epub\\:type="footnotes"]')
-            .forEach((element) => element.remove());
-        const body = doc.body || doc.documentElement;
+        const parser = new DOMParser();
+        let doc = parser.parseFromString(html, 'application/xhtml+xml');
+        const xmlFailed = Array.from(doc.getElementsByTagName('*'))
+            .some((element) => element.localName?.toLowerCase() === 'parsererror');
+        if (xmlFailed) {
+            // HTML parsing treats `<title/>` as an opening title element and can
+            // swallow the entire XHTML body. Close raw-text elements explicitly
+            // before falling back for malformed, HTML-ish EPUB chapters.
+            const htmlCompatible = String(html || '').replace(
+                /<(title|script|style|textarea)(\b[^>]*)\/>/giu,
+                '<$1$2></$1>'
+            );
+            doc = parser.parseFromString(htmlCompatible, 'text/html');
+        }
+        Array.from(doc.getElementsByTagName('*')).filter((element) => {
+            const tagName = element.localName?.toLowerCase() || '';
+            const epubType = element.getAttribute('epub:type')
+                || element.getAttributeNS?.('http://www.idpf.org/2007/ops', 'type')
+                || '';
+            return ['script', 'style', 'link', 'meta', 'svg', 'img', 'image', 'nav'].includes(tagName)
+                || element.getAttribute('role') === 'doc-endnotes'
+                || element.classList?.contains('footnotes')
+                || epubType === 'footnotes';
+        }).forEach((element) => element.remove());
+        const body = doc.body
+            || Array.from(doc.getElementsByTagName('*')).find((element) => element.localName?.toLowerCase() === 'body')
+            || doc.documentElement;
         const { text, chapters, anchorOffsets } = this.extractStructuredHTMLContent(body);
         return { text, title: chapters[0]?.title || '', chapters, anchorOffsets };
     }
@@ -433,7 +456,7 @@ class EPUBParser {
         };
         const rememberAnchor = (element, offset) => {
             const identifiers = [element.getAttribute('id')];
-            if (element.tagName === 'A') identifiers.push(element.getAttribute('name'));
+            if ((element.localName || element.tagName || '').toUpperCase() === 'A') identifiers.push(element.getAttribute('name'));
             identifiers.filter(Boolean).forEach((identifier) => {
                 const aliases = [identifier];
                 try {
@@ -457,7 +480,7 @@ class EPUBParser {
             if (node.nodeType !== 1) return;
 
             const element = node;
-            const tagName = element.tagName;
+            const tagName = (element.localName || element.tagName || '').toUpperCase();
             if (tagName === 'BR') {
                 queueLine();
                 return;
