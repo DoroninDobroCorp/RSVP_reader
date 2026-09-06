@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test('Test control buttons dont conflict with double-click', async ({ page }) => {
   console.log('\n🧪 Testing button conflicts...\n');
   
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   
   const testText = 'Раз два три четыре пять шесть семь восемь девять десять.';

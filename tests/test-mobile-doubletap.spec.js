@@ -5,7 +5,7 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
     test('iOS-style double-tap with varied timings', async ({ page }) => {
         console.log('\n🍎 Testing iOS-style double-tap...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'First word. Second word. Third word.';
@@ -50,7 +50,7 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
     test('Rapid sequential double-taps to test cooldown', async ({ page }) => {
         console.log('\n⚡ Testing rapid double-taps (cooldown test)...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Quick test. Rapid taps. Multiple attempts.';
@@ -88,7 +88,7 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
     test('Double-tap on different positions and elements', async ({ page }) => {
         console.log('\n🎯 Testing double-tap on various targets...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Position test. Different taps. Various elements.';
@@ -140,7 +140,7 @@ test.describe('Mobile Double-Tap Testing (iOS/Android Focus)', () => {
     test('Double-tap should NOT trigger on buttons', async ({ page }) => {
         console.log('\n🚫 Testing button isolation (double-tap protection)...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Button test. Control detection. Prevention mechanism.';

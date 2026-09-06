@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test('Test RSVP stop functionality', async ({ page }) => {
   console.log('\n🧪 Testing RSVP stop/pause...\n');
   
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   
   const testText = 'Первое слово. Второе слово. Третье слово. Четвертое слово. Пятое слово.';

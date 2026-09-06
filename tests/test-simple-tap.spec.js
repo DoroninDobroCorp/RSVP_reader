@@ -3,7 +3,7 @@ const { test } = require('@playwright/test');
 test('Simple tap test', async ({ page }) => {
   console.log('\n=== ТЕСТ БАЗОВОГО ФУНКЦИОНАЛА ===\n');
   
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   
   const text = 'Раз два три четыре пять';

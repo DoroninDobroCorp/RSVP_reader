@@ -77,13 +77,18 @@ self.addEventListener('fetch', (event) => {
 
   if (requestUrl.pathname.endsWith('/api/sync') || requestUrl.pathname.endsWith('/api/article')) return;
 
-  if (event.request.mode === 'navigate') {
+  const acceptHeader = event.request.headers.get('accept') || '';
+  const isNav = event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    (event.request.destination === '' && acceptHeader.includes('text/html'));
+
+  if (isNav || isAppShellNavigation(event.request.url)) {
     event.respondWith(handleNavigation(event.request));
     return;
   }
 
   if (isVersionedAppAsset(requestUrl)) {
-    event.respondWith(networkFirst(event.request));
+    event.respondWith(cacheFirstWithRevalidate(event.request, event));
     return;
   }
 
@@ -91,7 +96,11 @@ self.addEventListener('fetch', (event) => {
 });
 
 function isVersionedAppAsset(requestUrl) {
-  if (requestUrl.searchParams.has('v')) return true;
+  const pathname = requestUrl.pathname;
+  const versionedExtensions = ['.js', '.css', '.json', '.webmanifest', '.png', '.webp', '.svg', '.txt', '.woff', '.woff2', '.ttf'];
+  const hasAssetExt = versionedExtensions.some((ext) => pathname.endsWith(ext));
+
+  if (requestUrl.searchParams.has('v') && hasAssetExt) return true;
 
   return [
     '/app.js',
@@ -101,7 +110,7 @@ function isVersionedAppAsset(requestUrl) {
     '/vendor/jszip.min.js',
     '/manifest.json',
     '/manifest.webmanifest'
-  ].some((path) => requestUrl.pathname.endsWith(path));
+  ].some((path) => pathname.endsWith(path));
 }
 
 function getSwBaseUrl() {
@@ -111,14 +120,82 @@ function getSwBaseUrl() {
   return 'http://localhost/';
 }
 
-async function handleNavigation(request) {
+function detectLocale(url) {
   try {
-    const response = await fetch(request);
-    const responseType = response.headers.get('content-type') || '';
+    const pathname = new URL(url).pathname.replace(/\/+/g, '/');
+    if (pathname.includes('/ru/') || pathname.endsWith('/ru') || pathname.endsWith('/ru/index.html')) {
+      return 'ru';
+    }
+    if (pathname.includes('/es/') || pathname.endsWith('/es') || pathname.endsWith('/es/index.html')) {
+      return 'es';
+    }
+  } catch (e) {}
+  return 'en';
+}
+
+async function matchAppShell(request) {
+  const reqUrl = typeof request === 'string' ? request : (request && request.url ? request.url : '');
+  const baseUrl = getSwBaseUrl();
+  const locale = detectLocale(reqUrl);
+
+  let match = await caches.match(request, { ignoreSearch: true });
+  if (match) return match;
+
+  const candidates = [];
+  if (locale === 'ru') {
+    candidates.push(new URL('./ru/index.html', baseUrl).href);
+    candidates.push(new URL('./ru/', baseUrl).href);
+  } else if (locale === 'es') {
+    candidates.push(new URL('./es/index.html', baseUrl).href);
+    candidates.push(new URL('./es/', baseUrl).href);
+  }
+  candidates.push(new URL('./index.html', baseUrl).href);
+  candidates.push(new URL('./', baseUrl).href);
+
+  for (const candidate of candidates) {
+    match = await caches.match(candidate, { ignoreSearch: true });
+    if (match) return match;
+  }
+  return null;
+}
+
+// Fast fetch with timeout so slow/stalled networks (e.g. Lie-Fi on a bus)
+// fail over to the cached app shell within 1.5s instead of hanging indefinitely.
+async function fetchWithTimeout(request, timeoutMs = 1500) {
+  if (typeof AbortController === 'undefined' || typeof setTimeout === 'undefined') {
+    return fetch(request);
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(request, { signal: controller.signal });
+    clearTimeout(timer);
+    return response;
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+async function handleNavigation(request) {
+  const url = new URL(request.url);
+  const pathname = url.pathname.replace(/\/+/g, '/');
+
+  // If navigation is missing the trailing slash on directories, redirect to the canonical trailing slash
+  // so relative asset paths resolve correctly
+  if (pathname === '/rsvp' || pathname === '/ru' || pathname === '/es' || pathname.endsWith('/ru') || pathname.endsWith('/es')) {
+    const redirectUrl = new URL(request.url);
+    redirectUrl.pathname = pathname + '/';
+    if (typeof Response !== 'undefined' && typeof Response.redirect === 'function') {
+      return Response.redirect(redirectUrl.href, 301);
+    }
+  }
+
+  try {
+    const response = await fetchWithTimeout(request, 1500);
+    const responseType = response.headers && response.headers.get ? (response.headers.get('content-type') || '') : '';
     if (response.status >= 500 && isAppShellNavigation(request.url)) {
-      const cachedShell = (await caches.match(request, { ignoreSearch: true })) ||
-                          (await caches.match(new URL('./index.html', getSwBaseUrl()).href, { ignoreSearch: true })) ||
-                          (await caches.match(new URL('./', getSwBaseUrl()).href, { ignoreSearch: true }));
+      const cachedShell = await matchAppShell(request);
       if (cachedShell) return cachedShell;
     }
     if (response.ok && responseType.includes('text/html') && isAppShellNavigation(request.url)) {
@@ -127,9 +204,16 @@ async function handleNavigation(request) {
     }
     return response;
   } catch (error) {
-    return (await caches.match(request, { ignoreSearch: true })) ||
-           (await caches.match(new URL('./index.html', getSwBaseUrl()).href, { ignoreSearch: true })) ||
-           (await caches.match(new URL('./', getSwBaseUrl()).href, { ignoreSearch: true }));
+    const cachedShell = await matchAppShell(request);
+    if (cachedShell) return cachedShell;
+    if (typeof Response !== 'undefined') {
+      return new Response('Offline', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
+    }
+    return null;
   }
 }
 
@@ -137,27 +221,79 @@ function isAppShellNavigation(url) {
   const pathname = new URL(url).pathname.replace(/\/+/g, '/');
   return [
     '/', '/index.html',
-    '/ru/', '/ru/index.html',
-    '/es/', '/es/index.html',
-    '/rsvp/', '/rsvp/index.html',
-    '/rsvp/ru/', '/rsvp/ru/index.html',
-    '/rsvp/es/', '/rsvp/es/index.html'
+    '/ru', '/ru/', '/ru/index.html',
+    '/es', '/es/', '/es/index.html',
+    '/rsvp', '/rsvp/', '/rsvp/index.html',
+    '/rsvp/ru', '/rsvp/ru/', '/rsvp/ru/index.html',
+    '/rsvp/es', '/rsvp/es/', '/rsvp/es/index.html'
   ].includes(pathname) ||
     pathname.endsWith('/') ||
     pathname.endsWith('/index.html') ||
+    pathname.endsWith('/ru') ||
     pathname.endsWith('/ru/') ||
     pathname.endsWith('/ru/index.html') ||
+    pathname.endsWith('/es') ||
     pathname.endsWith('/es/') ||
     pathname.endsWith('/es/index.html');
 }
 
-async function staleWhileRevalidate(request, event) {
+// Find asset in cache even if requested with a different subpath resolution
+async function matchAssetInCache(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, { ignoreSearch: true });
+  let match = await cache.match(request, { ignoreSearch: true });
+  if (match) return match;
+
+  const reqUrl = new URL(request.url);
+  const swBase = getSwBaseUrl();
+  const filename = reqUrl.pathname.split('/').pop();
+  if (filename) {
+    const candidate = new URL('./' + filename, swBase).href;
+    match = await cache.match(candidate, { ignoreSearch: true });
+    if (match) return match;
+  }
+  return null;
+}
+
+async function cacheFirstWithRevalidate(request, event) {
+  const cached = await matchAssetInCache(request);
+  if (cached) {
+    if (event && event.waitUntil) {
+      event.waitUntil(
+        fetch(request)
+          .then(async (response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(request, response.clone());
+            }
+          })
+          .catch(() => undefined)
+      );
+    }
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200 && response.type === 'basic') {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    if (typeof Response !== 'undefined') {
+      return cached || new Response('Asset unavailable', { status: 404 });
+    }
+    return cached || null;
+  }
+}
+
+async function staleWhileRevalidate(request, event) {
+  const cached = await matchAssetInCache(request);
 
   const networkFetch = fetch(request)
     .then(async (response) => {
       if (response && response.status === 200 && response.type === 'basic') {
+        const cache = await caches.open(CACHE_NAME);
         await cache.put(request, response.clone());
       }
       return response;
@@ -165,25 +301,10 @@ async function staleWhileRevalidate(request, event) {
     .catch(() => cached);
 
   if (cached) {
-    event.waitUntil(networkFetch.then(() => undefined));
+    if (event && event.waitUntil) {
+      event.waitUntil(networkFetch.then(() => undefined));
+    }
     return cached;
   }
   return networkFetch;
-}
-
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const response = await fetch(request);
-    if (response && response.status === 200 && response.type === 'basic') {
-      await cache.put(request, response.clone());
-    }
-    if (response && response.status >= 500) {
-      return (await cache.match(request, { ignoreSearch: true })) || response;
-    }
-    return response;
-  } catch (error) {
-    return cache.match(request, { ignoreSearch: true });
-  }
 }

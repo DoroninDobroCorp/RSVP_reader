@@ -331,15 +331,22 @@
                     </div>
                 </aside>
                 <div class="rsvp-controls" aria-label="Reading controls" data-i18n-aria="readingControls">
-                    <button id="playPauseBtn" class="control-btn play-control" type="button" data-i18n-aria="pause">⏸</button>
-                    <button id="rewindWordsBtn" class="control-btn rewind-control" type="button" data-i18n-title="rewindTenWords" data-i18n-aria="rewindTenWords">↶ 10</button>
-                    <div class="rsvp-speed-group" data-i18n-aria="readingSpeed" aria-label="Reading speed">
-                        <button id="prevWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="decreaseSpeed" data-i18n-aria="decreaseSpeed">−20</button>
-                        <output id="rsvpWpmLabel">350 WPM</output>
-                        <button id="nextWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="increaseSpeed" data-i18n-aria="increaseSpeed">+20</button>
+                    <div class="rsvp-inflight-row">
+                        <button id="rewindWordsBtn" class="control-btn rewind-control" type="button" data-i18n-title="rewindTenWords" data-i18n-aria="rewindTenWords">↶ 10</button>
+                        <div class="rsvp-speed-group" data-i18n-aria="readingSpeed" aria-label="Reading speed">
+                            <button id="prevWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="decreaseSpeed" data-i18n-aria="decreaseSpeed">−20</button>
+                            <output id="rsvpWpmLabel">350 WPM</output>
+                            <button id="nextWordBtn" class="control-btn speed-btn" type="button" data-i18n-title="increaseSpeed" data-i18n-aria="increaseSpeed">+20</button>
+                        </div>
                     </div>
-                    <button id="rsvpBookmarkBtn" class="control-btn" type="button" data-i18n-title="addBookmark" data-i18n-aria="addBookmark">☆</button>
-                    <button id="stopRSVPBtn" class="control-btn" type="button" data-i18n-title="stopFocusMode" data-i18n-aria="stopFocusMode">×</button>
+                    <div class="rsvp-primary-row">
+                        <button id="rsvpBookmarkBtn" class="control-btn rsvp-aux-btn" type="button" data-i18n-title="addBookmark" data-i18n-aria="addBookmark">☆</button>
+                        <button id="playPauseBtn" class="control-btn play-control main-play-btn" type="button" data-i18n-aria="pause">⏸</button>
+                        <button id="stopRSVPBtn" class="control-btn rsvp-aux-btn stop-control" type="button" data-i18n-title="stopFocusMode" data-i18n-aria="stopFocusMode">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="vertical-align: middle;"><path d="M19 12H5m7 7-7-7 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                            <span class="btn-text" data-i18n="backToText">Text</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="rsvp-progress">
                     <label class="sr-only" for="rsvpScrubber" data-i18n="readingPosition">Reading position</label>
@@ -351,7 +358,7 @@
                     <div class="progress-stats">
                         <span id="rsvpProgressText" data-i18n="sessionProgress">Session 0% · book 0% · 0 min left</span>
                         <span id="rsvpWordCount">0 / 0</span>
-                        <span id="rsvpSpeedText" data-i18n="targetWpmShort">350 target WPM</span>
+                        <span id="rsvpSpeedText" data-i18n="targetWpmShort" hidden>350 target WPM</span>
                     </div>
                 </div>
                 <button id="rsvpBottomTapZone" class="rsvp-bottom-tap" type="button" data-i18n-aria="pause">
@@ -385,6 +392,15 @@
                         <div class="segmented-control theme-buttons">
                             <button type="button" id="themeNightBtn"><span aria-hidden="true">●</span> <span data-i18n="night">Night</span></button>
                             <button type="button" id="themeDayBtn"><span aria-hidden="true">○</span> <span data-i18n="day">Day</span></button>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label data-i18n="readingFont">Reading font</label>
+                        <div class="segmented-control font-buttons">
+                            <button type="button" id="fontSansBtn" class="active" data-font="sans" data-i18n="fontSans">Sans</button>
+                            <button type="button" id="fontSerifBtn" data-font="serif" data-i18n="fontSerif">Serif</button>
+                            <button type="button" id="fontMonoBtn" data-font="mono" data-i18n="fontMono">Mono</button>
+                            <button type="button" id="fontRoundedBtn" data-font="rounded" data-i18n="fontRounded">Rounded</button>
                         </div>
                     </div>
                 </section>

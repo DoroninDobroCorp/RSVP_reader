@@ -8,7 +8,7 @@ test.describe('Bottom tap zone', () => {
   });
 
   test('toggles pause and resume by tapping the lower screen area', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.locator('#textInput').fill('Bottom tap check. This text should pause and resume from the lower screen area.');

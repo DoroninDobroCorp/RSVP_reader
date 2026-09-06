@@ -3,7 +3,7 @@ const { test } = require('@playwright/test');
 test('Tap anywhere on screen', async ({ page }) => {
   console.log('\n=== ТЕСТ: ТАПНУТЬ МОЖНО ВЕЗДЕ ===\n');
   
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   
   const text = 'Раз два три четыре пять шесть семь восемь';

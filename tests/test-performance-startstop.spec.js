@@ -5,7 +5,7 @@ test.describe('Start/Stop Performance Tests', () => {
     test('Measure start performance speed', async ({ page }) => {
         console.log('\n⚡ Measuring RSVP start performance...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Performance test. Speed measurement. Start stop timing.';
@@ -59,7 +59,7 @@ test.describe('Start/Stop Performance Tests', () => {
     test('Measure stop performance speed', async ({ page }) => {
         console.log('\n🛑 Measuring RSVP stop performance...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Stop test. Performance measure. Return to normal.';
@@ -113,7 +113,7 @@ test.describe('Start/Stop Performance Tests', () => {
     test('Test rapid start/stop cycles', async ({ page }) => {
         console.log('\n🔄 Testing rapid start/stop cycles...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'Rapid cycles test. Start stop repeat. Performance check.';
@@ -168,7 +168,7 @@ test.describe('Start/Stop Performance Tests', () => {
     test('Test memory and performance during long sessions', async ({ page }) => {
         console.log('\n🧠 Testing performance during extended session...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         // Long text for extended testing

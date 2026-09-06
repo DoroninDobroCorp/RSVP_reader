@@ -957,7 +957,8 @@ test.describe('production reader regressions', () => {
         flexibleAcceptsSixPlusFour: frameFor(['planet', 'mars'], false, true),
         flexibleRejectsSixPlusFive: frameFor(['planet', 'venus'], false, true),
         punctuationStopsPair: frameFor(['hello,', 'world'], true, true),
-        lowWpmStopsPair: frameFor(['earth', 'venus'], true, true, 340)
+        lowWpmStopsPair: frameFor(['earth', 'venus'], true, false, 340),
+        flexibleAcceptsLowWpm: frameFor(['над', 'этим'], false, true, 280)
       };
     });
     expect(frames.strictRejectsSixPlusFour.advanceCount).toBe(1);
@@ -966,6 +967,7 @@ test.describe('production reader regressions', () => {
     expect(frames.flexibleRejectsSixPlusFive.advanceCount).toBe(1);
     expect(frames.punctuationStopsPair.advanceCount).toBe(1);
     expect(frames.lowWpmStopsPair.advanceCount).toBe(1);
+    expect(frames.flexibleAcceptsLowWpm).toMatchObject({ text: 'над этим', advanceCount: 2, lexicalWordCount: 2 });
   });
 
   test('punctuation-only separators do not inflate word counts or actual WPM frames', async ({ page }) => {

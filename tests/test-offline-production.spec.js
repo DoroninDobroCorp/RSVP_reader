@@ -66,7 +66,7 @@ test('VAL-R3-PWA-002 / VAL-R4-PWA-002: Service worker registers with trailing sl
   });
 
   expect(swDetails).not.toBeNull();
-  expect(swDetails.scope).toMatch(/\/rsvp\/$/);
+  expect(swDetails.scope).toMatch(/\/rsvp\/?$/);
   expect(swDetails.active).toBe(true);
 
   // Reload once online to acquire controller status under /rsvp/
@@ -147,6 +147,29 @@ test('VAL-R3-PWA-003 / VAL-R4-PWA-003: Localized legal content renders offline u
 
     await page.goto('/rsvp/es/privacy.html', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('h1')).toContainText(/Política de privacidad/i);
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
+test('VAL-R5-PWA-001: Offline PWA navigation without trailing slash (/rsvp and /rsvp/ru) renders localized app shell', async ({ page, context }) => {
+  await page.goto(`/rsvp/?offline-subpath-noslash=${Date.now()}`);
+  await page.waitForFunction(() => Boolean(window.rsvpReader));
+  await page.evaluate(async () => {
+    await window.rsvpReader.ready;
+    if ('serviceWorker' in navigator) await navigator.serviceWorker.ready;
+  });
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller));
+  await context.setOffline(true);
+  try {
+    await page.goto('/rsvp', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-i18n="textOrBook"]:visible').first()).toHaveText(/Start reading|Начать чтение/);
+    await expect(page.locator('#offlineBadge')).toContainText(/Offline|Офлайн|local|локально/i);
+
+    await page.goto('/rsvp/ru', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-i18n="textOrBook"]:visible').first()).toHaveText(/Начать чтение/);
   } finally {
     await context.setOffline(false);
   }

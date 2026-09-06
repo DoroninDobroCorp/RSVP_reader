@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 async function resetReaderStorage(page) {
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   await page.waitForFunction(() => Boolean(window.rsvpReader));
 

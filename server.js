@@ -570,10 +570,14 @@ function sendStatic(request, response, url) {
       }
 
       const ext = path.extname(finalPath).toLowerCase();
-      response.writeHead(200, {
+      const headers = {
         'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
-        'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=300'
-      });
+        'Cache-Control': ext === '.html' ? 'no-cache' : (relativePath === 'service-worker.js' ? 'no-cache, no-store, must-revalidate' : 'public, max-age=300')
+      };
+      if (relativePath === 'service-worker.js') {
+        headers['Service-Worker-Allowed'] = '/';
+      }
+      response.writeHead(200, headers);
       response.end(data);
     });
   });

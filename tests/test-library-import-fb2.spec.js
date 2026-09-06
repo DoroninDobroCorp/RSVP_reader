@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 test('Import FB2 book directly through Library Import button', async ({ page }) => {
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
 
   await page.click('#libraryBtn');

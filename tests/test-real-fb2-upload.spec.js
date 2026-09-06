@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 test('Upload real Russian FB2 book Yuri_Nikitin_Imortist.fb2', async ({ page }) => {
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
 
   const fb2Path = '/srv/RSVP_reader/Yuri_Nikitin_Imortist.fb2';

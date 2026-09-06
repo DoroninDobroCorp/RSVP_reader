@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
     
     test.beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
     });
 
@@ -466,7 +466,7 @@ test.describe('Comprehensive RSVP Reader Functionality Tests', () => {
         for (const viewport of viewports) {
             console.log(`   Testing ${viewport.name} (${viewport.width}x${viewport.height})...`);
             
-            await page.goto('http://localhost:8081');
+            await page.goto('/');
             await page.waitForLoadState('networkidle');
             
             const result = await checkResponsiveLayout(page, viewport);

@@ -85,7 +85,7 @@ test.describe('Additional file format imports', () => {
     fs.writeFileSync(files.md, '# Markdown Title\n\nMarkdown **first** paragraph with [a link](https://example.com).');
     fs.writeFileSync(files.rtf, String.raw`{\rtf1\ansi RTF first paragraph.\par RTF second paragraph.}`);
 
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     for (const [format, filePath] of Object.entries(files)) {

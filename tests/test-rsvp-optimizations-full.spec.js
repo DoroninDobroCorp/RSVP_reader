@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
 
   test('1. Each checkbox changes runtime setting and persists across reload', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.click('#settingsBtn');
@@ -47,7 +47,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('2. Reset button restores UI checkboxes and runtime settings to defaults', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.click('#settingsBtn');
@@ -80,7 +80,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('3. Chunking shows pairs for short words (<=5 letters) and single for long words', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.evaluate(() => {
@@ -117,7 +117,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('4. Punctuation boundary isolates chunks and preserves delay multiplier', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.evaluate(() => {
@@ -140,7 +140,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('5. Speed Ramp-up starts when Play is clicked regardless of pause duration', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.evaluate(() => {
@@ -166,7 +166,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('6. Pauses do NOT affect Real WPM calculation', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.locator('#textInput').fill('Слово1 Слово2 Слово3 Слово4 Слово5 Слово6 Слово7 Слово8 Слово9 Слово10');
@@ -187,7 +187,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('7. Focus letter stays centered within 1.0px tolerance in ORP grid mode', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await page.evaluate(() => {
@@ -224,7 +224,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('8. Offline reload works after cache update', async ({ page, context }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Set offline
@@ -242,7 +242,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
   });
 
   test('9. Day and Night themes render with proper contrast on Desktop & Mobile', async ({ page }) => {
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Test Desktop

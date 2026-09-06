@@ -5,7 +5,7 @@ test.describe('Last Word Stopping Tests', () => {
     test('Should pause at last word of short text', async ({ page }) => {
         console.log('\n🏁 Testing pause at last word (short text)...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         // Very short text
@@ -49,7 +49,7 @@ test.describe('Last Word Stopping Tests', () => {
     test('Should pause at last word of longer text', async ({ page }) => {
         console.log('\n📚 Testing pause at last word (longer text)...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         // Longer text
@@ -99,7 +99,7 @@ test.describe('Last Word Stopping Tests', () => {
     test('Should handle single word text correctly', async ({ page }) => {
         console.log('\n🔤 Testing single word text...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         // Single word
@@ -130,7 +130,7 @@ test.describe('Last Word Stopping Tests', () => {
     test('Should preserve progress after pausing at end', async ({ page }) => {
         console.log('\n💾 Testing progress preservation after end pause...');
         
-        await page.goto('http://localhost:8081');
+        await page.goto('/');
         await page.waitForLoadState('networkidle');
         
         const testText = 'One. Two. Three. Four. Five.';

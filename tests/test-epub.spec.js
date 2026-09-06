@@ -17,7 +17,7 @@ test.describe('EPUB Parser Tests', () => {
     
     // Открываем приложение
     console.log('\n📖 Открываем приложение...');
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     
     // Проверяем что страница загрузилась
@@ -146,7 +146,7 @@ test.describe('EPUB Parser Tests', () => {
   test('should persist text in localStorage', async ({ page }) => {
     console.log('\n💾 Тестируем сохранение в localStorage...');
     
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     
     // Вводим тестовый текст
     const testText = 'Это тестовый текст для проверки сохранения в localStorage. Он должен сохраниться автоматически.';
@@ -171,7 +171,7 @@ test.describe('EPUB Parser Tests', () => {
   test('should work offline with service worker', async ({ page }) => {
     console.log('\n🔌 Тестируем оффлайн режим...');
     
-    await page.goto('http://localhost:8081');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     
     // Ждём регистрации service worker

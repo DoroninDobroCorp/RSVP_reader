@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test('queues local data offline and syncs it when online again', async ({ page, context, request }) => {
   const bookName = `Offline Sync Book ${Date.now()}`;
 
-  await request.post('http://localhost:8081/api/sync', {
+  await request.post('/api/sync', {
     data: {
       version: 1,
       clientId: `test-reset-${Date.now()}`,
@@ -16,7 +16,7 @@ test('queues local data offline and syncs it when online again', async ({ page, 
     }
   });
 
-  await page.goto('http://localhost:8081/?reset-cache=1');
+  await page.goto('/?reset-cache=1');
   await page.waitForLoadState('networkidle');
 
   await context.setOffline(true);
@@ -33,7 +33,7 @@ test('queues local data offline and syncs it when online again', async ({ page, 
 
   page.once('dialog', async (dialog) => dialog.accept('Offline bookmark'));
   await page.locator('#addBookmarkBtn').click();
-  await expect(page.locator('#offlineBadge')).toContainText('Офлайн');
+  await expect(page.locator('#offlineBadge')).toHaveClass(/offline/);
 
   await context.setOffline(false);
   await page.evaluate(() => window.rsvpReader.syncNow());
@@ -42,7 +42,7 @@ test('queues local data offline and syncs it when online again', async ({ page, 
     { timeout: 10000 }
   ).toBe('0');
 
-  const response = await request.post('http://localhost:8081/api/sync', {
+  const response = await request.post('/api/sync', {
     data: {
       version: 1,
       clientId: `test-reader-${Date.now()}`,

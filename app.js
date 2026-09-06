@@ -123,6 +123,7 @@ class RSVPReader {
             lengthScaling: true,
             chunkingEnabled: true,
             balancedPairsEnabled: false,
+            fontFamily: 'sans',
             speedRampUp: true,
             orpNotches: false,
             hardwareControls: false,
@@ -203,6 +204,11 @@ class RSVPReader {
         this.lengthScalingInput = document.getElementById('lengthScalingInput');
         this.chunkingEnabledInput = document.getElementById('chunkingEnabledInput');
         this.balancedPairsEnabledInput = document.getElementById('balancedPairsEnabledInput');
+        this.fontSansBtn = document.getElementById('fontSansBtn');
+        this.fontSerifBtn = document.getElementById('fontSerifBtn');
+        this.fontMonoBtn = document.getElementById('fontMonoBtn');
+        this.fontRoundedBtn = document.getElementById('fontRoundedBtn');
+        this.fontButtons = [this.fontSansBtn, this.fontSerifBtn, this.fontMonoBtn, this.fontRoundedBtn].filter(Boolean);
         this.speedRampUpInput = document.getElementById('speedRampUpInput');
         this.orpNotchesInput = document.getElementById('orpNotchesInput');
         this.orpAxisLine = document.getElementById('orpAxisLine');
@@ -388,7 +394,18 @@ class RSVPReader {
         }
         this.prevWordBtn.addEventListener('click', () => this.adjustSpeed(-20, this.prevWordBtn));
         this.nextWordBtn.addEventListener('click', () => this.adjustSpeed(20, this.nextWordBtn));
-        this.rewindWordsBtn.addEventListener('click', () => this.rewindReadableWords(10));
+        this.rewindWordsBtn.addEventListener('click', () => {
+            this.flashSpeedButton(this.rewindWordsBtn);
+            if (typeof this.rewindWordsBtn.blur === 'function') this.rewindWordsBtn.blur();
+            this.rewindReadableWords(10);
+        });
+
+        this.fontButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const font = btn.dataset.font || 'sans';
+                this.setFontFamily(font);
+            });
+        });
         this.demoCoachActionBtn.addEventListener('click', () => this.advanceDemoGuide());
         this.demoCoachSkipBtn.addEventListener('click', () => this.finishDemoGuide());
         this.stopRSVPBtn.addEventListener('click', () => this.stopRSVP());
@@ -4578,17 +4595,18 @@ class RSVPReader {
         let combinedText = firstWord;
         const sourceWords = [firstWord];
 
+        const strictEligible = this.settings.chunkingEnabled && this.settings.wpm >= 350;
+        const balancedEligible = Boolean(this.settings.balancedPairsEnabled);
         const pairModeEnabled = lexicalWordCount > 0
-            && (this.settings.chunkingEnabled || this.settings.balancedPairsEnabled)
-            && this.settings.wpm >= 350
+            && (strictEligible || balancedEligible)
             && index < this.words.length - 1;
         if (pairModeEnabled) {
             const secondWord = this.words[index + 1];
             if (!this.terminalPunctuation(firstWord) && this.isReadableToken(secondWord)) {
                 const firstLength = this.readableCharacterCount(firstWord);
                 const secondLength = this.readableCharacterCount(secondWord);
-                const strictPair = this.settings.chunkingEnabled && firstLength <= 5 && secondLength <= 5;
-                const balancedPair = this.settings.balancedPairsEnabled && (firstLength + secondLength) <= 10;
+                const strictPair = strictEligible && firstLength <= 5 && secondLength <= 5;
+                const balancedPair = balancedEligible && (firstLength + secondLength) <= 10;
                 if (strictPair || balancedPair) {
                     advanceCount = 2;
                     lexicalWordCount = 2;
@@ -5078,6 +5096,14 @@ class RSVPReader {
         if (this.mode !== 'rsvp') return;
 
         switch (event.code) {
+            case 'ArrowUp':
+                event.preventDefault();
+                this.adjustSpeed(20, this.nextWordBtn);
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                this.adjustSpeed(-20, this.prevWordBtn);
+                break;
             case 'ArrowLeft':
                 event.preventDefault();
                 this.adjustSpeed(-20, this.prevWordBtn);
@@ -5086,6 +5112,13 @@ class RSVPReader {
                 event.preventDefault();
                 this.adjustSpeed(20, this.nextWordBtn);
                 break;
+            case 'KeyR':
+            case 'Backspace':
+                event.preventDefault();
+                this.flashSpeedButton(this.rewindWordsBtn);
+                this.rewindReadableWords(10);
+                break;
+            case 'KeyK':
             case 'KeyP':
                 event.preventDefault();
                 this.togglePlayPause();
@@ -5114,7 +5147,7 @@ class RSVPReader {
         document.documentElement.classList.toggle('reader-view', isReaderView);
         document.body.classList.toggle('reader-view', isReaderView);
         if (isReaderView && window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'auto' });
-        this.globalSearchBtn.hidden = !['normal', 'rsvp'].includes(section);
+        this.globalSearchBtn.hidden = section !== 'normal';
     }
 
     backToInput() {
@@ -5151,6 +5184,15 @@ class RSVPReader {
         if (this.orpNotchesInput) this.orpNotchesInput.checked = Boolean(this.settings.orpNotches);
         if (this.hardwareControlsInput) this.hardwareControlsInput.checked = Boolean(this.settings.hardwareControls);
         this.updatePlatformControlAvailability();
+        const activeFont = this.settings.fontFamily || 'sans';
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-reader-font', activeFont);
+            if (this.fontButtons) {
+                this.fontButtons.forEach((btn) => {
+                    btn.classList.toggle('active', (btn.dataset.font || 'sans') === activeFont);
+                });
+            }
+        }
     }
 
     updateSettings() {
@@ -5196,6 +5238,7 @@ class RSVPReader {
             lengthScaling: true,
             chunkingEnabled: true,
             balancedPairsEnabled: false,
+            fontFamily: 'sans',
             speedRampUp: true,
             orpNotches: false,
             hardwareControls: false,
@@ -5356,6 +5399,10 @@ class RSVPReader {
             }
             if (typeof migrated.chunkingEnabled !== 'boolean') {
                 migrated.chunkingEnabled = true;
+                changed = true;
+            }
+            if (typeof migrated.fontFamily !== 'string') {
+                migrated.fontFamily = 'sans';
                 changed = true;
             }
             if (typeof migrated.balancedPairsEnabled !== 'boolean') {
@@ -6699,10 +6746,19 @@ class RSVPReader {
             const swPath = typeof window !== 'undefined' && window.resolveAppPath ? window.resolveAppPath('service-worker.js') : '/service-worker.js';
             const rawBase = typeof window !== 'undefined' && window.getAppBaseUrl ? window.getAppBaseUrl() : '';
             const swScope = rawBase ? (rawBase.endsWith('/') ? rawBase : `${rawBase}/`) : '/';
-            const registration = await navigator.serviceWorker.register(swPath, {
-                scope: swScope,
-                updateViaCache: 'none'
-            });
+            const preferredScope = rawBase || '/';
+            let registration;
+            try {
+                registration = await navigator.serviceWorker.register(swPath, {
+                    scope: preferredScope,
+                    updateViaCache: 'none'
+                });
+            } catch (scopeError) {
+                registration = await navigator.serviceWorker.register(swPath, {
+                    scope: swScope,
+                    updateViaCache: 'none'
+                });
+            }
 
             registration.addEventListener('updatefound', () => {
                 const nextWorker = registration.installing;

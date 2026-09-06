@@ -4,7 +4,7 @@ test('Test double-tap functionality', async ({ page }) => {
   console.log('\n🧪 Testing double-tap on mobile...\n');
   
   // Открываем приложение
-  await page.goto('http://localhost:8081');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   
   // Вводим тестовый текст

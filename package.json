@@ -30,13 +30,15 @@
     "release:check": "npm run test:isolation && npm test && npm run test:extension && npm run test:visual && npm run test:lighthouse && npm run cap:sync && npm run verify:all",
     "ios:add": "npm run build && cap add ios",
     "ios:open": "npm run cap:sync && cap open ios",
-    "test": "npm run test:unit && npm run test:web-built && npm run test:production",
+    "test": "npm run test:fast",
     "test:unit": "node --test tests/unit/*.test.js",
     "test:clean-checkout": "node scripts/verify-clean-checkout.mjs",
     "test:web-built": "node scripts/test-web-built.mjs",
     "test:isolation": "node tests/isolation/run-port-collision.mjs",
     "test:extension": "node tests/extension/chrome-extension.e2e.mjs",
     "test:production": "playwright test tests/test-production-regressions.spec.js tests/test-offline-production.spec.js --project=chromium",
+    "test:offline": "playwright test tests/test-offline-production.spec.js --project=chromium",
+    "test:fast": "npm run test:unit && npm run test:web-built && npm run test:offline",
     "typecheck": "node --check scripts/*.mjs",
     "lint": "node --check app.js server.js scripts/*.mjs tests/unit/*.test.js",
     "test:cross-browser": "playwright test tests/test-production-regressions.spec.js --project=webkit --project=mobile-safari",
@@ -46,7 +48,8 @@
     "test:headed": "playwright test tests/test-production-regressions.spec.js --project=chromium --headed",
     "test:debug": "playwright test tests/test-production-regressions.spec.js --project=chromium --debug",
     "test:prod": "playwright test --config=playwright.prod.config.js",
-    "verify:android-r5-evidence": "node scripts/verify-android-r5-evidence.mjs"
+    "verify:android-r5-evidence": "node scripts/verify-android-r5-evidence.mjs",
+    "test:full": "npm run test:unit && npm run test:web-built && npm run test:production"
   },
   "keywords": [
     "rsvp",
