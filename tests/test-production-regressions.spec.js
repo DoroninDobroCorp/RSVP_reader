@@ -713,6 +713,33 @@ test.describe('production reader regressions', () => {
     expect(await page.evaluate(() => window.rsvpReader.currentIndex)).toBe(5);
   });
 
+  test('reading font choices apply to book text and survive reload without losing position', async ({ page }) => {
+    await openReader(page);
+    await loadPlainText(page, 'One two three four five six seven eight nine ten', 'Font persistence');
+    await page.evaluate(async () => {
+      const reader = window.rsvpReader;
+      reader.setCurrentWordIndex(4, { scroll: false });
+      await reader.persistReadingPosition();
+      reader.saveResumeSnapshot();
+    });
+    await page.locator('#settingsBtn').click();
+    for (const [button, font] of [['fontSansBtn', 'sans'], ['fontSerifBtn', 'serif'], ['fontRoundedBtn', 'rounded'], ['fontMonoBtn', 'mono']]) {
+      await page.locator(`#${button}`).click();
+      await expect(page.locator(`#${button}`)).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('html')).toHaveAttribute('data-reader-font', font);
+    }
+    await page.locator('#closeSettingsBtn').click();
+    await expect(page.locator('#normalTextDisplay')).toHaveCSS('font-family', /monospace/);
+    await page.evaluate(async () => window.rsvpReader.settingsWritePromise);
+    await page.reload();
+    await page.waitForFunction(() => Boolean(window.rsvpReader));
+    await page.evaluate(async () => window.rsvpReader.ready);
+    await expect(page.locator('#normalReadingSection')).toBeVisible();
+    await expect(page.locator('#normalTextDisplay')).toHaveCSS('font-family', /monospace/);
+    expect(await page.evaluate(() => ({ font: window.rsvpReader.settings.fontFamily, index: window.rsvpReader.currentIndex })))
+      .toEqual({ font: 'mono', index: 4 });
+  });
+
   test('long focus tokens shrink to fit the mobile viewport and short tokens reset the font', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openReader(page);
@@ -2354,6 +2381,7 @@ test.describe('production reader regressions', () => {
     await openReader(page, 'en');
     await page.locator('#textInput').fill('private local book words');
     await page.locator('#bookNameInput').fill('Erase me');
+    const navigation = page.waitForEvent('framenavigated', (frame) => frame === page.mainFrame());
     await page.evaluate(async () => {
       const reader = window.rsvpReader;
       await reader.saveCurrentTextAsBook({ silent: true });
@@ -2363,7 +2391,8 @@ test.describe('production reader regressions', () => {
       await reader.deleteAllLocalData();
     });
 
-    await page.waitForTimeout(700);
+    await navigation;
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForFunction(() => Boolean(window.rsvpReader));
     await page.evaluate(async () => window.rsvpReader.ready);
     const state = await page.evaluate(async () => ({
@@ -2718,25 +2747,37 @@ test.describe('production reader regressions', () => {
     expect(orpData[3]).toMatchObject({ word: 'año', focusGrapheme: 'ñ' });
   });
 
-  test('VAL-WEB-011: 320px viewport renders EN, RU, and ES views without clipping or horizontal page scroll', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 568 });
+  test('VAL-WEB-011: narrow settings keep every localized font label inside its tappable button', async ({ page }) => {
     await openReader(page);
-
-    for (const lang of ['en', 'ru', 'es']) {
-      await page.evaluate((l) => window.rsvpReader.setLanguage(l), lang);
-      const overflow = await page.evaluate(() => ({
-        viewport: document.documentElement.clientWidth,
-        scroll: document.documentElement.scrollWidth
-      }));
-      expect(overflow.scroll - overflow.viewport, `horizontal overflow in ${lang} at 320px`).toBeLessThanOrEqual(1);
-
-      await page.locator('#settingsBtn').click();
-      const settingsOverflow = await page.evaluate(() => ({
-        viewport: document.documentElement.clientWidth,
-        scroll: document.documentElement.scrollWidth
-      }));
-      expect(settingsOverflow.scroll - settingsOverflow.viewport, `settings overflow in ${lang} at 320px`).toBeLessThanOrEqual(1);
-      await page.locator('#closeSettingsBtn').click();
+    for (const width of [320, 390, 768]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const lang of ['en', 'ru', 'es']) {
+        await page.evaluate((l) => window.rsvpReader.setLanguage(l), lang);
+        await expect(page.locator('#storageStatus')).not.toContainText(/IndexedDB|localStorage|app storage/);
+        const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(homeOverflow, `${lang} home at ${width}px`).toBeLessThanOrEqual(1);
+        await page.locator('#settingsBtn').click();
+        const layout = await page.locator('.font-buttons').evaluate((group) => ({
+          viewport: document.documentElement.clientWidth,
+          scroll: document.documentElement.scrollWidth,
+          buttons: [...group.querySelectorAll('button')].map((button) => {
+            const range = document.createRange();
+            range.selectNodeContents(button);
+            const text = range.getBoundingClientRect();
+            const box = button.getBoundingClientRect();
+            return { label: button.textContent, left: text.left - box.left, right: box.right - text.right, height: box.height };
+          })
+        }));
+        expect(layout.scroll - layout.viewport, `${lang} settings at ${width}px`).toBeLessThanOrEqual(1);
+        for (const button of layout.buttons) {
+          expect(button.left, `${button.label} left edge at ${width}px`).toBeGreaterThanOrEqual(3);
+          expect(button.right, `${button.label} right edge at ${width}px`).toBeGreaterThanOrEqual(3);
+          expect(button.height, `${button.label} touch target`).toBeGreaterThanOrEqual(44);
+        }
+        await page.locator('#fontRoundedBtn').click();
+        await expect(page.locator('#fontRoundedBtn')).toHaveAttribute('aria-pressed', 'true');
+        await page.locator('#closeSettingsBtn').click();
+      }
     }
   });
 

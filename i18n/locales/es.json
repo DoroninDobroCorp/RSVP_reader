@@ -272,7 +272,7 @@
   "draft": "Borrador",
   "shortBookmarks": "{count}",
   "libraryButton": "Biblioteca ({count})",
-  "storageSummary": "{books} · {words} · {storage} · {sync}",
+  "storageSummary": "{books} · {words} · {sync}",
   "syncDisabled": "solo local",
   "syncOffline": "sincronización sin conexión",
   "syncing": "sincronizando…",

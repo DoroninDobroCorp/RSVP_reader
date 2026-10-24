@@ -272,7 +272,7 @@
   "draft": "Черновик",
   "shortBookmarks": "{count}",
   "libraryButton": "Библиотека ({count})",
-  "storageSummary": "{books} · {words} · {storage} · {sync}",
+  "storageSummary": "{books} · {words} · {sync}",
   "syncDisabled": "только локально",
   "syncOffline": "синхронизация офлайн",
   "syncing": "синхронизация…",

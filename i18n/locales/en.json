@@ -272,7 +272,7 @@
   "draft": "Draft",
   "shortBookmarks": "{count}",
   "libraryButton": "Library ({count})",
-  "storageSummary": "{books} · {words} · {storage} · {sync}",
+  "storageSummary": "{books} · {words} · {sync}",
   "syncDisabled": "local only",
   "syncOffline": "sync offline",
   "syncing": "syncing…",

@@ -5184,12 +5184,27 @@ class RSVPReader {
         if (this.orpNotchesInput) this.orpNotchesInput.checked = Boolean(this.settings.orpNotches);
         if (this.hardwareControlsInput) this.hardwareControlsInput.checked = Boolean(this.settings.hardwareControls);
         this.updatePlatformControlAvailability();
-        const activeFont = this.settings.fontFamily || 'sans';
+        this.applyReadingFont();
+    }
+
+    setFontFamily(font) {
+        if (!['sans', 'serif', 'mono', 'rounded'].includes(font)) return;
+        this.settings.fontFamily = font;
+        this.applyReadingFont();
+        this.saveSettings();
+        if (this.mode === 'rsvp') this.displayCurrentWord();
+    }
+
+    applyReadingFont() {
+        const activeFont = ['sans', 'serif', 'mono', 'rounded'].includes(this.settings.fontFamily)
+            ? this.settings.fontFamily : 'sans';
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-reader-font', activeFont);
             if (this.fontButtons) {
                 this.fontButtons.forEach((btn) => {
-                    btn.classList.toggle('active', (btn.dataset.font || 'sans') === activeFont);
+                    const selected = (btn.dataset.font || 'sans') === activeFont;
+                    btn.classList.toggle('active', selected);
+                    btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
                 });
             }
         }
@@ -6677,13 +6692,11 @@ class RSVPReader {
 
     updateStorageStatus() {
         const totalWords = this.library.reduce((sum, book) => sum + book.wordCount, 0);
-        const mode = this.isNativePlatform() ? 'app storage' : (this.storageMode === 'indexeddb' ? 'IndexedDB' : 'localStorage');
         const syncText = this.formatSyncStatus();
         const bookLabel = this.formatBookCount(this.library.length);
         this.storageStatus.textContent = this.t('storageSummary', {
             books: bookLabel,
             words: this.formatWordCount(totalWords),
-            storage: mode,
             sync: syncText
         });
         this.updateLibraryButton();
