@@ -1,6 +1,6 @@
 # Active repository mission
 
-The current owner request (2026-10-24) is to prepare HummingRead for an iPhone/iPad production release and publish a useful marketing website. Work only through SSH on `serverforvovka`, in `/srv/hummingread`. Keep the existing review branch `mission/android-r5-recovery-20260814`; preserve earlier evidence and checkpoints.
+The current owner request (2026-10-24) is to prepare HummingRead for an iPhone/iPad production release and publish a useful marketing website. Canonical development and application source edits stay through SSH on `serverforvovka`, in `/srv/hummingread`. The owner subsequently authorized the Mac as an isolated Xcode build/sign/install/test host using a checksummed server-source export, with their connected iPhone and existing Personal Team before paid enrollment. Do not move canonical development to the Mac or commit local signing/device data. Keep the existing review branch `mission/android-r5-recovery-20260814`; preserve earlier evidence and checkpoints.
 
 Read `docs/IOS_LAUNCH_2026-10-24.md` for current decisions and gates.
 
