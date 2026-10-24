@@ -78,7 +78,7 @@ test('VAL-WEB-SEO-005: Tester-preview builds set noindex,nofollow,noarchive meta
 });
 
 // VAL-WEB-SEO-006: Tester-Preview Metadata & Canonical Stripping Safeguard
-test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, hreflang, and JSON-LD tags with no sslip.io leakage', () => {
+test('VAL-WEB-SEO-006: Tester-preview channel omits canonical, hreflang and JSON-LD SEO while allowing an explicit public marketing link', () => {
   ensureDistBuilt();
   const htmlFiles = [
     'index.html',
@@ -109,7 +109,11 @@ test('VAL-WEB-SEO-006: Tester-preview channel builds completely omit canonical, 
     const jsonLd = document.querySelectorAll('script[type="application/ld+json"]');
     assert.equal(jsonLd.length, 0, `${relPath} must omit all JSON-LD script blocks in tester-preview`);
 
-    assert.ok(!content.includes('sslip.io'), `${relPath} must not leak sslip.io domain`);
+    // The public website is intentional navigation, not preview SEO.
+    const marketingLink = document.querySelector('a.marketing-link');
+    if (marketingLink) assert.equal(marketingLink.getAttribute('href'), require('../../product.config.json').website.baseUrl);
+    const withoutMarketingLink = content.replace(/<a class="marketing-link"[^>]*>[\s\S]*?<\/a>/u, '');
+    assert.ok(!withoutMarketingLink.includes('sslip.io'), relPath + ' must not leak preview-domain SEO');
     assert.ok(!content.includes('example.invalid'), `${relPath} must not leak example.invalid domain`);
   }
 

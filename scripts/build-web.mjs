@@ -498,6 +498,8 @@ await buildChromeExtension({
 });
 
 const buildTimestamp = process.env.SOURCE_DATE_EPOCH ? new Date(process.env.SOURCE_DATE_EPOCH * 1000).toISOString() : '2026-08-13T00:00:00.000Z';
+await import('./build-marketing.mjs');
+
 await writeFile(join(destination, '.build-complete'), buildTimestamp, 'utf8');
 
 console.log(`Built bundled web assets in ${destination}`);

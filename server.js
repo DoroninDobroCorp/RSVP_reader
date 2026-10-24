@@ -31,6 +31,13 @@ const ARTICLE_NATIVE_ENDPOINT_ORIGINS = new Set([
 ]);
 const PUBLIC_FILES = new Set([
   'index.html',
+  'about/index.html',
+  'about/ru/index.html',
+  'about/es/index.html',
+  'about/marketing.css',
+  'about/marketing.js',
+  'about/robots.txt',
+  'about/sitemap.xml',
   'reset.html',
   'privacy.html',
   'support.html',
@@ -504,6 +511,8 @@ function sendStatic(request, response, url) {
   if (pathname === '/' || pathname === '') pathname = '/index.html';
   if (pathname === '/ru' || pathname === '/ru/') pathname = '/ru/index.html';
   if (pathname === '/es' || pathname === '/es/') pathname = '/es/index.html';
+
+  if (/^\/about(?:\/(?:ru|es))?\/?$/u.test(pathname)) pathname = pathname.replace(/\/$/u, '') + '/index.html';
 
   const requestedRelativePath = pathname.replace(/^\/+/, '');
   const filePath = path.resolve(ROOT, requestedRelativePath);

@@ -1,0 +1,254 @@
+{
+  "en": {
+    "lang": "en",
+    "title": "Your books.\nYour pace.",
+    "accent": "A little more focus.",
+    "eyebrow": "FREE · OPEN SOURCE · MADE FOR LONG READS",
+    "intro": "Meet HummingRead. A quiet place for your books and documents, one word at a time. Set a comfortable rhythm. Keep the context. Come back to your place.",
+    "try": "Try the web reader",
+    "source": "Explore the source",
+    "soon": "iPhone & iPad · App Store release in preparation",
+    "nav": [
+      "How it reads",
+      "Your files",
+      "Open source"
+    ],
+    "demoTitle": "A small change in how you read.",
+    "demoText": "RSVP presents words in one place. Try this short example, then open your own text in the reader. You choose the pace; a pause is always one tap away.",
+    "demoLabel": "Interactive illustration of RSVP reading",
+    "play": "Play example",
+    "pause": "Pause",
+    "restart": "Restart",
+    "speed": "Words per minute",
+    "sample": "A good book does not ask you to hurry. Give it a little space. Find a rhythm that feels comfortable. Pause when a sentence deserves a second look. Continue when you are ready.",
+    "word": "rhythm",
+    "formatsTitle": "The books you already have.",
+    "formatsText": "Bring your own DRM-free books and documents. EPUB, FB2, DOCX, TXT, HTML, Markdown and RTF. Or simply paste a passage.",
+    "steps": [
+      [
+        "01",
+        "Bring a book",
+        "Import a local file or paste some text. No library subscription to manage."
+      ],
+      [
+        "02",
+        "Find your rhythm",
+        "Adjust words per minute, fonts and day or night appearance. Switch to regular text whenever you want."
+      ],
+      [
+        "03",
+        "Keep your place",
+        "Pause for context. Search, bookmark and return to your saved reading position."
+      ]
+    ],
+    "privacyTitle": "Your reading is yours.",
+    "privacyText": "The iPhone and iPad app keeps books and progress on your device. No account. No ads. No tracking SDK. Local reading works offline.",
+    "privacyNote": "The web reader also has an optional article-by-link importer: it sends the URL to the article service. Web and app libraries do not sync.",
+    "openTitle": "A useful starting point.\nYours to make better.",
+    "openText": "HummingRead is free software under the MIT license. Read the code, fork it, change it, build your own version — with your tools, your ideas, or a little help from AI. Just keep the license notice.",
+    "openLink": "Read the MIT license",
+    "supportTitle": "Help a small project keep flying.",
+    "supportText": "If HummingRead helps you, share it with someone who likes long reads. Report a rough edge, suggest an idea or contribute a fix. Every bit helps.",
+    "supportAction": "Send feedback",
+    "faqTitle": "A few things to know.",
+    "faqs": [
+      [
+        "Will it make me read faster?",
+        "It lets you control presentation speed. It does not guarantee faster reading or better comprehension. Start slowly, pause often and choose what feels comfortable."
+      ],
+      [
+        "Where are my books stored?",
+        "In the app or browser on your device. There is no cloud sync. Export a backup from Settings before changing devices, clearing browser data or uninstalling."
+      ],
+      [
+        "Does it remove DRM?",
+        "No. Import only DRM-free files that you have the right to read. The app does not include a commercial book catalog."
+      ],
+      [
+        "Is it really free?",
+        "Yes. All reading features are free, and the source is available under MIT. You can use it, modify it and redistribute it while keeping the license notice."
+      ],
+      [
+        "Can I get it on my iPhone?",
+        "The App Store release is in preparation. You can try the web reader today. We will add the App Store link here when the app is available."
+      ]
+    ],
+    "footer": [
+      "Privacy",
+      "Support",
+      "Licenses"
+    ],
+    "footerLine": "Made with care by Vladimir Doronin. Read at your own rhythm.",
+    "illustration": "Pico, the HummingRead hummingbird",
+    "donate": "Leave a voluntary tip",
+    "donateNote": "Optional support. No reading features are locked."
+  },
+  "ru": {
+    "lang": "ru",
+    "title": "Ваши книги.\nВаш темп.",
+    "accent": "Чуть больше фокуса.",
+    "eyebrow": "БЕСПЛАТНО · ОТКРЫТЫЙ КОД · ДЛЯ ДОЛГОГО ЧТЕНИЯ",
+    "intro": "HummingRead — спокойное место для ваших книг и документов. По одному слову, в удобном темпе. С контекстом на паузе и сохранённым местом.",
+    "try": "Попробовать в браузере",
+    "source": "Посмотреть исходный код",
+    "soon": "iPhone и iPad · готовим выпуск в App Store",
+    "nav": [
+      "Как это читается",
+      "Ваши файлы",
+      "Открытый код"
+    ],
+    "demoTitle": "Немного другой способ читать.",
+    "demoText": "RSVP показывает слова в одной точке. Попробуйте короткий пример, затем откройте свой текст в читалке. Темп выбираете вы, пауза всегда рядом.",
+    "demoLabel": "Интерактивный пример чтения по одному слову",
+    "play": "Запустить пример",
+    "pause": "Пауза",
+    "restart": "Сначала",
+    "speed": "Слов в минуту",
+    "sample": "Хорошая книга не просит торопиться. Дайте ей немного места. Найдите удобный ритм. Остановитесь, если фразу хочется перечитать. Продолжайте, когда будете готовы.",
+    "word": "ритм",
+    "formatsTitle": "Книги, которые уже у вас.",
+    "formatsText": "Импортируйте свои книги и документы без DRM: EPUB, FB2, DOCX, TXT, HTML, Markdown и RTF. Или просто вставьте фрагмент текста.",
+    "steps": [
+      [
+        "01",
+        "Откройте книгу",
+        "Импортируйте локальный файл или вставьте текст. Без подписки на библиотеку."
+      ],
+      [
+        "02",
+        "Найдите свой темп",
+        "Настройте скорость, шрифт, дневное или ночное оформление. В любой момент вернитесь к обычному тексту."
+      ],
+      [
+        "03",
+        "Сохраните место",
+        "Пауза возвращает контекст. Поиск, закладки и сохранённая позиция помогают продолжить чтение."
+      ]
+    ],
+    "privacyTitle": "Ваше чтение — ваше дело.",
+    "privacyText": "Приложение для iPhone и iPad хранит книги и прогресс на устройстве. Без аккаунта, рекламы и SDK отслеживания. Локальные файлы читаются офлайн.",
+    "privacyNote": "В браузерной версии есть необязательный импорт статей по ссылке: URL отправляется сервису извлечения текста. Библиотеки сайта и приложения не синхронизируются.",
+    "openTitle": "Хорошая основа.\nДальше — по-вашему.",
+    "openText": "HummingRead — бесплатное ПО под лицензией MIT. Изучайте код, делайте форк, меняйте и собирайте свою версию — своими руками или с помощью ИИ. Сохраните уведомление о лицензии.",
+    "openLink": "Прочитать лицензию MIT",
+    "supportTitle": "Помогите маленькому проекту летать.",
+    "supportText": "Если HummingRead оказался полезен, расскажите о нём тем, кто любит читать. Сообщите об ошибке, предложите идею или внесите улучшение. Это тоже поддержка.",
+    "supportAction": "Написать автору",
+    "faqTitle": "Перед началом.",
+    "faqs": [
+      [
+        "Я стану читать быстрее?",
+        "Вы управляете скоростью показа слов. Это не гарантия более быстрого чтения или лучшего понимания. Начните неспешно и подберите удобный темп."
+      ],
+      [
+        "Где хранятся книги?",
+        "В приложении или браузере на вашем устройстве. Облачной синхронизации нет. Экспортируйте резервную копию перед сменой устройства, очисткой браузера или удалением приложения."
+      ],
+      [
+        "А книги с DRM?",
+        "Защиту DRM приложение не снимает. Используйте только файлы без DRM, которые имеете право читать. Магазина книг внутри нет."
+      ],
+      [
+        "Точно бесплатно?",
+        "Да. Все функции чтения бесплатны, исходный код доступен под MIT. Его можно использовать, изменять и распространять, сохраняя уведомление о лицензии."
+      ],
+      [
+        "Как поставить на iPhone?",
+        "Готовим публикацию в App Store. Уже сейчас можно попробовать браузерную версию. Когда приложение выйдет, здесь появится ссылка."
+      ]
+    ],
+    "footer": [
+      "Конфиденциальность",
+      "Поддержка",
+      "Лицензии"
+    ],
+    "footerLine": "Автор — Владимир Доронин. Читайте в своём ритме.",
+    "illustration": "Пико — колибри HummingRead",
+    "donate": "Поддержать добровольным донатом",
+    "donateNote": "По желанию. Все функции чтения открыты."
+  },
+  "es": {
+    "lang": "es",
+    "title": "Tus libros.\nTu ritmo.",
+    "accent": "Un poco más de enfoque.",
+    "eyebrow": "GRATIS · CÓDIGO ABIERTO · PARA LECTURAS LARGAS",
+    "intro": "HummingRead es un lugar tranquilo para tus libros y documentos. Una palabra a la vez, a un ritmo cómodo. Pausa para recuperar el contexto y vuelve a tu lugar.",
+    "try": "Probar el lector web",
+    "source": "Explorar el código",
+    "soon": "iPhone y iPad · preparando el lanzamiento en App Store",
+    "nav": [
+      "Cómo se lee",
+      "Tus archivos",
+      "Código abierto"
+    ],
+    "demoTitle": "Una pequeña forma de leer diferente.",
+    "demoText": "RSVP presenta las palabras en un solo lugar. Prueba este ejemplo y después abre tu texto en el lector. Tú eliges el ritmo; la pausa siempre está a un toque.",
+    "demoLabel": "Ejemplo interactivo de lectura RSVP",
+    "play": "Iniciar ejemplo",
+    "pause": "Pausa",
+    "restart": "Reiniciar",
+    "speed": "Palabras por minuto",
+    "sample": "Un buen libro no te pide que te apures. Dale un poco de espacio. Encuentra un ritmo cómodo. Pausa cuando quieras volver a una frase. Continúa cuando estés listo.",
+    "word": "ritmo",
+    "formatsTitle": "Los libros que ya tienes.",
+    "formatsText": "Importa tus propios libros y documentos sin DRM: EPUB, FB2, DOCX, TXT, HTML, Markdown y RTF. O simplemente pega un fragmento.",
+    "steps": [
+      [
+        "01",
+        "Abre un libro",
+        "Importa un archivo local o pega un texto. Sin suscripción a una biblioteca."
+      ],
+      [
+        "02",
+        "Encuentra tu ritmo",
+        "Ajusta la velocidad, las fuentes y el tema de día o de noche. Vuelve a la vista de texto cuando quieras."
+      ],
+      [
+        "03",
+        "Conserva tu lugar",
+        "Pausa para recuperar el contexto. Busca, guarda marcadores y continúa desde la posición guardada."
+      ]
+    ],
+    "privacyTitle": "Tu lectura es tuya.",
+    "privacyText": "La aplicación para iPhone y iPad guarda libros y progreso en tu dispositivo. Sin cuenta, publicidad ni SDK de seguimiento. Lee archivos locales sin conexión.",
+    "privacyNote": "El lector web también ofrece un importador opcional por enlace: envía la URL al servicio de artículos. Las bibliotecas web y de la app no se sincronizan.",
+    "openTitle": "Un buen punto de partida.\nHazlo tuyo.",
+    "openText": "HummingRead es software gratuito con licencia MIT. Explora el código, crea un fork, modifícalo y compila tu propia versión: con tus herramientas, tus ideas o ayuda de IA. Conserva el aviso de licencia.",
+    "openLink": "Leer la licencia MIT",
+    "supportTitle": "Ayuda a que este proyecto siga volando.",
+    "supportText": "Si HummingRead te sirve, compártelo con alguien que disfrute leer. Informa de un error, propone una idea o contribuye una mejora. Todo ayuda.",
+    "supportAction": "Escribir al autor",
+    "faqTitle": "Antes de empezar.",
+    "faqs": [
+      [
+        "¿Voy a leer más rápido?",
+        "Puedes controlar la velocidad de presentación. No garantiza leer más rápido ni comprender mejor. Empieza despacio y encuentra un ritmo cómodo."
+      ],
+      [
+        "¿Dónde están mis libros?",
+        "En la aplicación o el navegador de tu dispositivo. No hay sincronización en la nube. Exporta una copia antes de cambiar de dispositivo, borrar datos o desinstalar."
+      ],
+      [
+        "¿Elimina el DRM?",
+        "No. Utiliza archivos sin DRM que tengas derecho a leer. La aplicación no incluye una tienda de libros."
+      ],
+      [
+        "¿Es gratis de verdad?",
+        "Sí. Todas las funciones de lectura son gratuitas y el código tiene licencia MIT. Puedes usarlo, modificarlo y distribuirlo conservando el aviso de licencia."
+      ],
+      [
+        "¿Cómo lo instalo en iPhone?",
+        "Estamos preparando el lanzamiento en App Store. Ya puedes probar el lector web. Añadiremos el enlace cuando la aplicación esté disponible."
+      ]
+    ],
+    "footer": [
+      "Privacidad",
+      "Soporte",
+      "Licencias"
+    ],
+    "footerLine": "Creado con cuidado por Vladimir Doronin. Lee a tu ritmo.",
+    "illustration": "Pico, el colibrí de HummingRead",
+    "donate": "Dejar una propina voluntaria",
+    "donateNote": "Apoyo opcional. Ninguna función de lectura está bloqueada."
+  }
+}

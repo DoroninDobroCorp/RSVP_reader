@@ -49,7 +49,11 @@
     "test:debug": "playwright test tests/test-production-regressions.spec.js --project=chromium --debug",
     "test:prod": "playwright test --config=playwright.prod.config.js",
     "verify:android-r5-evidence": "node scripts/verify-android-r5-evidence.mjs",
-    "test:full": "npm run test:unit && npm run test:web-built && npm run test:production"
+    "test:full": "npm run test:unit && npm run test:web-built && npm run test:production",
+    "store:prepare": "node scripts/prepare-app-store.mjs",
+    "ios:verify-source": "node scripts/verify-ios-release.mjs",
+    "ios:release-check": "node scripts/check-ios-candidate.mjs",
+    "test:marketing": "playwright test tests/test-marketing.spec.js --project=chromium --project=webkit --project=mobile-safari"
   },
   "keywords": [
     "rsvp",
@@ -66,19 +70,19 @@
     "url": "https://github.com/DoroninDobroCorp/RSVP_reader.git"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.0",
+    "@capacitor/cli": "8.5.3",
     "@playwright/test": "^1.62.1",
     "lighthouse": "13.4.1",
-    "sharp": "0.35.3"
+    "sharp": "0.35.5"
   },
   "dependencies": {
     "@capacitor-community/keep-awake": "8.0.1",
-    "@capacitor/android": "8.5.0",
+    "@capacitor/android": "8.5.3",
     "@capacitor/app": "^8.1.1",
-    "@capacitor/core": "^8.5.0",
+    "@capacitor/core": "8.5.3",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/haptics": "^8.0.2",
-    "@capacitor/ios": "^8.5.0",
+    "@capacitor/ios": "8.5.3",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/share": "^8.0.1",
     "@mozilla/readability": "^0.6.0",

@@ -1,35 +1,34 @@
 # HummingRead App Store release checklist
 
-## Engineering evidence
+Current release decisions and evidence boundaries: [IOS_LAUNCH_2026-10-24.md](IOS_LAUNCH_2026-10-24.md). Older Xcode/simulator claims are historical and do not validate the October source.
 
-- [x] Native article importer hidden and unreachable; no article fetch in the iOS surface.
-- [x] Legacy cloud sync retired without deleting local books.
-- [x] Core reader, library, bookmarks, settings, and progress work offline.
-- [x] App display name is HummingRead; version/build source is centralized.
-- [x] SwiftPM `Package.resolved` is tracked; Keep Awake is pinned.
-- [x] Privacy manifest is bundled and package-verified.
-- [x] Final unsigned Release build and Analyze pass in Xcode 26.3.
-- [x] Release build launches on iPhone 16 Pro and 13-inch iPad Pro simulators; portrait, landscape, demo, background/resume, and the document picker were visually inspected.
-- [ ] Physical-device cold start, background/resume, rotation, file picker, and Keep Awake are tested.
+## Source and materials prepared
 
-## Owner/account gates
+- [x] Free/open-source model and public MIT source link.
+- [x] EN/RU/ES metadata, field validation including keyword UTF-8 byte limit, plain-text export and screenshot headlines.
+- [x] Public no-login support contact approved by owner: vladimir_doronin@icloud.com.
+- [x] iOS privacy manifest, offline legal/support pages and local-only packaging checks.
+- [x] Shared Xcode archive scheme and current Capacitor package/pin preparation.
+- [x] Marketing site source with responsive layout, RSVP example, source/license links, FAQs and optional future donation URL.
+- [ ] Verify final tested source SHA and all October web/source checks in release report.
+- [ ] Verify public marketing deployment, HTTPS, three languages, support and code links in release report.
 
-- [ ] Approve the provisional HummingRead brand after independent legal review.
-- [ ] Provide final public domain, privacy URL, and no-login support email.
-- [ ] Confirm seller/legal entity and Apple Developer Team ID.
-- [ ] Approve/register the final bundle identifier. Do not change `team.ibet.paceflow` in source until this step.
-- [ ] Configure signing certificates/profiles and `DEVELOPMENT_TEAM`.
-- [ ] Select price, territories, tax, and banking agreements.
-- [ ] Create App Store Connect record and confirm name availability there.
-- [ ] Upload archive, run Validate, TestFlight, and invited-tester QA.
-- [ ] Capture final localized screenshots from the submitted build.
-- [ ] Confirm privacy answers, age rating, content-rights declaration, review contact, and export-compliance answers.
-- [ ] Submit and respond to App Review. Do not claim publication before approval is visible.
+## Native/account release gates
 
-## Copy/package review
+- [ ] Apple Developer enrollment and membership paid by owner.
+- [ ] Seller/legal identity, bundle identifier availability, Apple team/signing.
+- [ ] Fresh Xcode Release build and Analyze from the tested source.
+- [ ] Actual iPhone and iPad Simulator QA; physical-device QA.
+- [ ] Signed archive validated and uploaded; TestFlight checks.
+- [ ] Final localized screenshots from the submitted build.
+- [ ] Privacy, age rating, content rights, export, territories and trader/account declarations.
+- [ ] App Review submission and approval; working App Store URL.
 
-- [x] English/Russian name, subtitle, keywords, description, promo text, review workflow, privacy draft, age/content-rights rationale, and screenshot plan exist in `APP_STORE_COPY.md`.
-- [x] Claims distinguish native local-only behavior from the optional web article service and Chrome Quick Send.
-- [x] No promise of guaranteed comprehension or reading-speed improvement.
-- [ ] Owner substitutes the final support/contact/domain data and passes production-mode brand verification.
-- [x] Final icons are dimension-checked; the 1024×1024 App Store icon has no alpha.
+## Voluntary support
+
+- [ ] Owner creates a donation account and supplies its public URL.
+- [ ] Configure website.donationUrl, test the provider destination and rebuild/deploy website.
+- [x] Do not block reading features or display a nonfunctional payment button.
+- [x] No external payment link or unimplemented StoreKit feature in native iOS.
+
+The source/web release gate must keep App Store readiness BLOCKED until the native/account steps are actually proven.

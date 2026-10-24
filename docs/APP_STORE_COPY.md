@@ -1,104 +1,132 @@
-# App Store copy: HummingRead
+# HummingRead — App Store copy
 
-Status: release-candidate copy for a **provisional pending owner/legal confirmation** brand. Do not submit until every owner gate in `APP_STORE_CHECKLIST.md` is complete.
+Prepared 2026-10-24. Source of truth: `release/app-store/*.json`. Run `npm run store:prepare` to validate UTF-8 keyword bytes and export individual App Store Connect fields. App is free, MIT-licensed, with no subscriptions, paywall or in-app purchases. Voluntary support on the independent website can be connected after the owner creates a donation account.
 
 ## English metadata
 
-- Name (25/30): `HummingRead: Speed Reader`
-- Subtitle (26/30): `RSVP Reader for Real Books`
-- Promotional text (148/170): `Bring EPUB, FB2, DOCX and long text into one calm focal point. Pause for context, rewind ten words, and return to the exact saved word.`
-- Keywords (84/100): `rsvp,speed reading,epub,fb2,docx,focus,offline,one word,book reader,read faster,local`
-- Chrome Web Store Name (25/45): `HummingRead: Speed Reader`
-- Chrome Web Store Summary (115/132): `Calm RSVP speed reader for books, articles, and pasted text. Keep your focus on one word with zero distractions.`
+- Name: `HummingRead: Speed Reader`
+- Subtitle: `Offline EPUB & Book Reading`
+- Promotional text: `Your books. Your pace. Read one word at a time, pause for context, and pick up where you left off. Free, open source, and private on your device.`
+- Keywords: `rsvp,fb2,docx,focus,bookmark,text,document,one word,library,drm free,reading`
+- Chrome Web Store Name: `HummingRead: Speed Reader`
+- Chrome Web Store Summary: `Free RSVP reader for your books and text. Offline, no account or advertising, with open source code.`
 
 ### Description
 
-HummingRead is a calm, offline reader for your own DRM-free books and documents. Import EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF, choose a comfortable presentation pace, and keep your gaze on one clear point while the words move.
+A little more room for your next long read.
 
-Pico, the hummingbird focus pilot, guides a short demo through the essentials. Play or pause at any time, reveal the sentence around the current word, rewind ten words, scrub to an exact position, search a large book, add bookmarks, and continue where you stopped.
+HummingRead turns your own books and documents into an adjustable, one-word-at-a-time reading experience. Bring an EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF file, or paste a passage. Choose your pace and start reading.
 
-Your native library is local-only. There is no account, advertising, analytics SDK, tracking SDK, cloud sync, or article URL importer in the iOS build. Imported books, extracted text, bookmarks, settings, and reading position remain on the device. Core reading works in Airplane Mode.
+KEEP YOUR PLACE
+Switch between a regular text view and focused RSVP playback. Pause to see the surrounding sentence, rewind ten words, search your text, use the table of contents, and leave bookmarks for later. Your library and reading position are saved on your device.
 
-HummingRead controls presentation pace. It does not promise a particular increase in comprehension or reading speed; results vary with the reader, language, material, and chosen pace.
+MADE FOR YOUR RHYTHM
+Adjust words per minute, text size, fonts and day or night appearance. Start with the built-in demo and find a pace that feels comfortable. English, Russian and Spanish interfaces are included.
+
+READ WITHOUT AN ACCOUNT
+The iPhone and iPad app reads local files offline. No sign-up, advertising, tracking SDK or cloud sync. Your imported text and reading progress are not sent to the developer. Export a backup before changing or resetting devices.
+
+FREE AND OPEN SOURCE
+All reading features are free. HummingRead is released under the MIT license: you can inspect the code, change it and build your own version, keeping the license notice. Sharing feedback and contributing improvements help the project grow.
+
+Bring files you have the right to read. DRM-protected books are not supported. HummingRead adjusts presentation pace; it does not guarantee faster reading or improved comprehension.
 
 ## Russian metadata
 
-- Название (26/30): `HummingRead: Быстрое чтение`
-- Подзаголовок (19/30): `Книги в режиме RSVP`
-- Промотекст (139/170): `Импортируйте EPUB, FB2, DOCX и длинные тексты. Пауза возвращает контекст, перемотка — десять слов, а позиция сохраняется точно.`
-- Ключевые слова (74/100): `чтение,книги,epub,fb2,docx,офлайн,RSVP,фокус,по одному слову,скорочтение`
-- Название Chrome Web Store (25/45): `HummingRead: Скорочиталка`
-- Краткое описание Chrome Web Store (123/132): `Спокойная RSVP-скорочиталка для книг, статей и вставленного текста. Читайте по одному слову без отвлекающих факторов.`
+- Название: `HummingRead: книги и тексты`
+- Подзаголовок: `Офлайн, по одному слову`
+- Промотекст: `Ваши книги в комфортном темпе: читайте по одному слову, возвращайтесь к контексту и продолжайте с сохранённого места. Бесплатно, с открытым кодом.`
+- Ключевые слова: `rsvp,epub,fb2,docx,скорочтение,фокус,закладки`
+- Название Chrome Web Store: `HummingRead: книги и тексты`
+- Краткое описание Chrome Web Store: `Бесплатная RSVP-читалка для ваших книг и текстов. Офлайн, без аккаунта и рекламы, с открытым кодом.`
 
-### Описание
+### Description
 
-HummingRead — спокойная офлайн-читалка для ваших книг и документов без DRM. Импортируйте EPUB, FB2, DOCX, TXT, HTML, Markdown или RTF, выберите комфортный темп и удерживайте взгляд на одной точке, пока слова сменяют друг друга.
+Для книг, до которых всё не доходили руки.
 
-Пико, колибри-пилот фокуса, проводит короткое демо. В любой момент можно поставить чтение на паузу и вернуть контекст, отмотать десять слов, точно перейти по шкале, найти фразу, добавить закладку и продолжить с сохранённого места.
+HummingRead показывает текст по одному слову в выбранном вами темпе. Импортируйте свою книгу или документ в EPUB, FB2, DOCX, TXT, HTML, Markdown или RTF — либо вставьте текст и начните читать.
 
-Нативная библиотека хранится только на устройстве. В приложении нет аккаунта, рекламы, аналитики, отслеживания, облачной синхронизации и импорта статей по ссылке. Книги, извлечённый текст, закладки, настройки и позиция не покидают устройство; основное чтение работает в авиарежиме.
+НЕ ТЕРЯЙТЕ МЕСТО
+Переключайтесь между обычным текстом и режимом RSVP. Пауза возвращает окружающую фразу, перемотка — десять слов назад. Внутри книги доступны поиск, оглавление и закладки. Библиотека и позиция чтения сохраняются на устройстве.
 
-HummingRead управляет темпом показа, но не обещает определённого роста скорости или понимания текста.
+ПОДСТРОЙТЕ ПОД СЕБЯ
+Выбирайте темп в словах в минуту, размер текста, шрифт, дневное или ночное оформление. Короткое встроенное демо поможет разобраться. Интерфейс доступен на русском, английском и испанском.
+
+ЧИТАЙТЕ ОФЛАЙН
+Приложение для iPhone и iPad работает с локальными файлами без регистрации, рекламы, SDK отслеживания и облачной синхронизации. Текст книг и прогресс чтения не отправляются разработчику. Перед сбросом или заменой устройства экспортируйте резервную копию.
+
+БЕСПЛАТНО И С ОТКРЫТЫМ КОДОМ
+Все функции чтения бесплатны. Лицензия MIT позволяет изучать, изменять код и собирать свою версию с сохранением уведомления о лицензии. Помочь проекту можно отзывом, рекомендацией или улучшением кода.
+
+Используйте файлы, которые имеете право читать. Книги с DRM не поддерживаются. Приложение управляет темпом показа, но не гарантирует роста скорости чтения или понимания текста.
 
 ## Spanish metadata
 
-- Nombre (27/30): `HummingRead: Lectura rápida`
-- Subtítulo (24/30): `Lector RSVP para libros`
-- Texto promocional (146/170): `Importa EPUB, FB2, DOCX y textos largos a un punto focal tranquilo. Pausa para ver el contexto y rebobina diez palabras.`
-- Palabras clave (89/100): `rsvp,lectura rapida,epub,fb2,docx,enfoque,sin conexion,una palabra,lector libros,local`
-- Nombre Chrome Web Store (27/45): `HummingRead: Lectura rápida`
-- Resumen Chrome Web Store (119/132): `Lector de velocidad RSVP para libros, artículos y texto pegado. Mantén tu enfoque en una palabra sin distracciones.`
+- Nombre: `HummingRead: Lectura RSVP`
+- Subtítulo: `Libros EPUB sin conexión`
+- Texto promocional: `Tus libros, a tu ritmo. Lee palabra a palabra, pausa para ver el contexto y continúa donde lo dejaste. Gratis, con código abierto y sin cuenta.`
+- Palabras clave: `rapida,lector,documentos,fb2,docx,enfoque,marcadores,texto,ritmo,privado`
+- Nombre Chrome Web Store: `HummingRead: Lectura RSVP`
+- Resumen Chrome Web Store: `Lector RSVP gratuito para tus libros y textos. Sin cuenta ni publicidad, con código abierto.`
 
-### Descripción
+### Description
 
-HummingRead es un lector tranquilo y sin conexión para sus propios libros y documentos sin DRM. Importe EPUB, FB2, DOCX, TXT, HTML, Markdown o RTF, elija un ritmo de presentación cómodo y mantenga la mirada en un punto claro mientras las palabras avanzan.
+Un poco más de espacio para tu próxima lectura larga.
 
-Pico, el colibrí piloto de enfoque, guía una breve demostración. Reproduzca o pause en cualquier momento, revele la oración alrededor de la palabra actual, rebobine diez palabras, desplácese a una posición exacta, busque en un libro extenso, añada marcadores y continúe donde se detuvo.
+HummingRead presenta tus libros y documentos palabra a palabra, al ritmo que elijas. Importa un archivo EPUB, FB2, DOCX, TXT, HTML, Markdown o RTF, o pega un texto para empezar.
 
-Su biblioteca nativa es solo local. No hay cuenta, publicidad, SDK de analítica, SDK de seguimiento, sincronización en la nube ni importador de URL de artículos en la versión para iOS. Los libros importados, el texto extraído, los marcadores, la configuración y la posición de lectura permanecen en el dispositivo. La lectura principal funciona en modo avión.
+CONSERVA TU LUGAR
+Alterna entre la vista de texto y la reproducción RSVP. Pausa para recuperar el contexto, retrocede diez palabras, busca en el texto, consulta el índice y guarda marcadores. La biblioteca y la posición de lectura se conservan en tu dispositivo.
 
-HummingRead controla el ritmo de presentación. No promete un aumento determinado en la comprensión o en la velocidad de lectura; los resultados varían según el lector, el idioma, el material y el ritmo elegido.
+A TU RITMO
+Ajusta las palabras por minuto, el tamaño del texto, las fuentes y el tema de día o de noche. La demostración integrada te ayuda a encontrar un ritmo cómodo. Incluye interfaces en español, inglés y ruso.
+
+LEE SIN CUENTA
+La aplicación para iPhone y iPad lee archivos locales sin conexión. Sin registro, publicidad, SDK de seguimiento ni sincronización en la nube. El texto importado y tu progreso no se envían al desarrollador. Exporta una copia de seguridad antes de cambiar o restablecer el dispositivo.
+
+GRATIS Y DE CÓDIGO ABIERTO
+Todas las funciones de lectura son gratuitas. La licencia MIT permite estudiar el código, modificarlo y compilar tu propia versión conservando el aviso de licencia. Tus comentarios, recomendaciones y contribuciones ayudan al proyecto.
+
+Utiliza archivos que tengas derecho a leer. No se admiten libros protegidos por DRM. HummingRead ajusta el ritmo de presentación; no garantiza una mayor velocidad ni una mejor comprensión.
 
 ## App Review notes
 
-The submitted iOS build is intentionally local-only and exposes no article URL import. No login is required.
+No login or reviewer account is required. The iOS app is a local document reader, not the web article importer. All reading features are free. No in-app purchases or external payment buttons are present in the native app.
 
-Reviewer workflow:
+1. Open the built-in demo, observe one-word RSVP playback and pause to see the context.
+2. Rewind ten words and change words per minute.
+3. Import an owner-supplied, DRM-free EPUB or TXT file using the system document picker.
+4. Switch between normal text and RSVP; test search, table of contents and bookmarks.
+5. Background and relaunch the app; verify the book and reading position.
+6. Enable Airplane Mode and reopen the imported book.
+7. Open Settings → Privacy policy and Support. Both pages are bundled offline; support contact is vladimir_doronin@icloud.com.
 
-1. Open **Fly through the 45-second demo**.
-2. Observe automatic playback followed by a pause with surrounding context.
-3. Use **Rewind 10 words**, then drag the exact-position scrubber.
-4. Exit to the home screen and import a DRM-free EPUB/TXT test file through the system file picker.
-5. Open Settings → Privacy policy and verify the local-only native statement.
-6. Enable Airplane Mode, relaunch, and reopen the imported book.
+Do not claim native steps 1–7 were tested from Linux browser mocks. Attach actual submitted-build QA evidence before submission.
 
-The app does not remap volume buttons. Compatible hardware-keyboard Space toggles playback. No external service is required for core reading.
+## App Store Connect answers to prepare
 
-## Privacy answers draft
+- Primary category: Books. Secondary candidate: Productivity.
+- Price: Free. No subscription, paywall or in-app purchases in this build.
+- Tracking: No. Data collection: no imported text, reading progress, identifiers or analytics are transmitted by the native app to the developer.
+- Support: localized support URLs exported by `store:prepare`; public contact vladimir_doronin@icloud.com.
+- Marketing: localized website URLs exported by `store:prepare`.
+- Copyright owner and App Review phone/contact: owner must confirm legal details.
+- Content rights: users import DRM-free files they are entitled to read. No bundled commercial catalog, DRM bypass, user-to-user messaging or native unrestricted web browser.
+- Age rating: answer the current questionnaire from actual features; do not copy a guessed historical rating.
+- Export compliance: source sets ITSAppUsesNonExemptEncryption=false; confirm the submitted build's encryption answers and territories.
+- EU trader status, tax/banking and developer agreements: owner/account steps. Do not invent seller identity.
 
-- Tracking: **No**.
-- Data linked to identity: **None collected by the app**.
-- Data not linked to identity: **None transmitted by the app**.
-- User content: stored locally on device; user can export or delete it; not collected by the developer.
-- Diagnostics/analytics/advertising identifiers: no SDK and no app-side transmission.
+## Screenshots
 
-Apple may independently process store download, payment, diagnostics, or support data under Apple’s policies; do not describe Apple’s processing as developer collection.
+Use actual final iOS build captures. Website RSVP illustration and Linux WebKit captures are not App Store screenshots.
 
-## Age rating and content rights
+Current Apple specification checked 2026-10-24: at least one iPhone Dynamic Island medium-display screenshot (accepted portrait sizes include 1179×2556 and 1206×2622); an iPad 13-inch screenshot if supporting iPad (check current accepted dimensions in App Store Connect). RGB PNG/JPEG without transparency.
 
-- No gambling, contests, violence, sexual content, alcohol, drugs, simulated gambling, or user-to-user communication is built in.
-- The app is a document reader, not an unrestricted web browser; native iOS has no URL/article fetch feature.
-- Users must import material they are entitled to read. Marketing and review notes specify user-owned/public-domain, DRM-free files; the app does not bypass DRM.
+Recommended sequence with localized headlines exported in each locale: import/demo home; RSVP controls and WPM; paused context; library/resume; search/TOC/bookmarks; local/offline privacy. Avoid customer books, invented ratings, App Store availability badges before release and unsupported comprehension claims.
 
-## Screenshot plan
+## Official references
 
-Produce deterministic localized captures from the final signed UI for the current App Store iPhone and 13-inch iPad classes:
-
-1. First screen with both demo and import CTAs.
-2. Live RSVP word with explicit WPM and rewind.
-3. Paused context with anchored current word.
-4. Local library/continue card.
-5. Contents/search/bookmarks.
-6. Native privacy/offline message.
-
-Do not include preview domains, Chrome tester-install instructions, unsupported performance claims, or non-final seller/support details.
+- [Field limits and Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information/): name/subtitle 30 characters, promotional text 170, description 4000; keywords 100 UTF-8 bytes.
+- [Screenshot requirements](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
+- [Review guidelines](https://developer.apple.com/app-store/review/guidelines/), including accurate metadata and in-app purchase tipping rules.
+- [Upcoming requirements](https://developer.apple.com/news/upcoming-requirements/): current upload SDK requirements must be rechecked before submission.

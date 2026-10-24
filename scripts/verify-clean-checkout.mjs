@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const EXPECTED_UNIT_TESTS = 105;
+const EXPECTED_UNIT_TESTS = 107;
 const RELEASE_BRANCH = 'mission/android-r5-recovery-20260814';
 
 async function main() {

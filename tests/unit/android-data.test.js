@@ -14,8 +14,8 @@ test('VAL-AND-DATA-001..006 / VAL-R4-SEC-003: Android Document Picker, Pinning, 
     const productConfigContent = JSON.parse(await readFile(join(root, 'product.config.json'), 'utf8'));
 
     // 0. Pinning and Product Config Identity Gates
-    assert.equal(pkgContent.dependencies['@capacitor/android'], '8.5.0', '@capacitor/android must be pinned to 8.5.0 in package.json');
-    assert.equal(pkgLockContent.packages[''].dependencies['@capacitor/android'], '8.5.0', '@capacitor/android must be pinned to 8.5.0 in package-lock.json root packages');
+    assert.equal(pkgContent.dependencies['@capacitor/android'], '8.5.3', '@capacitor/android must be pinned to 8.5.3 in package.json');
+    assert.equal(pkgLockContent.packages[''].dependencies['@capacitor/android'], '8.5.3', '@capacitor/android must be pinned to 8.5.3 in package-lock.json root packages');
     
     assert.ok(productConfigContent.android, 'product.config.json must define android section');
     assert.equal(productConfigContent.android.applicationId, 'team.ibet.paceflow', 'applicationId must match review app id');

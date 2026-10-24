@@ -40,5 +40,18 @@
     "minSdkVersion": 24,
     "targetSdkVersion": 36,
     "compileSdkVersion": 36
+  },
+  "supportEmail": "vladimir_doronin@icloud.com",
+  "website": {
+    "baseUrl": "https://hummingread.145.239.82.124.sslip.io/",
+    "sourceUrl": "https://github.com/DoroninDobroCorp/RSVP_reader/tree/mission/android-r5-recovery-20260814",
+    "donationUrl": null,
+    "indexable": true
+  },
+  "monetization": {
+    "model": "free-open-source-voluntary-support",
+    "readingFeaturesFree": true,
+    "inAppPurchases": false,
+    "donationAccountConfigured": false
   }
 }

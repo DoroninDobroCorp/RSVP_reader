@@ -11,6 +11,7 @@ await cp(source, destination, { recursive: true });
 
 for (const relativePath of [
     'downloads',
+    'about',
     'reset.html',
     'manifest.json',
     'manifest.webmanifest',
@@ -61,6 +62,8 @@ if (!webOnlyBlock.test(index)) throw new Error('Native build could not find the 
 index = index
     .replace('<html lang="en">', '<html lang="en" data-platform="native">')
     .replace(webOnlyBlock, '\n')
+    .replace(/\s*<a class="marketing-link"[^>]*>[\s\S]*?<\/a>/u, '')
+    .replace(/\s*<span data-i18n="appStorePending"[^>]*>[\s\S]*?<\/span>/u, '')
     .replace(/\s*<meta name="robots"[^>]*>/u, '')
     .replace(/\s*<link rel="canonical"[^>]*>/u, '')
     .replace(/\s*<meta property="og:[^>]*>/gu, '')

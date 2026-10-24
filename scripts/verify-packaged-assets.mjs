@@ -4,7 +4,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { JSDOM } from 'jsdom';
-import { configureFinalSeoText, configureWebText } from './product-config.mjs';
+import { configureFinalSeoText, configureWebText, productConfig } from './product-config.mjs';
 import { transformLegalForLocale } from './build-web.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -203,7 +203,12 @@ for (const [doc, lang] of [
     if (doc.includes('application/ld+json')) {
         throw new Error(`Tester-preview locale doc ${lang} must not contain JSON-LD structured data.`);
     }
-    if (doc.includes('sslip.io') || doc.includes('example.invalid')) {
+    const publicMarketingLink = new JSDOM(doc).window.document.querySelector('a.marketing-link');
+    if (publicMarketingLink && publicMarketingLink.getAttribute('href') !== productConfig.website.baseUrl) {
+        throw new Error('The public marketing link does not match configured website.baseUrl.');
+    }
+    const withoutMarketingLink = doc.replace(/<a class="marketing-link"[^>]*>[\s\S]*?<\/a>/u, '');
+    if (withoutMarketingLink.includes('sslip.io') || withoutMarketingLink.includes('example.invalid')) {
         throw new Error(`Tester-preview locale doc ${lang} leaks temporary domain metadata.`);
     }
 }

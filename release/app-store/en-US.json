@@ -1,0 +1,16 @@
+{
+  "locale": "en-US",
+  "name": "HummingRead: Speed Reader",
+  "subtitle": "Offline EPUB & Book Reading",
+  "promotionalText": "Your books. Your pace. Read one word at a time, pause for context, and pick up where you left off. Free, open source, and private on your device.",
+  "keywords": "rsvp,fb2,docx,focus,bookmark,text,document,one word,library,drm free,reading",
+  "description": "A little more room for your next long read.\n\nHummingRead turns your own books and documents into an adjustable, one-word-at-a-time reading experience. Bring an EPUB, FB2, DOCX, TXT, HTML, Markdown or RTF file, or paste a passage. Choose your pace and start reading.\n\nKEEP YOUR PLACE\nSwitch between a regular text view and focused RSVP playback. Pause to see the surrounding sentence, rewind ten words, search your text, use the table of contents, and leave bookmarks for later. Your library and reading position are saved on your device.\n\nMADE FOR YOUR RHYTHM\nAdjust words per minute, text size, fonts and day or night appearance. Start with the built-in demo and find a pace that feels comfortable. English, Russian and Spanish interfaces are included.\n\nREAD WITHOUT AN ACCOUNT\nThe iPhone and iPad app reads local files offline. No sign-up, advertising, tracking SDK or cloud sync. Your imported text and reading progress are not sent to the developer. Export a backup before changing or resetting devices.\n\nFREE AND OPEN SOURCE\nAll reading features are free. HummingRead is released under the MIT license: you can inspect the code, change it and build your own version, keeping the license notice. Sharing feedback and contributing improvements help the project grow.\n\nBring files you have the right to read. DRM-protected books are not supported. HummingRead adjusts presentation pace; it does not guarantee faster reading or improved comprehension.",
+  "screenshotHeadlines": [
+    "Your books. Your pace.",
+    "One word. A little more focus.",
+    "Pause. Keep the context.",
+    "Pick up where you left off.",
+    "Find the part you need.",
+    "Private on your device."
+  ]
+}

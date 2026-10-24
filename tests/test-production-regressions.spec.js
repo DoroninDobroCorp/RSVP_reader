@@ -231,7 +231,10 @@ test.describe('production reader regressions', () => {
     await expect(page.locator('.pico-signature')).toHaveText('PICO · FOCUS PILOT');
     await expect(page.locator('.flow-map > li')).toHaveCount(3);
     await expect(page.locator('#chromeExtensionPanel')).toBeVisible();
-    await expect(page.locator('.pico-hero-image')).toBeVisible();
+    // Compact home prioritizes the demo/import controls; decorative hero art is desktop-only.
+    const compactHome = page.viewportSize().width <= 768;
+    if (compactHome) await expect(page.locator('.pico-hero-image')).toBeHidden();
+    else await expect(page.locator('.pico-hero-image')).toBeVisible();
     await expect(page.locator('.pico-quick-send')).toBeVisible();
 
     const imageState = await page.locator('.pico-hero-image, .pico-quick-send').evaluateAll((images) => (
@@ -254,7 +257,7 @@ test.describe('production reader regressions', () => {
         ].every((image) => getComputedStyle(image).pointerEvents === 'none')
       };
     });
-    expect(overlapState.heroCrossesBoundary).toBeGreaterThan(12);
+    if (!compactHome) expect(overlapState.heroCrossesBoundary).toBeGreaterThan(12);
     expect(overlapState.quickSendCrossesRightBoundary).toBeGreaterThan(8);
     expect(overlapState.quickSendCrossesBottomBoundary).toBeGreaterThan(8);
     expect(overlapState.imagesIgnorePointerInput).toBe(true);
@@ -274,11 +277,15 @@ test.describe('production reader regressions', () => {
       await page.setViewportSize(viewport);
       const firstViewport = await page.evaluate(() => ({
         demoBottom: document.querySelector('#tryDemoBtn').getBoundingClientRect().bottom,
+        demoHeight: document.querySelector('#tryDemoBtn').getBoundingClientRect().height,
+        importHeight: document.querySelector('#heroImportBtn').getBoundingClientRect().height,
         importBottom: document.querySelector('#heroImportBtn').getBoundingClientRect().bottom,
         horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
       }));
       expect(firstViewport.demoBottom, `demo CTA at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(viewport.height);
       expect(firstViewport.importBottom, `import CTA at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(viewport.height);
+      expect(firstViewport.demoHeight).toBeGreaterThanOrEqual(44);
+      expect(firstViewport.importHeight).toBeGreaterThanOrEqual(44);
       expect(firstViewport.horizontalOverflow, `overflow at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(1);
     }
 

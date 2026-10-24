@@ -35,3 +35,6 @@ contract-work/
 evidence/
 current
 
+
+# Immutable server release snapshots
+releases/

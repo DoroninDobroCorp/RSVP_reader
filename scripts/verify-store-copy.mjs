@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import './prepare-app-store.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -63,8 +64,9 @@ for (const file of files) {
             throw new Error(`Missing Keywords in ${locale} section of docs/${file}`);
         }
         const keywords = keywordsMatch[1];
-        if (keywords.length > 100) {
-            throw new Error(`Keywords in ${locale} section of docs/${file} exceeds 100 chars: "${keywords}" (${keywords.length})`);
+        const keywordSize = file === 'APP_STORE_COPY.md' ? Buffer.byteLength(keywords, 'utf8') : keywords.length;
+        if (keywordSize > 100) {
+            throw new Error(`Keywords in ${locale} section of docs/${file} exceeds 100 chars: "${keywords}" (${keywordSize} bytes/characters)`);
         }
 
         // Extract Chrome Web Store Name

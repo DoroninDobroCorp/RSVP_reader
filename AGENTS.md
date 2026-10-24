@@ -1,32 +1,13 @@
 # Active repository mission
 
-The active task is the Android R5 recovery mission in:
+The current owner request (2026-10-24) is to prepare HummingRead for an iPhone/iPad production release and publish a useful marketing website. Work only through SSH on `serverforvovka`, in `/srv/hummingread`. Keep the existing review branch `mission/android-r5-recovery-20260814`; preserve earlier evidence and checkpoints.
 
-`ANDROID_R5_RECOVERY_MISSION.md`
+Read `docs/IOS_LAUNCH_2026-10-24.md` for current decisions and gates.
 
-Work only through SSH on `serverforvovka` in `/srv/hummingread`, branch:
+Owner decisions: free reading features, MIT source that users can modify, voluntary support rather than a paid app or subscription. Public support email: vladimir_doronin@icloud.com. A free hostname is acceptable. No donation account exists yet.
 
-`mission/android-r5-recovery-20260814`
+The owner has authorized implementation, dependency security fixes, tests, release preparation and website publication on this server. The older Android R5 mission is historical context; its Android-specific acceptance must not be represented as iOS evidence. Preserve its truthful-evidence rules. Do not fabricate native QA or reuse old reports as current proof.
 
-Read the mission completely before changing code. The branch starts from the
-preserved interrupted R4 checkpoint
-`8e91d5bcaa96a519de2866240b2f66d08da1738e`. Preserve useful hermetic-build,
-toolchain, verifier, package, website, extension, iOS, and Android product work,
-but do not trust the unfinished Android QA script or any R2/R3/R4 runtime
-evidence.
+Keep `main`, immutable checkpoints, unrelated services, private user books and reading data untouched. Use logical commits on the existing review branch and push it after verification. Do not trigger hosted Actions, force-push, buy services, create paid accounts, or upload/sign a store release without the required owner account and signing material.
 
-The priority is truthful reproducibility: fix the clean-checkout reporter,
-remove manufactured emulator success, stabilize the two dedicated AVDs, execute
-real Android-system boundaries, and produce fresh SHA-bound evidence. CDP may
-inspect app state but may not substitute for SAF, DocumentsUI, Sharesheet,
-system Back, confirmation UI, airplane mode, rotation, process death, upgrade,
-KeepAwake, or haptic actions.
-
-Continue autonomously through implementation, a clean remote-source-SHA build,
-phone/tablet QA, evidence validation, logical commits, and final push. If a
-required system flow cannot be executed, leave it FAIL or BLOCKED with raw
-evidence; never invent or default to PASSED.
-
-Do not touch `/srv/RSVP_reader`, deploy, merge, publish, production-sign, create
-a PR, use paid services, trigger GitHub-hosted Actions, force-push, or modify the
-forensic checkpoint branch.
+Linux browser WebKit and Capacitor mocks are web evidence, not a real iPhone or iOS Simulator pass. App Store publication requires the owner's Developer enrollment, current Xcode, signing, physical-device/TestFlight checks, actual screenshots, metadata and App Review.

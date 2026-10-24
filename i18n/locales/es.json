@@ -94,7 +94,7 @@
   "benefitPrivateText": "Los libros, el texto pegado y el progreso se quedan en local. El importador web opcional de artículos envía solo la URL al servicio de artículos.",
   "nativeBenefitPrivateTitle": "Privado en este dispositivo",
   "nativeBenefitPrivateText": "Los libros, documentos, texto pegado, marcadores y progreso de lectura permanecen en el almacenamiento local de la aplicación.",
-  "appStorePending": "App Store · pendiente de firma del propietario y revisión",
+  "appStorePending": "Aplicación para iPhone y iPad · en preparación",
   "faqQuestion": "¿HummingRead garantiza una comprensión más rápida?",
   "faqAnswer": "No. Controla el ritmo de presentación; la comprensión varía según el lector, el material, el idioma y la velocidad elegida.",
   "startReading": "Abrir lector",
@@ -291,5 +291,6 @@
   "hardwareUnavailableIos": "No disponible en la versión de iOS. La barra espaciadora sigue funcionando con un teclado físico; los botones de volumen siempre controlan el volumen del sistema.",
   "hardwareEnabled": "Controles multimedia externos activados.",
   "hardwareDisabled": "Controles multimedia externos desactivados.",
-  "chapterPosition": "{progress}% · palabra {word}"
+  "chapterPosition": "{progress}% · palabra {word}",
+  "projectWebsite": "Acerca de HummingRead"
 }

@@ -94,7 +94,7 @@
   "benefitPrivateText": "Books, pasted text and progress stay local. The optional web article importer sends only the URL to the article service.",
   "nativeBenefitPrivateTitle": "Private on this device",
   "nativeBenefitPrivateText": "Books, documents, pasted text, bookmarks and reading progress stay in the app’s local storage.",
-  "appStorePending": "App Store · pending owner signing and review",
+  "appStorePending": "iPhone & iPad app · in preparation",
   "faqQuestion": "Does HummingRead promise faster comprehension?",
   "faqAnswer": "No. It controls presentation pace; comprehension varies with the reader, material, language and chosen speed.",
   "startReading": "Open reader",
@@ -291,5 +291,6 @@
   "hardwareUnavailableIos": "Unavailable in the iOS build. Space still works with a hardware keyboard; volume buttons always control system volume.",
   "hardwareEnabled": "Hardware play/pause controls enabled.",
   "hardwareDisabled": "Hardware play/pause controls disabled.",
-  "chapterPosition": "{progress}% · word {word}"
+  "chapterPosition": "{progress}% · word {word}",
+  "projectWebsite": "About HummingRead"
 }

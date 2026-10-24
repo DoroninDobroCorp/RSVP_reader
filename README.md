@@ -1,5 +1,8 @@
 # HummingRead: Speed Reader
 
+> **Free, open source, yours to modify.** HummingRead uses the [MIT license](LICENSE). See [contributing and personal builds](CONTRIBUTING.md), [current iOS launch gates](docs/IOS_LAUNCH_2026-10-24.md) and [App Store copy](docs/APP_STORE_COPY.md). Support: vladimir_doronin@icloud.com. The iOS app is being prepared for publication; no App Store availability is claimed.
+
+
 HummingRead is a calm, local-first RSVP (Rapid Serial Visual Presentation) speed reader for EPUB, FB2/ZIP, DOCX, TXT, HTML, Markdown, RTF, pasted text, and optional public web articles. Pico—the hummingbird focus pilot—anchors a calm, graphic interface built around a still gaze and moving words.
 
 This release features complete **Android R1 platform support** alongside **trilingual localization** across English (`en`), Russian (`ru`), and neutral international Spanish (`es`).

@@ -1,0 +1,16 @@
+{
+  "locale": "es-ES",
+  "name": "HummingRead: Lectura RSVP",
+  "subtitle": "Libros EPUB sin conexión",
+  "promotionalText": "Tus libros, a tu ritmo. Lee palabra a palabra, pausa para ver el contexto y continúa donde lo dejaste. Gratis, con código abierto y sin cuenta.",
+  "keywords": "rapida,lector,documentos,fb2,docx,enfoque,marcadores,texto,ritmo,privado",
+  "description": "Un poco más de espacio para tu próxima lectura larga.\n\nHummingRead presenta tus libros y documentos palabra a palabra, al ritmo que elijas. Importa un archivo EPUB, FB2, DOCX, TXT, HTML, Markdown o RTF, o pega un texto para empezar.\n\nCONSERVA TU LUGAR\nAlterna entre la vista de texto y la reproducción RSVP. Pausa para recuperar el contexto, retrocede diez palabras, busca en el texto, consulta el índice y guarda marcadores. La biblioteca y la posición de lectura se conservan en tu dispositivo.\n\nA TU RITMO\nAjusta las palabras por minuto, el tamaño del texto, las fuentes y el tema de día o de noche. La demostración integrada te ayuda a encontrar un ritmo cómodo. Incluye interfaces en español, inglés y ruso.\n\nLEE SIN CUENTA\nLa aplicación para iPhone y iPad lee archivos locales sin conexión. Sin registro, publicidad, SDK de seguimiento ni sincronización en la nube. El texto importado y tu progreso no se envían al desarrollador. Exporta una copia de seguridad antes de cambiar o restablecer el dispositivo.\n\nGRATIS Y DE CÓDIGO ABIERTO\nTodas las funciones de lectura son gratuitas. La licencia MIT permite estudiar el código, modificarlo y compilar tu propia versión conservando el aviso de licencia. Tus comentarios, recomendaciones y contribuciones ayudan al proyecto.\n\nUtiliza archivos que tengas derecho a leer. No se admiten libros protegidos por DRM. HummingRead ajusta el ritmo de presentación; no garantiza una mayor velocidad ni una mejor comprensión.",
+  "screenshotHeadlines": [
+    "Tus libros. Tu ritmo.",
+    "Una palabra en el centro.",
+    "Pausa y recupera el contexto.",
+    "Continúa donde lo dejaste.",
+    "Encuentra lo que buscas.",
+    "Privado en tu dispositivo."
+  ]
+}
