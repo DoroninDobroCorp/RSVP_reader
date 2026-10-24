@@ -15,7 +15,7 @@ Current release decisions and evidence boundaries: [IOS_LAUNCH_2026-10-24.md](IO
 
 ## First: free own-device trial
 
-- [x] Fresh Xcode Release build and Analyze from the tested server export cccc259; device and Simulator, Xcode 26.6. See [native report](IOS_NATIVE_2026-10-24.md).
+- [x] Fresh Xcode Release build and Analyze from the tested server export 78a57ea (build 2); device and Simulator, Xcode 26.6. See [native update report](IOS_UI_FIXES_2026-10-24.md).
 - [x] Install and launch on the owner's iPhone using existing Personal Team; profile expires 2026-10-31. Reinstall path in the native report.
 - [ ] Actual iPhone and iPad Simulator QA; physical iPhone reading, persistence and backup recovery.
 - [ ] Owner's 3–5 day trial and blocking fixes before paying membership.
