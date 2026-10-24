@@ -1,3 +1,5 @@
+> Historical August topology and scripts. For the current deployment, use [WEBSITE_DEPLOY_2026-10-24.md](WEBSITE_DEPLOY_2026-10-24.md) and [the verified release report](RELEASE_2026-10-24.md).
+
 # HummingRead existing-server deployment runbook
 
 Status: **deployed and rollback-tested**. The tester preview is served from the immutable target of `/srv/hummingread/current`; `/srv/RSVP_reader` deliberately remains the previous checked-out release and must not be fast-forwarded during the rollback window.

@@ -1,5 +1,7 @@
 # HummingRead: Speed Reader
 
+**Website:** [HummingRead](https://hummingread.145.239.82.124.sslip.io/) · [Web reader](https://145.239.82.124.sslip.io/rsvp/) · [October release report](docs/RELEASE_2026-10-24.md)
+
 > **Free, open source, yours to modify.** HummingRead uses the [MIT license](LICENSE). See [contributing and personal builds](CONTRIBUTING.md), [current iOS launch gates](docs/IOS_LAUNCH_2026-10-24.md) and [App Store copy](docs/APP_STORE_COPY.md). Support: vladimir_doronin@icloud.com. The iOS app is being prepared for publication; no App Store availability is claimed.
 
 

@@ -10,8 +10,8 @@ Current release decisions and evidence boundaries: [IOS_LAUNCH_2026-10-24.md](IO
 - [x] iOS privacy manifest, offline legal/support pages and local-only packaging checks.
 - [x] Shared Xcode archive scheme and current Capacitor package/pin preparation.
 - [x] Marketing site source with responsive layout, RSVP example, source/license links, FAQs and optional future donation URL.
-- [ ] Verify final tested source SHA and all October web/source checks in release report.
-- [ ] Verify public marketing deployment, HTTPS, three languages, support and code links in release report.
+- [x] Verify final tested source SHA and all October web/source checks in release report.
+- [x] Verify public marketing deployment, HTTPS, three languages, support and code links in release report.
 
 ## Native/account release gates
 
