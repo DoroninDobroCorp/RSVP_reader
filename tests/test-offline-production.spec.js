@@ -203,3 +203,73 @@ for (const prefix of ['', '/rsvp']) {
     } finally { await context.setOffline(false); }
   });
 }
+
+test('Lite first entry works under a legacy basename-fallback worker, then updates safely', async ({page}) => {
+  const http = require('node:http');
+  const fs = require('node:fs/promises');
+  const path = require('node:path');
+  const root = path.join(__dirname,'..','dist');
+  let currentWorker = false;
+  const app = await fs.readFile(path.join(root,'app.js'),'utf8');
+  const oldApp = app.replace(/window\.rsvpReader = document\.body\.dataset\.readerUi === 'lite' && window\.HummingReadLite[\s\S]*?\? new window\.HummingReadLite\(\) : new RSVPReader\(\);/u,'window.rsvpReader = new RSVPReader();');
+  expect(oldApp).not.toBe(app);
+  const oldBase = (await fs.readFile(path.join(root,'app-base-url.js'),'utf8')).replace('lite\\.html|','');
+  const legacyWorker = `
+self.addEventListener('install',event=>event.waitUntil(caches.open('hummingread-reader-v55').then(async cache=>{
+ await cache.put('/app.js?v=55',await fetch('/__old-app.js'));
+ await cache.put('/app-base-url.js?v=55',await fetch('/__old-base.js'));
+}).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
+self.addEventListener('fetch',event=>{
+ const pathname=new URL(event.request.url).pathname;
+ if(pathname.endsWith('/app.js'))event.respondWith(caches.match('/app.js?v=55'));
+ else if(pathname.endsWith('/app-base-url.js'))event.respondWith(caches.match('/app-base-url.js?v=55'));
+ else event.respondWith(fetch(event.request));
+});
+`;
+  const types={'.js':'application/javascript','.css':'text/css','.html':'text/html','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.webp':'image/webp','.txt':'text/plain','.svg':'image/svg+xml'};
+  const server=http.createServer(async(req,res)=>{
+    try{
+      const pathname=new URL(req.url,'http://localhost').pathname;
+      let body;
+      if(pathname==='/__legacy.html')body='<!doctype html><script>navigator.serviceWorker.register("/service-worker.js")</script>';
+      else if(pathname==='/service-worker.js'&&!currentWorker)body=legacyWorker;
+      else if(pathname==='/__old-app.js')body=oldApp;
+      else if(pathname==='/__old-base.js')body=oldBase;
+      else if(pathname==='/__legacy-lite.html'){
+        body=(await fs.readFile(path.join(root,'lite.html'),'utf8')).replaceAll('lite-core.js','app.js').replaceAll('lite-base-url.js','app-base-url.js');
+      }else{
+        if(pathname.includes('..'))throw new Error('invalid path');
+        body=await fs.readFile(path.join(root,pathname.endsWith('/')?pathname+'index.html':pathname));
+      }
+      res.writeHead(200,{'Content-Type':types[path.extname(pathname)]||'text/html','Cache-Control':'no-store'});res.end(body);
+    }catch{res.writeHead(404);res.end('not found');}
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const origin='http://127.0.0.1:'+server.address().port;
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  try{
+    await page.goto(origin+'/__legacy.html');await page.evaluate(()=>navigator.serviceWorker.ready);
+    await page.reload();await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
+    // Negative control: the former shared filenames reproduce the public first-entry failure.
+    await page.goto(origin+'/__legacy-lite.html?lang=ru');
+    await expect.poll(()=>errors.some(message=>message.includes('addEventListener'))).toBe(true);
+    errors.length=0;
+    await page.goto(origin+'/lite.html?lang=ru');
+    await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+    const oldCaches=await page.evaluate(()=>caches.keys());
+    expect(oldCaches).toContain('hummingread-reader-v55');
+    expect(oldCaches).not.toContain('hummingread-reader-v57');
+    await expect(page.locator('html')).toHaveAttribute('lang','ru');
+    currentWorker=true;
+    const reloaded=page.waitForEvent('framenavigated',{predicate:frame=>frame===page.mainFrame()});
+    await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();});
+    await reloaded;
+    await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+    await expect.poll(()=>page.evaluate(()=>caches.keys())).toContain('hummingread-reader-v57');
+    expect(await page.evaluate(()=>caches.keys())).not.toContain('hummingread-reader-v55');
+    await page.locator('#tryDemoBtn').click();await expect(page.locator('#normalReadingSection')).toBeVisible();
+    await page.locator('#startRSVPBtn').click();await expect.poll(()=>page.evaluate(()=>rsvpReader.isPlaying)).toBe(true);
+    expect(errors).toEqual([]);
+  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+});

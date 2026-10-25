@@ -13,6 +13,8 @@ for (const relativePath of [
     'lite.html',
     'lite.css',
     'lite.js',
+    'lite-core.js',
+    'lite-base-url.js',
     'downloads',
     'about',
     'reset.html',

@@ -90,6 +90,10 @@ function applyLocaleToHtml(html, lang, catalog) {
 for (const file of files) {
     await cp(join(root, file), join(destination, file));
 }
+// Distinct names avoid an older worker's basename fallback serving the full UI
+// bootstrap/base helper on the very first visit to the Lite entry.
+await cp(join(root, 'app.js'), join(destination, 'lite-core.js'));
+await cp(join(root, 'app-base-url.js'), join(destination, 'lite-base-url.js'));
 await cp(join(root, 'sample_text.txt'), join(destination, 'sample_text_en.txt'));
 
 // Pre-render English static body and active language button for root index.html

@@ -4,7 +4,7 @@
 
 Provide a calmer, intuitive alternative to the current feature-rich reader, including a reading view designed around iPhone 13 Pro. Keep the full version available. Do not install or replace anything on the connected iPhone.
 
-Canonical implementation stays on serverforvovka:/srv/hummingread and the existing review branch. The preview entry is `/rsvp/lite.html?lang=ru` (also `en` and `es`). The existing full reader remains the default at `/rsvp/` and its localized routes. There is no native version bump, Xcode invocation, signing or device installation for this work. The three Lite files are explicitly excluded from the native web bundle.
+Canonical implementation stays on serverforvovka:/srv/hummingread and the existing review branch. The preview entry is `/rsvp/lite.html?lang=ru` (also `en` and `es`). The existing full reader remains the default at `/rsvp/` and its localized routes. There is no native version bump, Xcode invocation, signing or device installation for this work. The Lite entry, controller, styles and two generated core/base aliases are explicitly excluded from the native web bundle.
 
 ## Product changes
 
@@ -43,3 +43,9 @@ The layout matrix includes EN/RU/ES at 320×568, 390×844 (iPhone 13 Pro CSS vie
 Ordinary scroll is exercised with a real desktop browser wheel; Playwright mobile WebKit lacks wheel support, so that project's touch event path uses a synthetic DOM touchmove followed by scrolling. None of these tests constitutes a physical iPhone/VoiceOver/native-Safari acceptance. A future user-approved native trial remains separate.
 
 Current validation/deployment results are recorded below after the checked source is committed.
+
+### First-visit compatibility with older offline workers
+
+A real public-browser check found that a pre-existing v55 service worker could serve its cached full-reader app.js/base helper in response to the new query version. On the Lite DOM, the full bootstrap then failed before it could update that worker. This first-entry failure was not visible in clean browser contexts.
+
+The web build now emits byte-identical aliases lite-core.js and lite-base-url.js from the canonical shared sources. Lite uses those distinct names, which the old worker cannot confuse with its cached full-reader entry. The v57 shell precaches them. No parser/timing/storage code is forked. A browser regression explicitly boots Lite while a representative v55 basename-fallback worker still controls the page, then upgrades to the current worker and verifies reading.

@@ -33,6 +33,8 @@ const PUBLIC_FILES = new Set([
   'lite.html',
   'lite.css',
   'lite.js',
+  'lite-core.js',
+  'lite-base-url.js',
   'index.html',
   'about/index.html',
   'about/ru/index.html',

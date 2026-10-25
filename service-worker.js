@@ -1,9 +1,11 @@
-const CACHE_NAME = 'hummingread-reader-v56';
-const ASSET_VERSION = 'v=56';
+const CACHE_NAME = 'hummingread-reader-v57';
+const ASSET_VERSION = 'v=57';
 const APP_SHELL = [
   './lite.html',
-  './lite.css?v=56',
-  './lite.js?v=56',
+  './lite.css?v=57',
+  './lite.js?v=57',
+  './lite-core.js?v=57',
+  './lite-base-url.js?v=57',
   './',
   './index.html',
   './privacy.html',
