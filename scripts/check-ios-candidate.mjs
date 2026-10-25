@@ -18,7 +18,7 @@ const steps=[
  ['security','npm',['audit','--audit-level=moderate']],
  ['isolation','npm',['run','test:isolation']],
  ['web-built','npm',['run','test:web-built']],
- ['browsers','npx',['playwright','test','tests/test-production-regressions.spec.js','tests/test-marketing.spec.js','--project=chromium','--project=webkit','--project=mobile-safari']],
+ ['browsers','npx',['playwright','test','tests/test-production-regressions.spec.js','tests/test-marketing.spec.js','tests/test-lite.spec.js','--project=chromium','--project=webkit','--project=mobile-safari']],
  ['offline','npm',['run','test:offline']],
  ['extension','npm',['run','test:extension']],
  ['determinism','npm',['run','verify:determinism']]

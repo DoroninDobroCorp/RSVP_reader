@@ -8,6 +8,9 @@ import { configureWebText, productConfig } from './product-config.mjs';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const destination = join(root, 'dist');
 const files = [
+    'lite.html',
+    'lite.css',
+    'lite.js',
     'index.html',
     'reset.html',
     'privacy.html',

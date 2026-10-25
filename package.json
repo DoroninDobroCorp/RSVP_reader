@@ -53,7 +53,8 @@
     "store:prepare": "node scripts/prepare-app-store.mjs",
     "ios:verify-source": "node scripts/verify-ios-release.mjs",
     "ios:release-check": "node scripts/check-ios-candidate.mjs",
-    "test:marketing": "playwright test tests/test-marketing.spec.js --project=chromium --project=webkit --project=mobile-safari"
+    "test:marketing": "playwright test tests/test-marketing.spec.js --project=chromium --project=webkit --project=mobile-safari",
+    "test:lite": "playwright test tests/test-lite.spec.js --project=chromium --project=webkit --project=mobile-safari"
   },
   "keywords": [
     "rsvp",

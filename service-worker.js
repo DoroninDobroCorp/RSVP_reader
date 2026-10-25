@@ -1,6 +1,9 @@
-const CACHE_NAME = 'hummingread-reader-v55';
-const ASSET_VERSION = 'v=55';
+const CACHE_NAME = 'hummingread-reader-v56';
+const ASSET_VERSION = 'v=56';
 const APP_SHELL = [
+  './lite.html',
+  './lite.css?v=56',
+  './lite.js?v=56',
   './',
   './index.html',
   './privacy.html',
@@ -229,6 +232,7 @@ function isAppShellNavigation(url) {
   ].includes(pathname) ||
     pathname.endsWith('/') ||
     pathname.endsWith('/index.html') ||
+    pathname.endsWith('/lite.html') ||
     pathname.endsWith('/ru') ||
     pathname.endsWith('/ru/') ||
     pathname.endsWith('/ru/index.html') ||

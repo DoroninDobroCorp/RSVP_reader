@@ -74,7 +74,7 @@ try {
     const baseUrl = `http://localhost:${port}${mountPath}`;
 
     // 1. Verify landing pages return HTTP 200 (VAL-R4-PWA-001)
-    for (const route of ['/', '/index.html', '/reset.html', '/ru/', '/ru/index.html', '/es/', '/es/index.html', '/privacy.html', '/support.html', '/acknowledgements.html']) {
+    for (const route of ['/', '/index.html', '/reset.html', '/lite.html', '/ru/', '/ru/index.html', '/es/', '/es/index.html', '/privacy.html', '/support.html', '/acknowledgements.html']) {
       const url = `${baseUrl}${route}`;
       const res = await fetch(url);
       assert.equal(res.status, 200, `Expected 200 for ${url}, got ${res.status}`);
@@ -84,12 +84,14 @@ try {
 
     // 2. Verify static assets return HTTP 200 (VAL-R4-PWA-001)
     const staticAssets = [
-      '/style.css?v=55',
-      '/app-base-url.js?v=55',
-      '/i18n.js?v=55',
-      '/app.js?v=55',
-      '/epub-parser.js?v=55',
-      '/vendor/jszip.min.js?v=55',
+      '/lite.css?v=56',
+      '/lite.js?v=56',
+      '/style.css?v=56',
+      '/app-base-url.js?v=56',
+      '/i18n.js?v=56',
+      '/app.js?v=56',
+      '/epub-parser.js?v=56',
+      '/vendor/jszip.min.js?v=56',
       '/assets/icons/app-icon-32.png',
       '/assets/icons/app-icon-64.png',
       '/assets/icons/app-icon-180.png',
@@ -127,8 +129,8 @@ try {
 
     const match = swCode.match(/const APP_SHELL = \[([\s\S]*?)\];/);
     assert.ok(match, 'service-worker.js must define APP_SHELL');
-    const ASSET_VERSION = 'v=55';
-    const precacheList = eval(`const ASSET_VERSION = 'v=55'; [${match[1]}]`);
+    const ASSET_VERSION = 'v=56';
+    const precacheList = eval(`const ASSET_VERSION = 'v=56'; [${match[1]}]`);
 
     for (const relAsset of precacheList) {
       const resolvedUrl = new URL(relAsset, swUrl).href;
@@ -143,7 +145,7 @@ try {
       assert.equal(swScope, '/rsvp/', 'Service Worker scope under subpath /rsvp must be /rsvp/');
     }
 
-    const appJsUrl = `${baseUrl}/app.js?v=55`;
+    const appJsUrl = `${baseUrl}/app.js?v=56`;
     const appJsRes = await fetch(appJsUrl);
     assert.equal(appJsRes.status, 200, `app.js must return 200 at ${appJsUrl}`);
     const appJsCode = await appJsRes.text();

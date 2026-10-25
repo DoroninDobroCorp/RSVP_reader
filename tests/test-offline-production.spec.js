@@ -174,3 +174,32 @@ test('VAL-R5-PWA-001: Offline PWA navigation without trailing slash (/rsvp and /
     await context.setOffline(false);
   }
 });
+
+// Lite is a second entry point, not an offline fallback to the full UI.
+for (const prefix of ['', '/rsvp']) {
+  test('Lite reopens offline with its own UI and saved position at ' + (prefix || '/'), async ({page,context}) => {
+    await page.goto(prefix + '/lite.html?lang=ru');
+    await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.locator('#tryDemoBtn').click();
+    await expect(page.locator('#normalReadingSection')).toBeVisible();
+    await page.locator('#normalTextDisplay [data-index="18"]').click();
+    await page.locator('#backToInputBtn').click();
+    await expect(page.locator('#continueReadingCard')).toBeVisible();
+    await page.reload();
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await context.setOffline(true);
+    try {
+      await page.goto(prefix + '/lite.html?lang=es');
+      await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+      await expect(page.locator('body')).toHaveAttribute('data-reader-ui','lite');
+      await expect(page.locator('html')).toHaveAttribute('lang','es');
+      await page.locator('#continueReadingCard').click();
+      await expect(page.locator('#normalReadingSection')).toBeVisible();
+      expect(await page.evaluate(() => rsvpReader.currentIndex)).toBe(18);
+      await page.locator('#startRSVPBtn').click();
+      await expect.poll(() => page.evaluate(() => rsvpReader.currentIndex)).toBeGreaterThan(18);
+      await page.locator('#playPauseBtn').click();
+    } finally { await context.setOffline(false); }
+  });
+}

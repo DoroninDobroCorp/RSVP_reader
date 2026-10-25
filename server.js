@@ -30,6 +30,9 @@ const ARTICLE_NATIVE_ENDPOINT_ORIGINS = new Set([
   'https://localhost'
 ]);
 const PUBLIC_FILES = new Set([
+  'lite.html',
+  'lite.css',
+  'lite.js',
   'index.html',
   'about/index.html',
   'about/ru/index.html',

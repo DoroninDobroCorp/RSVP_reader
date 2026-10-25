@@ -4578,7 +4578,7 @@ class RSVPReader {
         }
     }
 
-    getFrameAt(index) {
+    getFrameAt(index, options = {}) {
         index = this.clampIndex(index, this.words.length);
         if (this.words.length === 0 || index >= this.words.length) {
             return { text: '', advanceCount: 0, lexicalWordCount: 0, focusIndex: 0, sourceWords: [], punctuationMultiplier: 1, isPauseToken: true };
@@ -4595,8 +4595,8 @@ class RSVPReader {
         let combinedText = firstWord;
         const sourceWords = [firstWord];
 
-        const strictEligible = this.settings.chunkingEnabled && this.settings.wpm >= 350;
-        const balancedEligible = Boolean(this.settings.balancedPairsEnabled);
+        const strictEligible = !options.singleWord && this.settings.chunkingEnabled && this.settings.wpm >= 350;
+        const balancedEligible = !options.singleWord && Boolean(this.settings.balancedPairsEnabled);
         const pairModeEnabled = lexicalWordCount > 0
             && (strictEligible || balancedEligible)
             && index < this.words.length - 1;
@@ -7130,5 +7130,6 @@ async function resetRuntimeCacheIfRequested() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (await resetRuntimeCacheIfRequested()) return;
-    window.rsvpReader = new RSVPReader();
+    window.rsvpReader = document.body.dataset.readerUi === 'lite' && window.HummingReadLite
+        ? new window.HummingReadLite() : new RSVPReader();
 });

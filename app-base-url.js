@@ -19,7 +19,7 @@ function getAppBaseUrl(urlLocation) {
         let pathname = parsed.pathname;
 
         // Clean known file names from the end of the pathname
-        pathname = pathname.replace(/\/(?:index\.html|privacy\.html|support\.html|acknowledgements\.html)$/i, '');
+        pathname = pathname.replace(/\/(?:index\.html|lite\.html|privacy\.html|support\.html|acknowledgements\.html)$/i, '');
 
         // Clean known locale subpaths (/ru/, /es/, /ru, /es) from the end of the pathname
         if (pathname.endsWith('/ru/') || pathname.endsWith('/es/')) {

@@ -10,6 +10,9 @@ await rm(destination, { recursive: true, force: true });
 await cp(source, destination, { recursive: true });
 
 for (const relativePath of [
+    'lite.html',
+    'lite.css',
+    'lite.js',
     'downloads',
     'about',
     'reset.html',

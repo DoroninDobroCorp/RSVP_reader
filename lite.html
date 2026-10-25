@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8f7f2">
+<meta name="robots" content="noindex,follow">
+<meta name="description" content="HummingRead Lite — a quieter way to read your books. An optional web preview.">
+<title>HummingRead Lite</title>
+<link rel="icon" href="assets/icons/app-icon-32.png">
+<link rel="stylesheet" href="lite.css?v=56">
+</head>
+<body data-reader-ui="lite" data-screen="input">
+<a class="skip-link" href="#mainContainer" data-lite="skip">Skip to reading</a>
+<main id="mainContainer">
+<section id="textInputSection" class="home">
+  <header class="home-header">
+    <a class="wordmark" href="lite.html"><img src="assets/icons/app-icon-64.png" width="30" height="30" alt=""><span>HummingRead <small>lite</small></span></a>
+    <button id="settingsBtn" class="icon-button" type="button" aria-label="Reading settings" data-lite-aria="settings">Aa</button>
+  </header>
+  <div class="home-intro"><span class="eyebrow" data-lite="eyebrow">A little space for reading</span><h1 data-lite="homeTitle">Just you.<br>And a good book.</h1><p data-lite="homeHint">Open a book. Find your rhythm.</p></div>
+  <button id="continueReadingCard" class="continue-card" type="button" hidden>
+    <span class="eyebrow" data-lite="continue">Pick up where you left off</span>
+    <strong id="continueBookTitle"></strong><span id="continueBookProgress"></span><span class="continue-arrow" aria-hidden="true">↗</span>
+  </button>
+  <div class="add-actions">
+    <button id="loadFileBtn" class="primary-button" type="button"><span aria-hidden="true">＋</span><span data-lite="openBook">Open a book</span></button>
+    <button id="litePasteBtn" class="soft-button" type="button" data-lite="paste">Paste text</button>
+  </div>
+  <p class="file-hint" data-lite="formats">EPUB, FB2, DOCX, TXT, HTML, MD, RTF · no DRM</p>
+  <section class="bookshelf" aria-labelledby="shelfTitle"><div class="shelf-heading"><h2 id="shelfTitle" data-lite="books">Your books</h2><span id="liteBookCount"></span></div><ul id="booksList"></ul><div id="liteEmpty" class="empty"><span class="empty-mark" aria-hidden="true">⌁</span><p data-lite="empty">Your next chapter starts here.</p><button id="tryDemoBtn" class="text-button" type="button" data-lite="demo">Try a short read →</button></div></section>
+  <footer class="home-footer"><p id="litePrivacy" data-lite="privacy">Books and progress stay in this browser.</p><a class="full-version" href="index.html" data-lite="full">Full version ↗</a><span aria-hidden="true">·</span><a href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a><small data-lite="preview">Optional preview</small></footer>
+  <input id="fileInput" type="file" hidden>
+</section>
+
+<section id="normalReadingSection" class="reading-view" hidden>
+  <header class="reader-header">
+    <button id="backToInputBtn" class="icon-button" type="button" data-lite-aria="back" aria-label="Back to books">←</button>
+    <span id="currentBookInfo" class="reader-title"></span>
+    <button id="liteTextSettings" class="icon-button" type="button" data-lite-aria="settings" aria-label="Reading settings">Aa</button>
+  </header>
+  <article id="normalTextDisplay" class="normal-text" tabindex="0" data-lite-aria="bookText" aria-label="Book text"></article>
+  <footer class="text-footer"><output id="progressText">0%</output><button id="startRSVPBtn" class="focus-entry" type="button"><span aria-hidden="true">▶</span><span data-lite="focus">One word at a time</span></button><button id="liteTocBtn" class="icon-button" type="button" aria-label="Contents" data-i18n-aria="contents">☰</button></footer>
+</section>
+
+<section id="rsvpReadingSection" class="focus-view" hidden>
+  <header class="reader-header"><button id="stopRSVPBtn" class="icon-button" type="button" data-lite-aria="backText" aria-label="Back to text">←</button><span id="rsvpBookTitle" class="reader-title"></span><button id="liteFocusSettings" class="icon-button" type="button" data-lite-aria="settings" aria-label="Reading settings">Aa</button></header>
+  <div class="focus-stage"><span class="focus-mode-label" data-lite="focus">One word at a time</span><div class="rsvp-word-wrapper"><div id="rsvpWordDisplay" class="rsvp-word" aria-live="off"></div></div><div id="rsvpPauseContext" class="rsvp-pause-context" aria-live="polite" aria-hidden="true"></div></div>
+  <footer class="focus-footer">
+    <div class="speed-row"><button id="prevWordBtn" class="icon-button" type="button" data-i18n-aria="decreaseSpeed" aria-label="Decrease speed">−</button><output id="rsvpWpmLabel">350 WPM</output><button id="nextWordBtn" class="icon-button" type="button" data-i18n-aria="increaseSpeed" aria-label="Increase speed">＋</button></div>
+    <div class="play-row"><button id="rewindWordsBtn" class="rewind-button" type="button" data-i18n-aria="rewindTenWords" aria-label="Rewind 10 words">↶<small>10</small></button><button id="playPauseBtn" class="play-button" type="button" data-lite="play">Read</button><span id="liteFocusProgress">0%</span></div>
+    <label class="sr-only" for="rsvpScrubber" data-i18n="readingPosition">Reading position</label><input id="rsvpScrubber" type="range" min="0" max="1000" value="0" step="1" data-i18n-aria="readingPosition" aria-label="Reading position">
+  </footer>
+</section>
+</main>
+
+<div id="settingsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+<div class="sheet"><header class="sheet-header"><h2 id="settingsTitle" data-lite="settings">Make it yours</h2><button id="closeSettingsBtn" class="icon-button" type="button" aria-label="Close" data-i18n-aria="close">×</button></header><div class="sheet-body">
+  <div class="setting"><label for="wpmInput" data-lite="speed">Reading speed</label><output id="liteSpeedValue">350</output><input id="wpmInput" type="range" min="100" max="1000" step="10" value="350"><small data-lite="speedHint">Words per minute · start at a comfortable pace</small></div>
+  <div class="setting"><label for="fontSizeInput" data-lite="size">Text size</label><span class="size-endpoints" aria-hidden="true"><span>A</span><strong>A</strong></span><input id="fontSizeInput" type="range" min="18" max="30" step="1" value="20"></div>
+  <div class="setting"><span data-lite="font">Typeface</span><div class="segments"><button id="fontSerifBtn" data-font="serif" class="serif" type="button" data-lite="serif">Book</button><button id="fontSansBtn" data-font="sans" type="button" data-lite="sans">Simple</button></div></div>
+  <div class="setting"><span data-i18n="theme">Theme</span><div class="segments"><button id="themeDayBtn" type="button"><span aria-hidden="true">☼ </span><span data-lite="light">Light</span></button><button id="themeNightBtn" type="button"><span aria-hidden="true">☾ </span><span data-lite="dark">Dark</span></button></div></div>
+  <div class="setting"><span data-i18n="language">Language</span><div class="segments languages"><button type="button" data-language="en" aria-label="English">EN</button><button type="button" data-language="ru" aria-label="Русский">RU</button><button type="button" data-language="es" aria-label="Español">ES</button></div></div>
+  <div class="sheet-links"><button id="settingsExportBtn" class="text-button" type="button" data-lite="backup">Download a backup</button><a class="full-version" href="index.html" data-lite="full">Full version ↗</a></div>
+</div></div></div>
+
+<div id="litePasteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pasteTitle"><form id="litePasteForm" class="sheet"><header class="sheet-header"><h2 id="pasteTitle" data-lite="paste">Paste text</h2><button id="litePasteClose" class="icon-button" type="button" aria-label="Close" data-i18n-aria="close">×</button></header><div class="sheet-body"><label for="litePasteTitle" data-lite="title">Title (optional)</label><input id="litePasteTitle" type="text" maxlength="240" autocomplete="off"><label for="litePasteText" data-lite="text">Your text</label><textarea id="litePasteText" rows="8" required></textarea><button class="primary-button" id="litePasteSubmit" type="submit" data-lite="start">Read</button></div></form></div>
+
+<div id="liteBookModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="liteBookTitle"><div class="sheet"><header class="sheet-header"><h2 id="liteBookTitle"></h2><button id="liteBookClose" class="icon-button" type="button" data-i18n-aria="close" aria-label="Close">×</button></header><div class="sheet-body"><button id="liteBookRename" class="soft-button" type="button" data-lite="rename">Rename</button><button id="liteBookRemove" class="text-button" type="button" data-lite="remove">Remove book</button></div></div></div>
+<div id="tocModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="tocTitle"><div class="sheet"><header class="sheet-header"><h2 id="tocTitle" data-i18n="contents">Contents</h2><button id="closeTocBtn" class="icon-button" type="button" data-i18n-aria="close" aria-label="Close">×</button></header><div class="sheet-body"><ol id="tocList" class="toc-list"></ol></div></div></div>
+
+<div id="actionDialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="actionDialogTitle" aria-describedby="actionDialogMessage"><form id="actionDialogForm" class="sheet"><header class="sheet-header"><h2 id="actionDialogTitle">Confirm</h2><button id="actionDialogCloseBtn" class="icon-button" type="button" aria-label="Close" data-i18n-aria="close">×</button></header><div class="sheet-body"><p id="actionDialogMessage"></p><div id="actionDialogInputGroup" hidden><label id="actionDialogInputLabel" for="actionDialogInput"></label><input id="actionDialogInput" type="text" maxlength="240" autocomplete="off"></div><div class="dialog-actions"><button id="actionDialogCancelBtn" class="soft-button" type="button" data-i18n="cancel">Cancel</button><button id="actionDialogConfirmBtn" class="primary-button" type="submit" data-i18n="confirm">Confirm</button></div></div></form></div>
+<div id="toastContainer" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+<textarea id="textInput" hidden></textarea><input id="bookNameInput" type="hidden">
+<span id="offlineBadge" hidden></span>
+<script src="app-base-url.js?v=56"></script><script src="i18n.js?v=56"></script><script src="vendor/jszip.min.js?v=56"></script><script src="epub-parser.js?v=56"></script><script src="app.js?v=56"></script><script src="lite.js?v=56"></script>
+</body></html>
