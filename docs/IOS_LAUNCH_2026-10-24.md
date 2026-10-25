@@ -102,3 +102,9 @@ References verified 2026-10-24:
 - https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information/
 - https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/
 - https://developer.apple.com/news/upcoming-requirements/
+
+## Optional Lite design trial — 24 October 2026
+
+По запросу владельца подготовлен отдельный [Lite web preview](https://145.239.82.124.sslip.io/rsvp/lite.html?lang=ru): книги, спокойное обычное чтение и упрощённый режим по одному слову. EN/RU/ES; проверены размеры iPhone 13 Pro в браузере, портрет/альбом и модели safe area. Библиотека общая с полной веб-версией, установленное приложение 1.0 (2) не заменялось. Lite не включён в native payload и не стал режимом по умолчанию.
+
+Реализация, источники вдохновения, проверки, исправление первого запуска со старым кэшем и ссылка на опубликованный вариант: [LITE_PREVIEW_2026-10-24.md](LITE_PREVIEW_2026-10-24.md). Если владелец выберет Lite для iOS, сначала включить его в согласованный native вариант и выполнить соответствующий Xcode/device QA; затем сверить App Store тексты и скриншоты с финальным интерфейсом. Текущая веб-проба сама по себе эти пункты не закрывает.

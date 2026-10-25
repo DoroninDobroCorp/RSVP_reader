@@ -2,6 +2,8 @@
 
 **Website:** [HummingRead](https://hummingread.145.239.82.124.sslip.io/) · [Web reader](https://145.239.82.124.sslip.io/rsvp/) · [October release report](docs/RELEASE_2026-10-24.md)
 
+**Optional Lite web preview:** [Русский](https://145.239.82.124.sslip.io/rsvp/lite.html?lang=ru) · [English](https://145.239.82.124.sslip.io/rsvp/lite.html?lang=en) · [Español](https://145.239.82.124.sslip.io/rsvp/lite.html?lang=es). A smaller bookshelf and reading UI; the full web reader stays available and shares the browser library. No iPhone installation or replacement is included. [Design and verification report](docs/LITE_PREVIEW_2026-10-24.md).
+
 > **Free, open source, yours to modify.** HummingRead uses the [MIT license](LICENSE). See [contributing and personal builds](CONTRIBUTING.md), [current iOS launch gates](docs/IOS_LAUNCH_2026-10-24.md) and [App Store copy](docs/APP_STORE_COPY.md). Support: vladimir_doronin@icloud.com. The iOS app is being prepared for publication; no App Store availability is claimed.
 
 
