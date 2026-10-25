@@ -104,4 +104,4 @@ Server namespace: `/srv/hummingread/artifacts/lite-preview-20261024/`.
 - `first-entry-incident.json`: earlier live-cache failure and its fix; earlier candidate/deployment logs remain available.
 - The e4cc52e broad run's one full-reader matrix timeout is retained rather than presented as a pass. Final b112903 has the same assertions split into independent locale/viewport cases and passes cleanly.
 
-The preview is ready for the owner's design/reading trial. Selecting Lite as the default native interface, installing it on iPhone and native accessibility/device acceptance require a later owner request. The main iOS launch plan (domain, donations, Developer enrollment, TestFlight and review) remains open.
+The web preview remains available for the design/reading trial. A subsequent explicit owner request selected the minimal iOS entry and installed build 3 on the connected iPhone: [installation and evidence](IOS_MINIMAL_BUILD3_2026-10-24.md). Full native acceptance and the main launch plan (domain, donations, Developer enrollment, TestFlight and review) remain open.
