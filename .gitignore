@@ -38,3 +38,5 @@ current
 
 # Immutable server release snapshots
 releases/
+
+/dist-native-ios/

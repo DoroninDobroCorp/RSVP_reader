@@ -230,13 +230,14 @@ if (/__HUMMINGREAD_/u.test(finalSeo)) throw new Error('Final-channel SEO structu
 const nativeRoot = join(root, 'dist-native');
 const iosRoot = join(root, 'ios', 'App', 'App', 'public');
 const androidRoot = join(root, 'android', 'app', 'src', 'main', 'assets', 'public');
-const nativeFiles = (await listFiles(nativeRoot)).filter((file) => !file.startsWith('android/'));
+const iosNativeRoot = join(root, 'dist-native-ios');
+const nativeFiles = await listFiles(iosNativeRoot);
 const iosFiles = (await listFiles(iosRoot)).filter((file) => !['cordova.js', 'cordova_plugins.js', 'capacitor.config.json'].includes(file));
 if (JSON.stringify(iosFiles.sort()) !== JSON.stringify(nativeFiles.sort())) {
-    throw new Error('The iOS public tree has stale or missing files compared with dist-native.');
+    throw new Error('The iOS public tree has stale or missing files compared with dist-native-ios.');
 }
 for (const file of nativeFiles) {
-    const native = await readFile(join(nativeRoot, file));
+    const native = await readFile(join(iosNativeRoot, file));
     const ios = await readFile(join(iosRoot, file));
     if (digest(native) !== digest(ios)) throw new Error(`iOS copy differs from filtered native asset: ${file}`);
 }

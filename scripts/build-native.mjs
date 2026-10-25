@@ -1,3 +1,4 @@
+import { buildIosReader } from './build-ios-reader.mjs';
 import { cp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -182,9 +183,7 @@ const androidAppAssets = join(root, 'android', 'app', 'src', 'main', 'assets', '
 await rm(androidAppAssets, { recursive: true, force: true });
 await cp(androidNativeDir, androidAppAssets, { recursive: true });
 
-await rm(iosDestination, { recursive: true, force: true });
-await cp(destination, iosDestination, { recursive: true });
-await rm(join(iosDestination, 'android'), { recursive: true, force: true });
+await buildIosReader(root);
 
 const buildTimestamp = process.env.SOURCE_DATE_EPOCH ? new Date(process.env.SOURCE_DATE_EPOCH * 1000).toISOString() : '2026-08-13T00:00:00.000Z';
 await writeFile(join(destination, '.build-complete'), buildTimestamp, 'utf8');

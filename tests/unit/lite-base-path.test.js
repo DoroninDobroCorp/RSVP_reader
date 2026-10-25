@@ -3,6 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 test('Lite resolves shared parser, demos and worker at root and /rsvp/',()=>{
  for(const prefix of ['', '/rsvp']){
+  assert.equal(getAppBaseUrl('https://reader.example'+prefix+'/full.html'),prefix);
   const url='https://reader.example'+prefix+'/lite.html?lang=ru';
   assert.equal(getAppBaseUrl(url),prefix);
   assert.equal(resolveAppPath('service-worker.js',url),prefix+'/service-worker.js');

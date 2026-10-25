@@ -32,6 +32,12 @@ for(const path of ['ios/App/CapApp-SPM/Package.resolved','ios/App/App.xcodeproj/
  assert.equal(pin?.state?.version,capacitorVersion,'Xcode SwiftPM lock version is stale');
 }
 assert.ok(index.includes('data-platform="native"'));
+if(productConfig.ios.readerUi==='lite'){
+ assert.ok(index.includes('data-reader-ui="lite"'));
+ assert.ok(!index.includes('lite-core.js') && !index.includes('lite-base-url.js'));
+ assert.ok((await read('ios/App/App/public/full.html')).includes('data-native-reader="full"'));
+ assert.ok((await read('ios/App/App/public/lite.js')).includes('nativePrivacy'));
+}
 assert.ok(!/articleImportForm|chromeExtensionPanel|data-rsvp-demo|marketing-link|data-i18n="appStorePending"/u.test(index));
 for (const path of ['support.html','ru/support.html','es/support.html']) assert.ok((await read('ios/App/App/public/'+path)).includes('mailto:'+productConfig.supportEmail));
 for (const path of ['about','downloads','service-worker.js']) await assert.rejects(access(join(root,'ios/App/App/public',path)),undefined,'Web-only payload leaked: '+path);

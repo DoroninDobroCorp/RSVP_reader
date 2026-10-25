@@ -6829,6 +6829,7 @@ class RSVPReader {
         try {
             const rawBase = (typeof window !== 'undefined' && window.getAppBaseUrl) ? window.getAppBaseUrl() : '';
             let basePath = rawBase ? (rawBase.endsWith('/') ? rawBase : rawBase + '/') : '/';
+            if (document.documentElement.dataset.platform === 'native' && document.body.dataset.nativeReader === 'full') return basePath + 'full.html';
             let subPath = '';
             if (language === 'ru') subPath = 'ru/';
             else if (language === 'es') subPath = 'es/';

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const nativeRoot = join(root, 'dist-native');
+const nativeRoot = join(root, 'dist-native-ios');
 const iosPublic = join(root, 'ios', 'App', 'App', 'public');
 
 // capacitor.config.json intentionally points at the Android-filtered tree so

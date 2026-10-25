@@ -18,7 +18,7 @@
   "versions": {
     "web": "2.0.0",
     "ios": "1.0",
-    "iosBuild": "2",
+    "iosBuild": "3",
     "extension": "1.1.0"
   },
   "release": {
@@ -29,7 +29,8 @@
   "ios": {
     "currentBundleIdentifier": "team.ibet.paceflow",
     "proposedBundleIdentifier": "team.ibet.hummingread",
-    "changeApproved": false
+    "changeApproved": false,
+    "readerUi": "lite"
   },
   "android": {
     "applicationId": "team.ibet.paceflow",
