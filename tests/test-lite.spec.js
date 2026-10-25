@@ -151,12 +151,14 @@ test('Lite protects an unsaved full-reader draft before opening a different book
  expect(await page.evaluate(()=>rsvpReader.library.length)).toBe(0);
 });
 
-test('Lite backup downloads both books with their text intact',async({page})=>{
+test('Lite backup downloads both books with their text and latest position intact',async({page})=>{
  await open(page);await paste(page,'Backup one');await page.locator('#backToInputBtn').click();await paste(page,'Backup two');
+ await page.locator('#normalTextDisplay [data-index="22"]').click();
  await page.locator('#liteTextSettings').click();
  const downloading=page.waitForEvent('download');await page.locator('#settingsExportBtn').click();const download=await downloading;
  const fs=require('fs');const raw=fs.readFileSync(await download.path(),'utf8');const backup=JSON.parse(raw);
  expect(backup.books).toHaveLength(2);expect(backup.books.every(book=>book.text===text.trim())).toBe(true);
+ expect(backup.books.find(book=>book.name==='Backup two').currentIndex).toBe(22);
 });
 
 test('Lite iPhone layouts fit portrait, short Safari viewport and landscape in every language',async({page},testInfo)=>{
@@ -166,7 +168,9 @@ test('Lite iPhone layouts fit portrait, short Safari viewport and landscape in e
    await page.setViewportSize(size);
    await page.evaluate(s=>{
     document.documentElement.style.setProperty('--safe-top',s.width===390?'47px':'0px');
-    document.documentElement.style.setProperty('--safe-bottom',s.width===390?'34px':'0px');
+    document.documentElement.style.setProperty('--safe-bottom',s.width===390?'34px':s.height<500?'21px':'0px');
+    document.documentElement.style.setProperty('--safe-left',s.height<500?'47px':'0px');
+    document.documentElement.style.setProperty('--safe-right',s.height<500?'47px':'0px');
    },size);
    const normal=await page.locator('#normalTextDisplay').boundingBox();
    expect(normal.height).toBeGreaterThan(size.height<500?180:320);
@@ -181,6 +185,7 @@ test('Lite iPhone layouts fit portrait, short Safari viewport and landscape in e
    for(const id of ['playPauseBtn','rewindWordsBtn','prevWordBtn','nextWordBtn','stopRSVPBtn','liteFocusSettings']){
     const box=await page.locator('#'+id).boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+    if(size.height<500){expect(box.x).toBeGreaterThanOrEqual(47);expect(box.x+box.width).toBeLessThanOrEqual(size.width-47);}
     await expect(page.locator('#'+id)).toBeInViewport();
    }
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

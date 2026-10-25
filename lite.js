@@ -297,6 +297,12 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
    await this.addAndRead(this.nameFromFile(file.name),parsed,extension,{fileName:file.name});
   } finally { event.target.value = ''; this.loadFileBtn.disabled = false; this.updateOnlineStatus(); }
  }
+ async exportLibrary() {
+  await this.ready;
+  this.captureScrollPosition();
+  if (this.words.length) await this.persistReadingPosition();
+  return super.exportLibrary();
+ }
  async savePastedText() {
   await this.ready;
   const text = this.el('litePasteText').value.trim(); if (!text) return;

@@ -38,7 +38,7 @@ These are design references; no third-party screenshots, branding or app assets 
 
 The automated suite `tests/test-lite.spec.js` covers import through the file input for all seven advertised formats, paste, playback, pause/rewind/speed, exact saved position across reload and full/Lite transitions, settings and language persistence, safe HTML titles, rename/removal cancellation, draft protection and backup export. The existing offline suite adds Lite navigation at root and /rsvp, including changing language offline while retaining the saved book position.
 
-The layout matrix includes EN/RU/ES at 320×568, 390×844 (iPhone 13 Pro CSS viewport), 390×660 (short browser viewport) and 844×390 landscape. Portrait 390px tests additionally model 47px top and 34px bottom safe-area insets; this is a browser simulation. It verifies long-word fitting, absence of horizontal overflow and visible controls at least 44×44px.
+The layout matrix includes EN/RU/ES at 320×568, 390×844 (iPhone 13 Pro CSS viewport), 390×660 (short browser viewport) and 844×390 landscape. Portrait 390px tests additionally model 47px top and 34px bottom safe-area insets; landscape tests model 47px left/right and 21px bottom insets; this is a browser simulation. It verifies long-word fitting, absence of horizontal overflow and visible controls at least 44×44px.
 
 Ordinary scroll is exercised with a real desktop browser wheel; Playwright mobile WebKit lacks wheel support, so that project's touch event path uses a synthetic DOM touchmove followed by scrolling. None of these tests constitutes a physical iPhone/VoiceOver/native-Safari acceptance. A future user-approved native trial remains separate.
 
@@ -49,3 +49,7 @@ Current validation/deployment results are recorded below after the checked sourc
 A real public-browser check found that a pre-existing v55 service worker could serve its cached full-reader app.js/base helper in response to the new query version. On the Lite DOM, the full bootstrap then failed before it could update that worker. This first-entry failure was not visible in clean browser contexts.
 
 The web build now emits byte-identical aliases lite-core.js and lite-base-url.js from the canonical shared sources. Lite uses those distinct names, which the old worker cannot confuse with its cached full-reader entry. The v57 shell precaches them. No parser/timing/storage code is forked. A browser regression explicitly boots Lite while a representative v55 basename-fallback worker still controls the page, then upgrades to the current worker and verifies reading.
+
+### Release-test granularity
+
+The first e4cc52e broad run passed 281/282 browser tests but exhausted the 45-second deadline in the existing full-reader nine-combination font settings test. All completed geometry assertions passed. The locale/viewport combinations are now independent tests with the same default deadline and all original overflow, text-bound, 44px and selected-font assertions retained. This changes the browser case count without reducing coverage or adding automatic retries.

@@ -2747,11 +2747,13 @@ test.describe('production reader regressions', () => {
     expect(orpData[3]).toMatchObject({ word: 'año', focusGrapheme: 'ñ' });
   });
 
-  test('VAL-WEB-011: narrow settings keep every localized font label inside its tappable button', async ({ page }) => {
-    await openReader(page);
-    for (const width of [320, 390, 768]) {
+  // Independent locale/viewport cases keep each real WebKit interaction within
+  // the normal deadline while preserving every geometry and touch assertion.
+  for (const lang of ['en', 'ru', 'es']) {
+  for (const width of [320, 390, 768]) {
+  test('VAL-WEB-011: narrow settings keep ' + lang + ' labels inside buttons at ' + width + 'px', async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      for (const lang of ['en', 'ru', 'es']) {
+      await openReader(page);
         await page.evaluate((l) => window.rsvpReader.setLanguage(l), lang);
         await expect(page.locator('#storageStatus')).not.toContainText(/IndexedDB|localStorage|app storage/);
         const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -2777,9 +2779,9 @@ test.describe('production reader regressions', () => {
         await page.locator('#fontRoundedBtn').click();
         await expect(page.locator('#fontRoundedBtn')).toHaveAttribute('aria-pressed', 'true');
         await page.locator('#closeSettingsBtn').click();
-      }
-    }
   });
+  }
+  }
 
   test('VAL-WEB-007 & VAL-CROSS-004: Spanish sample text loading (sample_text_es.txt) when Spanish is active', async ({ page }) => {
     await openReader(page, 'es');
