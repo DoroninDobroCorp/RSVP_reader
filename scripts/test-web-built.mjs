@@ -84,16 +84,16 @@ try {
 
     // 2. Verify static assets return HTTP 200 (VAL-R4-PWA-001)
     const staticAssets = [
-      '/lite.css?v=57',
-      '/lite.js?v=57',
-      '/lite-core.js?v=57',
-      '/lite-base-url.js?v=57',
-      '/style.css?v=57',
-      '/app-base-url.js?v=57',
-      '/i18n.js?v=57',
-      '/app.js?v=57',
-      '/epub-parser.js?v=57',
-      '/vendor/jszip.min.js?v=57',
+      '/lite.css?v=58',
+      '/lite.js?v=58',
+      '/lite-core.js?v=58',
+      '/lite-base-url.js?v=58',
+      '/style.css?v=58',
+      '/app-base-url.js?v=58',
+      '/i18n.js?v=58',
+      '/app.js?v=58',
+      '/epub-parser.js?v=58',
+      '/vendor/jszip.min.js?v=58',
       '/assets/icons/app-icon-32.png',
       '/assets/icons/app-icon-64.png',
       '/assets/icons/app-icon-180.png',
@@ -131,8 +131,8 @@ try {
 
     const match = swCode.match(/const APP_SHELL = \[([\s\S]*?)\];/);
     assert.ok(match, 'service-worker.js must define APP_SHELL');
-    const ASSET_VERSION = 'v=57';
-    const precacheList = eval(`const ASSET_VERSION = 'v=57'; [${match[1]}]`);
+    const ASSET_VERSION = 'v=58';
+    const precacheList = eval(`const ASSET_VERSION = 'v=58'; [${match[1]}]`);
 
     for (const relAsset of precacheList) {
       const resolvedUrl = new URL(relAsset, swUrl).href;
@@ -147,7 +147,7 @@ try {
       assert.equal(swScope, '/rsvp/', 'Service Worker scope under subpath /rsvp must be /rsvp/');
     }
 
-    const appJsUrl = `${baseUrl}/app.js?v=57`;
+    const appJsUrl = `${baseUrl}/app.js?v=58`;
     const appJsRes = await fetch(appJsUrl);
     assert.equal(appJsRes.status, 200, `app.js must return 200 at ${appJsUrl}`);
     const appJsCode = await appJsRes.text();

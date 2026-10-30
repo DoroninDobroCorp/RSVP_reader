@@ -106,6 +106,7 @@ class RSVPReader {
         this.searchGeneration = 0;
         this.searchYieldInterval = 4000;
         this.library = [];
+        this.currentNotes = [];
         this.libraryFilter = '';
         this.demoGuideActive = false;
         this.demoGuideStep = 0;
@@ -2413,6 +2414,7 @@ class RSVPReader {
             currentIndex,
             bookmarks,
             chapters: this.normalizeChapters(book.chapters || []),
+            notes: this.normalizeNotes(book.notes || []),
             fileName: book.fileName || '',
             sourceType: book.sourceType || 'text',
             dateAdded: this.toIsoDate(book.dateAdded) || now,
@@ -2431,6 +2433,28 @@ class RSVPReader {
             excerpt: bookmark.excerpt || '',
             createdAt: this.toIsoDate(bookmark.createdAt) || new Date().toISOString()
         };
+    }
+
+    normalizeNotes(notes) {
+        if (!Array.isArray(notes)) return [];
+        return notes.slice(0, 10000).filter((note) => note && typeof note === 'object' && typeof note.text === 'string')
+            .map((note) => ({
+                wordIndex: Math.max(0, parseInt(note.wordIndex || 0, 10) || 0),
+                label: String(note.label || '*').slice(0, 40),
+                text: note.text.slice(0, 10000),
+                inlineMarker: note.inlineMarker !== false
+            })).filter((note) => note.text.trim());
+    }
+
+    notesFromCharacterOffsets(text, notes) {
+        if (!Array.isArray(notes) || !notes.length) return [];
+        const locations = this.chaptersFromCharacterOffsets(text, notes.map((note, index) => ({
+            id: 'note-' + index, title: 'note', charOffset: note.charOffset
+        })));
+        return this.normalizeNotes(notes.map((note, index) => ({
+            wordIndex: locations[index].wordIndex, label: note.label, text: note.text,
+            inlineMarker: note.inlineMarker !== false
+        })));
     }
 
     normalizeChapters(chapters) {
@@ -3099,7 +3123,8 @@ class RSVPReader {
                 const parsed = await new EPUBParser().parseDetailed(file);
                 return this.validateParsedBook({
                     text: parsed.text,
-                    chapters: this.chaptersFromCharacterOffsets(parsed.text, parsed.chapters)
+                    chapters: this.chaptersFromCharacterOffsets(parsed.text, parsed.chapters),
+                    notes: this.notesFromCharacterOffsets(parsed.text, parsed.notes)
                 });
             }
             case 'docx':
@@ -3372,14 +3397,48 @@ class RSVPReader {
         }
 
         const rawChapters = [];
+        const rawNotes = [];
         const paragraphs = [];
+        const noteBodies = new Map();
         let characterOffset = 0;
         const attributeByLocalName = (element, localName) => Array.from(element?.attributes || [])
             .find((attribute) => attribute.localName === localName)?.value || '';
+        for (const [kind,path] of [['footnote','word/footnotes.xml'], ['endnote','word/endnotes.xml']]) {
+            const file = zip.file(path); if (!file) continue;
+            this.assertArchiveEntrySafe(file);
+            const source = await file.async('string'); this.assertMarkupSourceSafe(source);
+            const notesDoc = new DOMParser().parseFromString(source, 'text/xml');
+            if (notesDoc.querySelector('parsererror')) continue;
+            Array.from(notesDoc.getElementsByTagName('*')).filter((node) => node.localName === kind).forEach((node) => {
+                const id=attributeByLocalName(node,'id');
+                const content=Array.from(node.getElementsByTagName('*')).filter((part) => part.localName === 'p')
+                    .map((part) => this.extractDocxParagraphText(part).replace(/\s+/g,' ').trim())
+                    .filter(Boolean).join('\n\n').slice(0,10000);
+                if (id && content) noteBodies.set(kind+':'+id,content);
+            });
+        }
+        const noteLabels = new Map();
         Array.from(doc.getElementsByTagName('*')).filter((element) => element.localName === 'p').forEach((paragraph) => {
             const value = this.extractDocxParagraphText(paragraph).replace(/\s+/g, ' ').trim();
             if (!value) return;
             const blockStart = characterOffset + (paragraphs.length > 0 ? 2 : 0);
+            const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_ELEMENT);
+            let current = walker.currentNode, prefix = '';
+            while (current) {
+                if (current.localName === 't') prefix += current.textContent || '';
+                else if (current.localName === 'tab') prefix += '\t';
+                else if (current.localName === 'br' || current.localName === 'cr') prefix += '\n';
+                else if (current.localName === 'footnoteReference' || current.localName === 'endnoteReference') {
+                    const kind=current.localName === 'footnoteReference' ? 'footnote' : 'endnote';
+                    const key=kind+':'+attributeByLocalName(current,'id'), note=noteBodies.get(key);
+                    if (note && rawNotes.length < 10000) {
+                        if (!noteLabels.has(key)) noteLabels.set(key,String(noteLabels.size+1));
+                        const localOffset=Math.max(0,prefix.replace(/\s+/g,' ').trimStart().trimEnd().length-1);
+                        rawNotes.push({label:noteLabels.get(key),text:note,charOffset:blockStart+localOffset,inlineMarker:false});
+                    }
+                }
+                current = walker.nextNode();
+            }
             const styleElement = Array.from(paragraph.getElementsByTagName('*'))
                 .find((element) => element.localName === 'pStyle');
             const outlineElement = Array.from(paragraph.getElementsByTagName('*'))
@@ -3412,7 +3471,7 @@ class RSVPReader {
         const chapters = rawChapters.length > 0
             ? this.chaptersFromCharacterOffsets(text, rawChapters)
             : this.detectChaptersFromText(text);
-        return { text, chapters };
+        return { text, chapters, notes: this.notesFromCharacterOffsets(text,rawNotes) };
     }
 
     extractDocxParagraphText(paragraph) {
@@ -3474,6 +3533,12 @@ class RSVPReader {
         const body = allElements().find((element) => element.localName?.toLowerCase() === 'body') || doc.documentElement;
         const blocks = [];
         const rawChapters = [];
+        const rawNotes = [];
+        const noteTargets = new Map();
+        allElements().forEach((element) => {
+            const id = element.getAttribute('id');
+            if (id && !noteTargets.has(id)) noteTargets.set(id, element);
+        });
         let characterOffset = 0;
 
         Array.from(body.getElementsByTagName('*'))
@@ -3485,6 +3550,29 @@ class RSVPReader {
             if (!value) return;
 
             const blockStartOffset = characterOffset + (blocks.length > 0 ? 2 : 0);
+            Array.from(element.getElementsByTagName('*')).filter((link) => link.localName?.toLowerCase() === 'a').forEach((link) => {
+                if (rawNotes.length >= 10000) return;
+                const href = link.getAttribute('l:href') || link.getAttribute('xlink:href')
+                    || link.getAttributeNS?.('http://www.w3.org/1999/xlink', 'href') || link.getAttribute('href') || '';
+                if (!href.startsWith('#')) return;
+                const target = noteTargets.get(href.slice(1));
+                if (!target) return;
+                let parent = target;
+                while (parent && parent.localName?.toLowerCase() !== 'body') parent = parent.parentElement;
+                if (link.getAttribute('type') !== 'note' && parent?.getAttribute('name') !== 'notes') return;
+                const clone = target.cloneNode(true);
+                Array.from(clone.getElementsByTagName('*')).filter((node) => node.localName?.toLowerCase() === 'a')
+                    .forEach((node) => node.remove());
+                const paragraphs = Array.from(clone.getElementsByTagName('*'))
+                    .filter((node) => ['p', 'v'].includes(node.localName?.toLowerCase()));
+                const noteText = (paragraphs.length ? paragraphs.map((node) => node.textContent.trim()).filter(Boolean).join('\n\n') : clone.textContent.trim()).slice(0, 10000);
+                if (!noteText) return;
+                const range = doc.createRange();
+                range.selectNodeContents(element);
+                range.setEndBefore(link);
+                const prefix = range.toString().replace(/\s+/g, ' ').trimStart();
+                rawNotes.push({label:(link.textContent || '*').trim().slice(0,40), text:noteText, charOffset:blockStartOffset+prefix.length});
+            });
 
             if (localName === 'title') {
                 rawChapters.push({
@@ -3509,7 +3597,8 @@ class RSVPReader {
         }
 
         const text = blocks.join('\n\n');
-        return { text, chapters: this.chaptersFromCharacterOffsets(text, rawChapters) };
+        return { text, chapters: this.chaptersFromCharacterOffsets(text, rawChapters),
+            notes: this.notesFromCharacterOffsets(text, rawNotes) };
     }
 
     elementDepthWithinSections(section) {
@@ -4738,18 +4827,22 @@ class RSVPReader {
             wordFrame.append(leftSpan, focusSpan, rightSpan);
         } else {
             wordFrame.className = 'rsvp-word-frame';
-            for (const grapheme of this.segmentGraphemes(frame.text)) {
-                const letter = document.createElement('span');
-                letter.className = 'rsvp-letter';
-                letter.textContent = grapheme.segment;
-
-                if (grapheme.index === frame.focusIndex && !frame.isPauseToken) {
-                    letter.classList.add('focus-letter');
-                    letter.style.color = this.settings.focusLetterColor;
-                }
-
-                wordFrame.appendChild(letter);
+            const focusText = frame.isPauseToken ? ''
+                : (this.segmentGraphemes(frame.text).find((item) => item.index === frame.focusIndex)?.segment || '');
+            const before = document.createElement('span');
+            before.className = 'rsvp-letter';
+            before.textContent = frame.text.slice(0, frame.focusIndex);
+            const focus = document.createElement('span');
+            focus.className = 'rsvp-letter';
+            focus.textContent = focusText;
+            if (focusText) {
+                focus.classList.add('focus-letter');
+                focus.style.color = this.settings.focusLetterColor;
             }
+            const after = document.createElement('span');
+            after.className = 'rsvp-letter';
+            after.textContent = frame.text.slice(frame.focusIndex + focusText.length);
+            wordFrame.append(before, focus, after);
         }
 
         this.wordPaintToken++;
@@ -4862,16 +4955,25 @@ class RSVPReader {
             ? Math.max(1, Math.min(preferredSize, preferredSize * fitRatio * 0.98))
             : preferredSize;
         this.rsvpWordDisplay.style.fontSize = `${fittedSize}px`;
+        const syncFocusAxis = () => {
+            const center = wordFrame.querySelector('.orp-center');
+            if (center) wordFrame.style.setProperty('--orp-focus-half', `${center.getBoundingClientRect().width / 2}px`);
+        };
+        syncFocusAxis();
 
         // Canvas and WebKit can choose slightly different fallback-font metrics.
         // Verify the final DOM against the real padded viewport, then refine.
         // The same check also covers the transformed layout shown on pause.
-        for (let attempt = 0; fitRatio < 0.995 && attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 5; attempt++) {
             void wordFrame.offsetWidth;
             const displayRect = this.rsvpWordDisplay.getBoundingClientRect();
             const contentLeft = displayRect.left + parseFloat(displayStyle.paddingLeft || 0);
             const contentRight = displayRect.right - parseFloat(displayStyle.paddingRight || 0);
-            const partRects = Array.from(wordFrame.children).map((element) => element.getBoundingClientRect());
+            const partRects = Array.from(wordFrame.children).map((element) => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                return range.getBoundingClientRect();
+            }).filter((rect) => rect.width > 0);
             const frameRect = wordFrame.getBoundingClientRect();
             const glyphLeft = partRects.length > 0 ? Math.min(...partRects.map((rect) => rect.left)) : frameRect.left;
             const glyphRight = partRects.length > 0 ? Math.max(...partRects.map((rect) => rect.right)) : frameRect.right;
@@ -4886,6 +4988,7 @@ class RSVPReader {
             const domRatio = Math.min(1, leftRoom / leftUsed, rightRoom / rightUsed);
             fittedSize = Math.max(1, fittedSize * domRatio * 0.96);
             this.rsvpWordDisplay.style.fontSize = `${fittedSize}px`;
+            syncFocusAxis();
         }
 
         fittedSize = Math.round(fittedSize * 100) / 100;
@@ -5837,6 +5940,7 @@ class RSVPReader {
         this.currentBookName = savedBook.name;
         this.currentTextSignature = savedBook.textSignature;
         this.currentChapters = this.normalizeChapters(savedBook.chapters);
+        this.currentNotes = this.normalizeNotes(savedBook.notes);
         this.words = this.parseText(savedBook.text);
         this.currentIndex = this.nearestReadableIndex(this.clampIndex(savedBook.currentIndex, this.words.length));
         this.setTextInputValue(savedBook.text);
@@ -6613,6 +6717,7 @@ class RSVPReader {
             currentIndex: 0,
             bookmarks: [],
             chapters: this.normalizeChapters(parsedBook.chapters),
+            notes: this.normalizeNotes(parsedBook.notes),
             sourceType,
             fileName: options.fileName || '',
             dateAdded: now,
@@ -6627,6 +6732,7 @@ class RSVPReader {
             this.currentBookName = savedBook.name;
             this.currentTextSignature = savedBook.textSignature;
             this.currentChapters = savedBook.chapters;
+            this.currentNotes = this.normalizeNotes(savedBook.notes);
             this.pendingChapters = savedBook.chapters;
             this.currentIndex = savedBook.currentIndex;
             this.setTextInputValue(savedBook.text);

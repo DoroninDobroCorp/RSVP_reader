@@ -1081,7 +1081,7 @@ input:focus {
 .rsvp-word-frame.orp-grid-mode {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 40fr) auto minmax(0, 60fr);
+    grid-template-columns: minmax(0, calc(40% - var(--orp-focus-half, 0px))) auto minmax(0, 1fr);
     align-items: baseline;
 }
 

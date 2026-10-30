@@ -35,14 +35,14 @@ async function sample(ext){
  return zip.generateAsync({type:'nodebuffer'});
 }
 
-test('Lite starts with just books and add actions; full app remains available',async({page})=>{
+test('Lite starts with books and add actions without a full-reader link',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await open(page,'ru');
  await expect(page.locator('#textInputSection')).toBeVisible();
  await expect(page.locator('.home-header button')).toHaveCount(1);
  await expect(page.locator('#liteEmpty')).toBeVisible();
  await expect(page.locator('.pico-hero,.flow-map,.product-story,.dock-grid')).toHaveCount(0);
- await expect(page.locator('.full-version').first()).toHaveAttribute('href','/ru/');
+ await expect(page.locator('.full-version')).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);
  expect(errors).toEqual([]);
 });
@@ -52,6 +52,8 @@ test('Lite reading, playback, rewind and exact position survive reload and full-
  await open(page);await paste(page);
  await page.locator('#normalTextDisplay [data-index="30"]').click();
  await page.locator('#startRSVPBtn').click();
+ expect(await page.evaluate(()=>rsvpReader.isPlaying)).toBe(false);
+ await page.locator('#playPauseBtn').click();
  await expect.poll(()=>page.evaluate(()=>rsvpReader.isPlaying)).toBe(true);
  expect(await page.evaluate(()=>rsvpReader.getFrameAt(8).lexicalWordCount)).toBe(1);
  expect(await page.evaluate(()=>rsvpReader.settings.chunkingEnabled)).toBe(true);
@@ -104,7 +106,8 @@ test('Lite settings are small, pause reading, persist and keep language on the L
  await open(page);await paste(page);await page.locator('#startRSVPBtn').click();
  await page.locator('#liteFocusSettings').click();
  expect(await page.evaluate(()=>rsvpReader.isPlaying)).toBe(false);
- await expect(page.locator('#settingsModal [type=checkbox]')).toHaveCount(0);
+ await expect(page.locator('.advanced-settings')).not.toHaveAttribute('open','');
+ await expect(page.locator('#litePairing')).not.toBeVisible();
  await page.locator('#wpmInput').fill('240');
  await page.locator('#fontSizeInput').fill('24');
  await page.locator('#fontSansBtn').click();await page.locator('#themeNightBtn').click();

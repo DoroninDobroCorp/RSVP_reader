@@ -90,6 +90,8 @@ class EPUBParser {
             const navigation = await this.parseNavigation(contents, opfFile, packageInfo);
             const textParts = [];
             const chapters = [];
+            const notes = [];
+            const noteDocuments = new Map();
             let characterOffset = 0;
 
             for (const item of packageInfo.spine) {
@@ -101,11 +103,18 @@ class EPUBParser {
                 if (this.shouldSkipFile(filePath, item)) continue;
 
                 const html = await this.readEntryText(entry);
+                const prepared = await this.prepareNoteReferences(contents, filePath, html, noteDocuments);
                 const navEntries = navigation.filter((candidate) => candidate.filePath === filePath);
-                const chapter = this.extractChapterFromHTML(html);
+                const chapter = this.extractChapterFromHTML(prepared.html);
                 if (!chapter.text) continue;
 
                 const partStart = characterOffset + (textParts.length > 0 ? 2 : 0);
+                prepared.references.forEach((reference) => {
+                    const offset = chapter.anchorOffsets[reference.anchor];
+                    if (Number.isFinite(offset)) {
+                        notes.push({ label: reference.label, text: reference.text, charOffset: partStart + offset });
+                    }
+                });
                 const navEntry = navEntries[0];
                 const fallbackTitle = chapter.title || navEntry?.title || this.titleFromPath(filePath);
                 const resolvedNavigation = navEntries
@@ -164,6 +173,7 @@ class EPUBParser {
             return {
                 text,
                 chapters: this.dedupeChapters(chapters),
+                notes,
                 metadata: packageInfo.metadata
             };
         } catch (error) {
@@ -362,6 +372,88 @@ class EPUBParser {
         } catch (error) {
             return String(value || '');
         }
+    }
+
+    // Preserve a book's original text and token positions while collecting
+    // cross-file EPUB2/EPUB3 noterefs. Only local archive targets are read.
+    async prepareNoteReferences(zip, sourcePath, html, documents) {
+        const parse = (input) => {
+            let doc = new DOMParser().parseFromString(input, 'application/xhtml+xml');
+            if (Array.from(doc.getElementsByTagName('*')).some((el) => el.localName?.toLowerCase() === 'parsererror')) {
+                const compatible = String(input || '').replace(/<(title|script|style|textarea)(\b[^>]*)\/>/giu, '<$1$2></$1>');
+                doc = new DOMParser().parseFromString(compatible, 'text/html');
+            }
+            return doc;
+        };
+        const doc = parse(html);
+        const references = [];
+        const links = Array.from(doc.getElementsByTagName('*')).filter((el) => (
+            el.localName?.toLowerCase() === 'a' && el.getAttribute('href')?.includes('#')
+        ));
+        const documentFor = async (path) => {
+            if (documents.has(path)) return documents.get(path);
+            const entry = this.findArchiveEntry(zip, path);
+            if (!entry || !/\.(?:xhtml|html|htm)$/i.test(entry.path)) return null;
+            const source = entry.path === sourcePath ? html : await this.readEntryText(entry.entry);
+            const targetDoc = parse(source);
+            const ids = new Map();
+            Array.from(targetDoc.getElementsByTagName('*')).forEach((element) => {
+                const id = element.getAttribute('id') || element.getAttribute('name');
+                if (id && !ids.has(id)) ids.set(id.normalize('NFC'), element);
+            });
+            const result = {doc: targetDoc, ids};
+            documents.set(path, result);
+            return result;
+        };
+        for (const link of links) {
+            if (references.length >= 10000) break;
+            const href = link.getAttribute('href') || '';
+            if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) continue;
+            const hash = href.indexOf('#');
+            const fragment = this.decodePathComponent(href.slice(hash + 1)).normalize('NFC');
+            if (!fragment) continue;
+            const part = href.slice(0, hash);
+            const path = part ? this.resolveFilePath(sourcePath, part) : sourcePath;
+            const located = this.findArchiveEntry(zip, path);
+            const target = located && await documentFor(located.path);
+            let node = target?.ids.get(fragment);
+            if (!node) continue;
+            const typeOf = (element) => [
+                element?.getAttribute('epub:type'),
+                element?.getAttributeNS?.('http://www.idpf.org/2007/ops', 'type'),
+                element?.getAttribute('role'),
+                element?.getAttribute('class')
+            ].filter(Boolean).join(' ').toLowerCase();
+            const marker = (link.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40) || '*';
+            const refType = typeOf(link);
+            const targetType = typeOf(node) + ' ' + typeOf(node.parentElement);
+            const explicit = /(?:^|\s)(?:noteref|doc-noteref|footnote-ref|footnote-reference)(?:\s|$)/.test(refType);
+            const looksLikeTarget = /(?:footnote|endnote|doc-footnote|doc-endnote|footnotes)/.test(targetType);
+            const numberedNote = /^(?:\[?\d+\]?|\*+|[⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/.test(marker)
+                && /^(?:fn|note|footnote|endnote|n)[_.:-]*\d+/i.test(fragment);
+            if (!explicit && !looksLikeTarget && !numberedNote) continue;
+            if (!node.textContent?.trim() && node.parentElement) node = node.parentElement;
+            const clone = node.cloneNode(true);
+            Array.from(clone.getElementsByTagName('*')).forEach((el) => {
+                const tag = el.localName?.toLowerCase();
+                const role = typeOf(el);
+                if (['script','style','nav','img','svg'].includes(tag)
+                    || (tag === 'a' && /backlink|doc-backlink/.test(role))) el.remove();
+            });
+            const paragraphNodes = Array.from(clone.getElementsByTagName('*')).filter((el) => (
+                ['p','li'].includes(el.localName?.toLowerCase())
+                && !['p','li'].includes(el.parentElement?.localName?.toLowerCase())
+            ));
+            const raw = paragraphNodes.length ? paragraphNodes.map((el) => el.textContent || '').join('\n\n') : clone.textContent || '';
+            const noteText = raw.split(/\n\s*\n/).map((part) => part.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n\n').slice(0, 10000);
+            if (!noteText) continue;
+            const anchor = '__hummingread_note_' + references.length;
+            const location = doc.createElementNS(link.namespaceURI || 'http://www.w3.org/1999/xhtml', 'span');
+            location.setAttribute('id', anchor);
+            link.insertBefore(location, link.firstChild);
+            references.push({anchor, label: marker, text: noteText});
+        }
+        return { html: references.length ? new XMLSerializer().serializeToString(doc) : html, references };
     }
 
     extractTextFromHTML(html) {

@@ -1,5 +1,11 @@
 const { test, expect } = require('@playwright/test');
 
+async function setSwitch(page,id,checked) {
+  if (await page.locator('#'+id).isChecked() !== checked) {
+    await page.locator('label[for="'+id+'"]').click();
+  }
+}
+
 test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
 
   test('1. Each checkbox changes runtime setting and persists across reload', async ({ page }) => {
@@ -10,11 +16,11 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
     await page.waitForSelector('#settingsModal', { state: 'visible' });
 
     // Toggle all 5 checkboxes
-    await page.check('#orpAlignmentInput');
-    await page.check('#lengthScalingInput');
-    await page.check('#chunkingEnabledInput');
-    await page.check('#speedRampUpInput');
-    await page.check('#orpNotchesInput');
+    await setSwitch(page,'orpAlignmentInput',true);
+    await setSwitch(page,'lengthScalingInput',true);
+    await setSwitch(page,'chunkingEnabledInput',true);
+    await setSwitch(page,'speedRampUpInput',true);
+    await setSwitch(page,'orpNotchesInput',true);
 
     // Verify runtime settings updated immediately
     const runtimeSettings = await page.evaluate(() => window.rsvpReader.settings);
@@ -54,9 +60,9 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
     await page.waitForSelector('#settingsModal', { state: 'visible' });
 
     // Change settings
-    await page.uncheck('#orpAlignmentInput');
-    await page.check('#lengthScalingInput');
-    await page.check('#chunkingEnabledInput');
+    await setSwitch(page,'orpAlignmentInput',false);
+    await setSwitch(page,'lengthScalingInput',true);
+    await setSwitch(page,'chunkingEnabledInput',true);
     await page.fill('#wpmInput', '500');
 
     // Click Reset
@@ -155,7 +161,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
     // Simulate standing in pause for 1 second
     await page.waitForTimeout(1000);
 
-    const nowBeforePlay = Date.now();
+    const nowBeforePlay = await page.evaluate(() => performance.now());
     // Click Play
     await page.click('#playPauseBtn');
 
@@ -223,11 +229,15 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
     }
   });
 
-  test('8. Offline reload works after cache update', async ({ page, context }) => {
+  test('8. Offline reload works after cache update', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Offline worker test runs on Chromium; native iOS is verified separately.');
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Set offline
+    // Wait for the current worker to control the app before going offline.
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
     await context.setOffline(true);
 
     // Reload page
@@ -236,7 +246,7 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
 
     // Assert main container and title are present
     const title = await page.title();
-    expect(title).toBe('RSVP Reader');
+    expect(title).toBe('HummingRead: Speed Reader');
 
     await context.setOffline(false);
   });

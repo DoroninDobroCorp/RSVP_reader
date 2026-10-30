@@ -24,7 +24,7 @@ for (const [locale,c] of Object.entries(catalogs)) {
   const up = locale === 'en' ? './' : '../';
   const target = join(destination,prefix);
   await mkdir(target,{recursive:true});
-  const appHref = appBase + (locale === 'en' ? '' : locale + '/');
+  const appHref = appBase + 'lite.html?lang=' + locale;
   const url = base + prefix;
   const alternates = Object.keys(catalogs).map(lang => '<link rel="alternate" hreflang="'+lang+'" href="'+base+(lang === 'en' ? '' : lang+'/')+'">').join('\n');
   const langs = Object.keys(catalogs).map(lang => '<a href="'+(lang === 'en' ? up : up+lang+'/')+'" lang="'+lang+'" hreflang="'+lang+'"'+(locale===lang?' aria-current="page"':'')+'>'+lang.toUpperCase()+'</a>').join('');

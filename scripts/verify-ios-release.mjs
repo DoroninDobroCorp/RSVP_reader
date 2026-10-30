@@ -35,12 +35,12 @@ assert.ok(index.includes('data-platform="native"'));
 if(productConfig.ios.readerUi==='lite'){
  assert.ok(index.includes('data-reader-ui="lite"'));
  assert.ok(!index.includes('lite-core.js') && !index.includes('lite-base-url.js'));
- assert.ok((await read('ios/App/App/public/full.html')).includes('data-native-reader="full"'));
+ assert.ok(!index.includes('full.html'), 'iOS reader must not expose the legacy full interface');
  assert.ok((await read('ios/App/App/public/lite.js')).includes('nativePrivacy'));
 }
 assert.ok(!/articleImportForm|chromeExtensionPanel|data-rsvp-demo|marketing-link|data-i18n="appStorePending"/u.test(index));
 for (const path of ['support.html','ru/support.html','es/support.html']) assert.ok((await read('ios/App/App/public/'+path)).includes('mailto:'+productConfig.supportEmail));
-for (const path of ['about','downloads','service-worker.js']) await assert.rejects(access(join(root,'ios/App/App/public',path)),undefined,'Web-only payload leaked: '+path);
+for (const path of ['about','downloads','service-worker.js','full.html']) await assert.rejects(access(join(root,'ios/App/App/public',path)),undefined,'Web-only payload leaked: '+path);
 const icon=await sharp(join(root,'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png')).metadata();
 assert.equal(icon.width,1024); assert.equal(icon.height,1024); assert.equal(icon.hasAlpha,false);
 console.log('PASS: iOS source/package checks, shared archive scheme, matching Capacitor pins, EN/RU/ES support, local-only assets, privacy declarations and opaque 1024 icon.');
