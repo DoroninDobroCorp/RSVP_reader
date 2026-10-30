@@ -150,27 +150,25 @@ test('advanced settings retain session statistics and can restore reading defaul
  await expect(page.locator('#normalTextDisplay')).toContainText('A little book');
 });
 
-test('existing book can restore notes from its matching original without changing progress or bookmarks',async({page})=>{
- await ready(page);const original=await epubFixture();
- await page.locator('#fileInput').setInputFiles({name:'notes.epub',mimeType:'application/epub+zip',buffer:original});
- await expect(page.locator('.inline-note')).toHaveCount(1);
- const before=await page.evaluate(async()=>{
-  const id=rsvpReader.currentBookId;
-  await rsvpReader.mutateBook(id,book=>({...book,notes:[],currentIndex:3,bookmarks:[{id:'saved',name:'Saved',index:3,excerpt:'kept'}]}));
-  await rsvpReader.loadLibrary();return id;
+test('saved books reopen without another file selection or changing the saved place',async({page})=>{
+ await ready(page);
+ const id=await page.evaluate(async()=>{
+  const text='An older saved book whose notes were not retained. '.repeat(30);
+  const book=await rsvpReader.addParsedBookToLibrary('Existing book',{text,chapters:[],notes:[]},'fb2',{silent:true});
+  await rsvpReader.mutateBook(book.id,b=>({...b,currentIndex:15,bookmarks:[{id:'saved',name:'Saved',index:15,excerpt:'kept'}]}));
+  await rsvpReader.loadLibrary();return book.id;
  });
- await page.locator('#backToInputBtn').click();
- const originalPosition=await page.evaluate(async id=>(await rsvpReader.getBook(id)).currentIndex,before);
+ const before=await page.evaluate(async id=>rsvpReader.getBook(id),id);
+ await page.reload();await expect(page.locator('body')).toHaveAttribute('data-ready','true');
  await page.locator('.book-more').click();
- let choice=page.waitForEvent('filechooser');await page.locator('#liteBookRefresh').click();
- await (await choice).setFiles({name:'different.txt',mimeType:'text/plain',buffer:Buffer.from('A completely different book.')});
- expect(await page.evaluate(async id=>(await rsvpReader.getBook(id)).notes.length,before)).toBe(0);
- await page.locator('.book-more').click();
- choice=page.waitForEvent('filechooser');await page.locator('#liteBookRefresh').click();
- await (await choice).setFiles({name:'notes.epub',mimeType:'application/epub+zip',buffer:original});
- await expect.poll(()=>page.evaluate(async id=>(await rsvpReader.getBook(id)).notes.length,before)).toBe(1);
- const saved=await page.evaluate(async id=>rsvpReader.getBook(id),before);
- expect(saved.id).toBe(before);expect(saved.bookmarks[0].id).toBe('saved');expect(saved.currentIndex).toBe(originalPosition);
+ await expect(page.locator('#liteBookRefresh')).toHaveCount(0);
+ await expect(page.locator('#liteBookRename')).toBeVisible();
+ await page.locator('#liteBookClose').click();
+ await page.locator('#continueReadingCard').click();
+ expect(await page.evaluate(()=>rsvpReader.currentIndex)).toBe(before.currentIndex);
+ const after=await page.evaluate(async id=>rsvpReader.getBook(id),id);
+ expect(after.text).toBe(before.text);expect(after.bookmarks).toEqual(before.bookmarks);
+ expect(after.notes).toEqual([]);
 });
 
 test('compact contents menu supports search and persistent bookmarks',async({page})=>{
@@ -262,26 +260,6 @@ test('EPUB links show blue notes in place and keep only referenced note bodies o
  }
  await page.locator('.inline-note').last().click();
  await expect(page.locator('#liteNoteText')).toHaveText('EXTERNAL NOTE BODY.');
-});
-
-test('loading notes into an older EPUB keeps its saved text, place and bookmarks',async({page})=>{
- await ready(page);const original=await inlineNoteFixture();
- const id=await page.evaluate(async data=>{
-  const file=new File([new Uint8Array(data)],'legacy.epub',{type:'application/epub+zip'});
-  const parsed=await rsvpReader.extractBookFromFile(file,'epub',{preserveInlineNoteBodies:true});
-  parsed.notes=[];
-  const book=await rsvpReader.addParsedBookToLibrary('Legacy',parsed,'epub',{silent:true});
-  await rsvpReader.mutateBook(book.id,b=>({...b,currentIndex:210,bookmarks:[{id:'saved',name:'Saved',index:210,excerpt:'kept'}]}));
-  await rsvpReader.loadLibrary();return book.id;
- },Array.from(original));
- const before=await page.evaluate(async id=>rsvpReader.getBook(id),id);
- expect(before.text).toContain('INLINE NOTE BODY.');
- await page.locator('.book-more').click();
- const choice=page.waitForEvent('filechooser');await page.locator('#liteBookRefresh').click();
- await (await choice).setFiles({name:'legacy.epub',mimeType:'application/epub+zip',buffer:original});
- await expect.poll(()=>page.evaluate(async id=>(await rsvpReader.getBook(id)).notes.length,id)).toBe(2);
- const after=await page.evaluate(async id=>rsvpReader.getBook(id),id);
- expect(after.text).toBe(before.text);expect(after.currentIndex).toBe(before.currentIndex);expect(after.bookmarks).toEqual(before.bookmarks);
 });
 
 test('nested note targets keep their full text and do not hide notes reachable only inside a popup',async({page})=>{

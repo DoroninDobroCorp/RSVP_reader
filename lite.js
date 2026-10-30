@@ -6,9 +6,9 @@ const copy = {
  ru: {nativePrivacy:'Книги и прогресс сохраняются на этом устройстве.',nativeFull:'Все инструменты',nativePreview:'HummingRead',skip:'К чтению',eyebrow:'Немного времени для себя',homeTitle:'Только ты.\nИ хорошая книга.',homeTitleReturning:'Время для пары страниц.',homeHint:'Открой книгу. Найди свой ритм.',continue:'Продолжить с того же места',openBook:'Открыть книгу',paste:'Вставить текст',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · без DRM',books:'Твои книги',empty:'Здесь начнётся следующая глава.',demo:'Попробовать на примере →',privacy:'Книги и прогресс остаются в этом браузере.',full:'Полная версия ↗',preview:'Пробный вариант',back:'К книгам',bookText:'Текст книги',backText:'К тексту',focus:'По одному слову',play:'Читать',pause:'Пауза',resume:'Продолжить',settings:'Как тебе удобно',speed:'Скорость чтения',speedHint:'Слов в минуту · начни с комфортного темпа',size:'Размер текста',font:'Шрифт',serif:'Книжный',sans:'Простой',light:'Светлая',dark:'Тёмная',backup:'Скачать резервную копию',title:'Название (необязательно)',text:'Твой текст',start:'Читать',loading:'Открываем книгу…',more:'Действия с книгой «{name}»',remove:'Убрать книгу',rename:'Переименовать',progress:'Прочитано {progress}%',draftTitle:'Сохранить вставленный текст?',draftHint:'В полной версии остался несохранённый текст. Скачай резервную копию или сохрани его там перед открытием другой книги. Продолжай, только если этот черновик больше не нужен.',openAnyway:'Всё равно открыть',done:'Готово',offline:'Без сети · сохранённые книги доступны',failed:'Не удалось открыть читалку. Обнови страницу и попробуй ещё раз.'},
  es: {nativePrivacy:'Los libros y tu progreso quedan en este dispositivo.',nativeFull:'Todas las herramientas',nativePreview:'HummingRead',skip:'Ir a la lectura',eyebrow:'Un momento para leer',homeTitle:'Solo tú.\nY un buen libro.',homeTitleReturning:'Unas páginas para ti.',homeHint:'Abre un libro. Encuentra tu ritmo.',continue:'Sigue donde lo dejaste',openBook:'Abrir un libro',paste:'Pegar texto',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · sin DRM',books:'Tus libros',empty:'Tu próximo capítulo empieza aquí.',demo:'Prueba una lectura breve →',privacy:'Los libros y tu progreso quedan en este navegador.',full:'Versión completa ↗',preview:'Vista previa opcional',back:'Volver a los libros',bookText:'Texto del libro',backText:'Volver al texto',focus:'Palabra por palabra',play:'Leer',pause:'Pausa',resume:'Continuar',settings:'A tu gusto',speed:'Velocidad de lectura',speedHint:'Palabras por minuto · empieza a un ritmo cómodo',size:'Tamaño del texto',font:'Tipografía',serif:'Libro',sans:'Sencilla',light:'Clara',dark:'Oscura',backup:'Descargar copia de seguridad',title:'Título (opcional)',text:'Tu texto',start:'Leer',loading:'Abriendo tu libro…',more:'Opciones de {name}',remove:'Quitar libro',rename:'Cambiar título',progress:'{progress}% leído',draftTitle:'¿Conservar el texto sin guardar?',draftHint:'Hay un texto sin guardar en la versión completa. Descarga una copia o guárdalo allí antes de abrir otro libro. Continúa solo si ya no necesitas ese borrador.',openAnyway:'Abrir de todos modos',done:'Listo',offline:'Sin conexión · tus libros guardados están aquí',failed:'No se pudo abrir el lector. Recarga la página para intentarlo de nuevo.'}
 };
-Object.assign(copy.en,{restore:'Restore backup',previousResult:'Previous result',nextResult:'Next result',note:'Note',refreshNotes:'Load notes from original file',notesUpdated:'Notes are ready',noNotes:'No notes found in this file',differentBook:'This file does not match the saved book; the book was not changed',advanced:'Advanced settings',moreFonts:'More typefaces',previousPage:'Previous page',nextPage:'Next page',earlierContext:'Earlier text',laterContext:'Later text',contextHint:'Tap a word to continue from there',minutes:'min'});
-Object.assign(copy.ru,{restore:'Восстановить копию',previousResult:'Предыдущее совпадение',nextResult:'Следующее совпадение',note:'Сноска',refreshNotes:'Загрузить сноски из исходного файла',notesUpdated:'Сноски загружены',noNotes:'В этом файле сноски не найдены',differentBook:'Файл не совпадает с сохранённой книгой; книга не изменена',advanced:'Расширенные настройки',moreFonts:'Другие шрифты',previousPage:'Предыдущая страница',nextPage:'Следующая страница',earlierContext:'Текст раньше',laterContext:'Текст дальше',contextHint:'Нажми на слово, чтобы продолжить с него',minutes:'мин'});
-Object.assign(copy.es,{restore:'Restaurar copia',previousResult:'Resultado anterior',nextResult:'Resultado siguiente',note:'Nota',refreshNotes:'Cargar notas del archivo original',notesUpdated:'Notas cargadas',noNotes:'No se encontraron notas en este archivo',differentBook:'El archivo no coincide con el libro guardado; no se modificó',advanced:'Ajustes avanzados',moreFonts:'Más tipografías',previousPage:'Página anterior',nextPage:'Página siguiente',earlierContext:'Texto anterior',laterContext:'Texto siguiente',contextHint:'Toca una palabra para continuar desde ella',minutes:'min'});
+Object.assign(copy.en,{restore:'Restore backup',previousResult:'Previous result',nextResult:'Next result',note:'Note',advanced:'Advanced settings',moreFonts:'More typefaces',previousPage:'Previous page',nextPage:'Next page',earlierContext:'Earlier text',laterContext:'Later text',contextHint:'Tap a word to continue from there',minutes:'min'});
+Object.assign(copy.ru,{restore:'Восстановить копию',previousResult:'Предыдущее совпадение',nextResult:'Следующее совпадение',note:'Сноска',advanced:'Расширенные настройки',moreFonts:'Другие шрифты',previousPage:'Предыдущая страница',nextPage:'Следующая страница',earlierContext:'Текст раньше',laterContext:'Текст дальше',contextHint:'Нажми на слово, чтобы продолжить с него',minutes:'мин'});
+Object.assign(copy.es,{restore:'Restaurar copia',previousResult:'Resultado anterior',nextResult:'Resultado siguiente',note:'Nota',advanced:'Ajustes avanzados',moreFonts:'Más tipografías',previousPage:'Página anterior',nextPage:'Página siguiente',earlierContext:'Texto anterior',laterContext:'Texto siguiente',contextHint:'Toca una palabra para continuar desde ella',minutes:'min'});
 Object.assign(copy.en,{draftHint:'Save your previous draft to your library before opening another book?',openAnyway:'Save and continue'});
 Object.assign(copy.ru,{draftHint:'Сохранить предыдущий черновик в библиотеку перед открытием другой книги?',openAnyway:'Сохранить и продолжить'});
 Object.assign(copy.es,{draftHint:'¿Guardar el borrador anterior en tu biblioteca antes de abrir otro libro?',openAnyway:'Guardar y continuar'});
@@ -44,9 +44,8 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.currentTheme = localStorage.getItem('rsvp_theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day');
   this.applyTheme(this.currentTheme);
   this.localizeLite();
-  on('loadFileBtn','click',() => { if(this.litePickerBusy) return; this.liteRefreshBook=null; this.openFilePicker(this.fileInput); });
+  on('loadFileBtn','click',() => { if(this.litePickerBusy) return; this.openFilePicker(this.fileInput); });
   on('fileInput','change',(event) => this.runAsync(() => this.handleFileUpload(event)));
-  on('fileInput','cancel',() => { this.liteRefreshBook=null; });
   on('continueReadingCard','click',() => this.runAsync(() => this.openBookLite(this.continueReadingCard.dataset.bookId)));
   on('liteLibrarySearchBtn','click',() => {
    const input=this.librarySearchInput, opening=input.hidden;
@@ -137,11 +136,6 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   on('closeTocBtn','click',() => this.closeToc());
   on('liteBookClose','click',() => this.closeModal(this.el('liteBookModal')));
   on('liteNoteClose','click',() => this.closeModal(this.el('liteNoteModal')));
-  on('liteBookRefresh','click',() => {
-   if(this.litePickerBusy) return;
-   this.liteRefreshBook=this.liteMenuBook; this.closeModal(this.el('liteBookModal'));
-   this.openFilePicker(this.fileInput);
-  });
   on('liteBookRename','click',() => this.runAsync(async () => {
    const id = this.liteMenuBook; this.closeModal(this.el('liteBookModal')); await this.renameBook(id); this.renderLibrary();
   }));
@@ -201,7 +195,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
    this.runAsync(async()=>{
     try {
      const result=await picker.pick();
-     if(result.cancelled) {this.liteRefreshBook=null;return;}
+     if(result.cancelled) return;
      if(!result.name || !result.url || !result.token || typeof window.Capacitor.convertFileSrc !== 'function') {
       throw new Error(this.t('actionFailed'));
      }
@@ -214,8 +208,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
       if(input===this.libraryImportInput) await this.importLibrary(event);
       else await this.handleFileUpload(event);
      } finally { await picker.finish({token:result.token}); }
-    } catch(error) { this.liteRefreshBook=null; throw error; }
-    finally { this.litePickerBusy=false; }
+    } finally { this.litePickerBusy=false; }
    });
    return;
   }
@@ -491,25 +484,9 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   try {
    if (!await this.allowDraftReplacement()) return;
    const extension = this.getFileExtension(file.name,file.type);
-   let parsed = await this.extractBookFromFile(file,extension);
-   if (this.liteRefreshBook) {
-    const id=this.liteRefreshBook, existing=await this.getBook(id);
-    // Older EPUB imports may contain inline note bodies. Match their original
-    // text before adding notes so saved word positions and bookmarks stay valid.
-    if (existing && extension==='epub' && existing.text.trim()!==parsed.text.trim()) {
-     parsed=await this.extractBookFromFile(file,extension,{preserveInlineNoteBodies:true});
-    }
-    if (!existing || existing.text.trim()!==parsed.text.trim()) { this.showToast(this.lt('differentBook'),'error'); return; }
-    if (!parsed.notes?.length) { this.showToast(this.lt('noNotes')); return; }
-    const saved=await this.mutateBook(id,latest=>latest.text.trim()===parsed.text.trim()
-     ? {...latest,notes:this.normalizeNotes(parsed.notes),chapters:parsed.chapters?.length ? this.normalizeChapters(parsed.chapters) : latest.chapters}
-     : null);
-    if (saved) {
-     if(this.currentBookId===id) this.currentNotes=this.normalizeNotes(saved.notes);
-     await this.loadLibrary(); this.showToast(this.lt('notesUpdated'));
-    }
-   } else await this.addAndRead(this.nameFromFile(file.name),parsed,extension,{fileName:file.name});
-  } finally { this.liteRefreshBook=null; event.target.value = ''; this.loadFileBtn.disabled = false; this.updateOnlineStatus(); }
+   const parsed = await this.extractBookFromFile(file,extension);
+   await this.addAndRead(this.nameFromFile(file.name),parsed,extension,{fileName:file.name});
+  } finally { event.target.value = ''; this.loadFileBtn.disabled = false; this.updateOnlineStatus(); }
  }
  async exportLibrary() {
   await this.ready;

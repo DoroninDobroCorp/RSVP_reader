@@ -80,15 +80,16 @@ test('native import calls the document-only picker',async({page})=>{
  await expect(page.locator('#normalTextDisplay')).toContainText('A native book');
 });
 
-test('a pending native picker keeps its original import purpose',async({page})=>{
+test('a pending native picker cannot be opened twice',async({page})=>{
  await page.goto(origin+'/index.html');await ready(page);
  await page.evaluate(()=>{
-  window.Capacitor.Plugins.ReaderFiles.pick=()=>new Promise(resolve=>{window.__resolvePicker=resolve;});
+  window.__pickerCalls=0;
+  window.Capacitor.Plugins.ReaderFiles.pick=()=>{window.__pickerCalls++;return new Promise(resolve=>{window.__resolvePicker=resolve;});};
  });
  await page.locator('#loadFileBtn').click();
  await expect.poll(()=>page.evaluate(()=>Boolean(window.__resolvePicker))).toBe(true);
- await page.evaluate(()=>{rsvpReader.liteMenuBook='other-book';document.querySelector('#liteBookRefresh').click();});
- expect(await page.evaluate(()=>rsvpReader.liteRefreshBook)).toBe(null);
+ await page.evaluate(()=>document.querySelector('#loadFileBtn').click());
+ expect(await page.evaluate(()=>window.__pickerCalls)).toBe(1);
  await page.evaluate(()=>window.__resolvePicker({name:'ordinary.txt',url:'data:application/octet-stream;base64,'+btoa('The first selection remains a new book.'),token:'pending'}));
  await expect(page.locator('#normalTextDisplay')).toContainText('The first selection');
 });

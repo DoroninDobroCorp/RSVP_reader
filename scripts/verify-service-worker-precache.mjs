@@ -7,10 +7,10 @@ const worker = await readFile(join(root, 'service-worker.js'), 'utf8');
 const index = await readFile(join(root, 'index.html'), 'utf8');
 const required = [
     './lite.html',
-    './lite.css?v=60',
-    './lite.js?v=60',
-    './lite-core.js?v=60',
-    './lite-base-url.js?v=60',
+    './lite.css?v=61',
+    './lite.js?v=61',
+    './lite-core.js?v=61',
+    './lite-base-url.js?v=61',
     './index.html',
     './privacy.html',
     './support.html',
@@ -39,15 +39,15 @@ const required = [
 for (const asset of required) {
     if (!worker.includes(`'${asset}'`)) throw new Error(`Service worker does not precache ${asset}.`);
 }
-if (!worker.includes("const CACHE_NAME = 'hummingread-reader-v60'")
+if (!worker.includes("const CACHE_NAME = 'hummingread-reader-v61'")
     || !worker.includes('/^(?:paceflow|hummingread)-reader-/u')) {
-    throw new Error('Service-worker v60 migration must clean legacy and current branded caches.');
+    throw new Error('Service-worker v61 migration must clean legacy and current branded caches.');
 }
-if (!index.includes('manifest') || !index.includes('app.js?v=60')) {
+if (!index.includes('manifest') || !index.includes('app.js?v=61')) {
     throw new Error('App shell asset version does not match the final service-worker generation.');
 }
 if (!/endsWith\('\/api\/article'\)\) return;/u.test(worker)) {
     throw new Error('Article responses must remain outside service-worker caching.');
 }
 
-console.log('Verified v60 app-shell precache, legacy cache migration, and API cache exclusions.');
+console.log('Verified v61 app-shell precache, legacy cache migration, and API cache exclusions.');

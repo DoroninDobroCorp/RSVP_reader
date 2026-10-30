@@ -261,14 +261,14 @@ self.addEventListener('fetch',event=>{
     await expect(page.locator('body')).toHaveAttribute('data-ready','true');
     const oldCaches=await page.evaluate(()=>caches.keys());
     expect(oldCaches).toContain('hummingread-reader-v55');
-    expect(oldCaches).not.toContain('hummingread-reader-v60');
+    expect(oldCaches).not.toContain('hummingread-reader-v61');
     await expect(page.locator('html')).toHaveAttribute('lang','ru');
     currentWorker=true;
     const reloaded=page.waitForEvent('framenavigated',{predicate:frame=>frame===page.mainFrame()});
     await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();});
     await reloaded;
     await expect(page.locator('body')).toHaveAttribute('data-ready','true');
-    await expect.poll(()=>page.evaluate(()=>caches.keys())).toContain('hummingread-reader-v60');
+    await expect.poll(()=>page.evaluate(()=>caches.keys())).toContain('hummingread-reader-v61');
     expect(await page.evaluate(()=>caches.keys())).not.toContain('hummingread-reader-v55');
     await page.locator('#tryDemoBtn').click();await expect(page.locator('#normalReadingSection')).toBeVisible();
     await page.locator('#startRSVPBtn').click();expect(await page.evaluate(()=>rsvpReader.isPlaying)).toBe(false);await page.locator('#playPauseBtn').click();await expect.poll(()=>page.evaluate(()=>rsvpReader.isPlaying)).toBe(true);
