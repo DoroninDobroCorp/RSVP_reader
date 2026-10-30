@@ -167,8 +167,18 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   }));
   document.addEventListener('keydown',event => {
    if (event.key === 'Escape' || event.key === 'Tab') { super.handleKeyboard(event); return; }
-   if (this.activeModal || event.target.closest('input,textarea,button,select,a,[contenteditable]')) return;
-   if (event.code === 'Space' && this.mode === 'rsvp') { event.preventDefault(); this.togglePlayPause(); }
+   const target=event.target instanceof Element ? event.target : null;
+   if (this.activeModal || target?.closest('input,textarea,select,a,[contenteditable]')) return;
+   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase()==='f' && ['normal','rsvp'].includes(this.mode)) {
+    event.preventDefault();
+    if(this.mode==='rsvp') this.stopRSVP();
+    this.openModal(this.el('liteSearchModal'),this.searchInput,target); return;
+   }
+   if (event.code==='Space' && target?.closest('button')) return;
+   if (this.mode==='rsvp') {super.handleKeyboard(event); return;}
+   if (event.code==='Space' && this.mode==='normal') {
+    event.preventDefault(); this.captureScrollPosition(); this.startRSVP();
+   }
   });
   document.addEventListener('visibilitychange',() => {
    if (document.visibilityState === 'hidden') this.handleAppPause();

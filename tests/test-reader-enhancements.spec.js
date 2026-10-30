@@ -104,6 +104,20 @@ test('paused entry, reading context, paging, pairing and focus fitting',async({p
  expect(unaligned.children).toBeLessThanOrEqual(3);expect(unaligned.fit).toBeLessThan(unaligned.preferred);
 });
 
+test('external keyboard shortcuts retain speed, pause, rewind and search in the compact reader',async({page})=>{
+ await ready(page);await openText(page,'One two three four five six seven eight nine ten eleven twelve. '.repeat(15));
+ await page.locator('#normalTextDisplay').focus();await page.keyboard.press('Space');
+ expect(await page.evaluate(()=>({mode:rsvpReader.mode,playing:rsvpReader.isPlaying}))).toEqual({mode:'rsvp',playing:false});
+ await page.locator('#rsvpWordDisplay').evaluate(el=>{el.tabIndex=-1;el.focus();});
+ await page.keyboard.press('ArrowUp');expect(await page.evaluate(()=>rsvpReader.settings.wpm)).toBe(370);
+ await page.keyboard.press('ArrowDown');expect(await page.evaluate(()=>rsvpReader.settings.wpm)).toBe(350);
+ await page.evaluate(()=>{rsvpReader.currentIndex=20;rsvpReader.displayCurrentWord();});
+ await page.keyboard.press('r');expect(await page.evaluate(()=>rsvpReader.currentIndex)).toBeLessThan(20);
+ await page.keyboard.press('p');expect(await page.evaluate(()=>rsvpReader.isPlaying)).toBe(true);
+ await page.keyboard.press('Space');expect(await page.evaluate(()=>rsvpReader.isPlaying)).toBe(false);
+ await page.keyboard.press('Control+f');await expect(page.locator('#liteSearchModal')).toBeVisible();
+});
+
 test('the library can be searched without hiding or changing saved books',async({page})=>{
  await ready(page);
  await page.evaluate(async()=>{
