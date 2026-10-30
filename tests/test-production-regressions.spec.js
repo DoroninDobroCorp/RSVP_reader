@@ -351,10 +351,14 @@ test.describe('production reader regressions', () => {
     await page.locator('#actionDialogCancelBtn').click();
     await expect(page.locator('#actionDialog')).toBeHidden();
     await page.waitForFunction(() => window.rsvpReader.pendingActionDialog === null);
+    // Closing the dialog restores focus on the next animation frame. Wait for
+    // that restoration before editing, or it can interrupt Playwright's fill.
+    await expect(page.locator('#importArticleBtn')).toBeFocused();
     await expect(page.locator('#textInput')).toHaveValue('Keep this unfinished draft exactly as it is.');
     expect(articleRequests).toBe(0);
 
     await page.locator('#textInput').fill('');
+    await expect(page.locator('#textInput')).toHaveValue('');
     await page.locator('#importArticleBtn').click();
     await expect(page.locator('#normalReadingSection')).toBeVisible();
     expect(articleRequests).toBe(1);
