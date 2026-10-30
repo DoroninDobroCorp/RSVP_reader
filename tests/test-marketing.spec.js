@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const productConfig = require('../product.config.json');
 test.use({serviceWorkers:'block'});
 for (const [lang,heading] of [['en','Your books.'],['ru','Ваши книги.'],['es','Tus libros.']]) {
   const path='/about/'+(lang==='en'?'':lang+'/');
@@ -19,6 +20,14 @@ for (const [lang,heading] of [['en','Your books.'],['ru','Ваши книги.']
     await expect(page.locator('a[href*="example.invalid"]')).toHaveCount(0);
     await expect(page.locator('a[href*="apps.apple.com"]')).toHaveCount(0);
     await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(4);
+    const readerLink=page.locator('.hero .actions a').first();
+    await expect(readerLink).toHaveAttribute('href',productConfig.urls.marketingSite+'lite.html?lang='+lang);
+    for(const [index,file] of ['privacy.html','support.html','acknowledgements.html'].entries()) {
+      const href=await page.locator('.footer-links a').nth(index).getAttribute('href');
+      expect(href).toBe(productConfig.urls.marketingSite+(lang==='en'?'':lang+'/')+file);
+      const response=await request.get(new URL(href).pathname);
+      expect(response.status(),file+' in '+lang).toBe(200);
+    }
     const demo=page.locator('[data-rsvp-demo]');
     const initial=await demo.locator('[data-word]').textContent();
     await demo.locator('[data-play]').click();

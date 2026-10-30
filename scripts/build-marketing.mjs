@@ -25,6 +25,7 @@ for (const [locale,c] of Object.entries(catalogs)) {
   const target = join(destination,prefix);
   await mkdir(target,{recursive:true});
   const appHref = appBase + 'lite.html?lang=' + locale;
+  const legalBase = appBase + prefix;
   const url = base + prefix;
   const alternates = Object.keys(catalogs).map(lang => '<link rel="alternate" hreflang="'+lang+'" href="'+base+(lang === 'en' ? '' : lang+'/')+'">').join('\n');
   const langs = Object.keys(catalogs).map(lang => '<a href="'+(lang === 'en' ? up : up+lang+'/')+'" lang="'+lang+'" hreflang="'+lang+'"'+(locale===lang?' aria-current="page"':'')+'>'+lang.toUpperCase()+'</a>').join('');
@@ -65,7 +66,7 @@ for (const [locale,c] of Object.entries(catalogs)) {
   '<section class="section"><div class="faq"><h2>'+escape(c.faqTitle)+'</h2>'+c.faqs.map(([q,a])=>'<details><summary>'+escape(q)+'</summary><p>'+escape(a)+'</p></details>').join('')+'</div>'+
   '<div class="support"><h2>'+escape(c.supportTitle)+'</h2><p>'+escape(c.supportText)+'</p><a class="btn primary" href="mailto:'+email+'?subject=HummingRead">'+escape(c.supportAction)+' &rarr;</a>'+
   (donation?'<a class="btn" rel="noopener noreferrer" href="'+escape(donation)+'">'+escape(c.donate)+'</a><p class="donation-note">'+escape(c.donateNote)+'</p>':'')+'</div></section></main>'+
-  '<footer class="footer"><span>'+escape(c.footerLine)+'</span><div class="footer-links">'+['privacy.html','support.html','acknowledgements.html'].map((f,i)=>'<a href="'+appHref+f+'">'+escape(c.footer[i])+'</a>').join('')+'</div></footer></div></body></html>\n';
+  '<footer class="footer"><span>'+escape(c.footerLine)+'</span><div class="footer-links">'+['privacy.html','support.html','acknowledgements.html'].map((f,i)=>'<a href="'+legalBase+f+'">'+escape(c.footer[i])+'</a>').join('')+'</div></footer></div></body></html>\n';
   await writeFile(join(target,'index.html'),html);
 }
 await writeFile(join(destination,'robots.txt'),productConfig.website.indexable?'User-agent: *\nAllow: /\nSitemap: '+base+'sitemap.xml\n':'User-agent: *\nDisallow: /\n');
