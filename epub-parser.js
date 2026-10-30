@@ -74,7 +74,7 @@ class EPUBParser {
         return parsed.text;
     }
 
-    async parseDetailed(file) {
+    async parseDetailed(file, options = {}) {
         try {
             if (Number.isFinite(file?.size) && file.size > this.limits.maxSourceBytes) {
                 throw new Error(this.t('importSafetyLimit'));
@@ -94,18 +94,35 @@ class EPUBParser {
             const noteDocuments = new Map();
             let characterOffset = 0;
 
-            for (const item of packageInfo.spine) {
+            const spineEntries = packageInfo.spine.map((item) => {
                 const requestedPath = this.resolveFilePath(opfFile, item.href);
                 const located = this.findArchiveEntry(contents, requestedPath);
                 const filePath = located?.path || requestedPath;
-                const entry = located?.entry;
-                if (!entry || !this.isHtmlManifestItem(item, filePath)) continue;
-                if (this.shouldSkipFile(filePath, item)) continue;
+                return { item, filePath, entry: located?.entry };
+            }).filter(({ item, filePath, entry }) => entry && this.isHtmlManifestItem(item, filePath)
+                && !this.shouldSkipFile(filePath, item));
 
+            // A note document can occur before its reference in the spine. Find
+            // resolvable targets first, so only notes available through a popup
+            // are suppressed in the prose. Unreferenced content stays readable.
+            const noteTargets = new Map();
+            if (!options.preserveInlineNoteBodies) {
+                for (const { filePath, entry } of spineEntries) {
+                    const html = await this.readEntryText(entry);
+                    const prepared = await this.prepareNoteReferences(contents, filePath, html, noteDocuments);
+                    for (const reference of prepared.references) {
+                        if (!reference.sourceInReadingFlow) continue;
+                        if (!noteTargets.has(reference.targetPath)) noteTargets.set(reference.targetPath, new Set());
+                        noteTargets.get(reference.targetPath).add(reference.targetFragment);
+                    }
+                }
+            }
+
+            for (const { filePath, entry } of spineEntries) {
                 const html = await this.readEntryText(entry);
                 const prepared = await this.prepareNoteReferences(contents, filePath, html, noteDocuments);
                 const navEntries = navigation.filter((candidate) => candidate.filePath === filePath);
-                const chapter = this.extractChapterFromHTML(prepared.html);
+                const chapter = this.extractChapterFromHTML(prepared.html, noteTargets.get(filePath));
                 if (!chapter.text) continue;
 
                 const partStart = characterOffset + (textParts.length > 0 ? 2 : 0);
@@ -374,6 +391,31 @@ class EPUBParser {
         }
     }
 
+    isPopupNoteAside(element) {
+        if (element?.localName?.toLowerCase() !== 'aside') return false;
+        const types = [
+            element.getAttribute('epub:type'),
+            element.getAttributeNS?.('http://www.idpf.org/2007/ops', 'type'),
+            element.getAttribute('role')
+        ].filter(Boolean).join(' ').toLowerCase().split(/\s+/);
+        return types.some((type) => ['footnote', 'endnote', 'doc-footnote', 'doc-endnote'].includes(type));
+    }
+
+    isReferenceInReadingFlow(element) {
+        for (let candidate = element; candidate; candidate = candidate.parentElement) {
+            const tag = candidate.localName?.toLowerCase() || '';
+            const epubType = candidate.getAttribute('epub:type')
+                || candidate.getAttributeNS?.('http://www.idpf.org/2007/ops', 'type') || '';
+            if (this.isPopupNoteAside(candidate)
+                || ['script', 'style', 'link', 'meta', 'svg', 'img', 'image', 'nav'].includes(tag)
+                || candidate.getAttribute('role') === 'doc-endnotes'
+                || candidate.classList?.contains('footnotes')
+                || epubType === 'footnotes') return false;
+            if (tag === 'body') return true;
+        }
+        return false;
+    }
+
     // Preserve a book's original text and token positions while collecting
     // cross-file EPUB2/EPUB3 noterefs. Only local archive targets are read.
     async prepareNoteReferences(zip, sourcePath, html, documents) {
@@ -432,6 +474,11 @@ class EPUBParser {
             const numberedNote = /^(?:\[?\d+\]?|\*+|[⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/.test(marker)
                 && /^(?:fn|note|footnote|endnote|n)[_.:-]*\d+/i.test(fragment);
             if (!explicit && !looksLikeTarget && !numberedNote) continue;
+            // A fragment may be a small marker nested within a footnote. Show
+            // the complete semantic note before hiding its body from prose.
+            for (let candidate = node; candidate; candidate = candidate.parentElement) {
+                if (this.isPopupNoteAside(candidate)) { node = candidate; break; }
+            }
             if (!node.textContent?.trim() && node.parentElement) node = node.parentElement;
             const clone = node.cloneNode(true);
             Array.from(clone.getElementsByTagName('*')).forEach((el) => {
@@ -451,7 +498,11 @@ class EPUBParser {
             const location = doc.createElementNS(link.namespaceURI || 'http://www.w3.org/1999/xhtml', 'span');
             location.setAttribute('id', anchor);
             link.insertBefore(location, link.firstChild);
-            references.push({anchor, label: marker, text: noteText});
+            references.push({
+                anchor, label: marker, text: noteText,
+                targetPath: located.path, targetFragment: fragment,
+                sourceInReadingFlow: this.isReferenceInReadingFlow(link)
+            });
         }
         return { html: references.length ? new XMLSerializer().serializeToString(doc) : html, references };
     }
@@ -460,7 +511,7 @@ class EPUBParser {
         return this.extractChapterFromHTML(html).text;
     }
 
-    extractChapterFromHTML(html) {
+    extractChapterFromHTML(html, noteTargets = null) {
         const parser = new DOMParser();
         let doc = parser.parseFromString(html, 'application/xhtml+xml');
         const xmlFailed = Array.from(doc.getElementsByTagName('*'))
@@ -475,12 +526,30 @@ class EPUBParser {
             );
             doc = parser.parseFromString(htmlCompatible, 'text/html');
         }
-        Array.from(doc.getElementsByTagName('*')).filter((element) => {
+        const elements = Array.from(doc.getElementsByTagName('*'));
+        const popupAsides = new Set();
+        if (noteTargets?.size) {
+            const visitedTargets = new Set();
+            for (const element of elements) {
+                const id = (element.getAttribute('id') || element.getAttribute('name') || '').normalize('NFC');
+                if (!id || !noteTargets.has(id) || visitedTargets.has(id)) continue;
+                // Match the first id, just as the note document lookup does.
+                visitedTargets.add(id);
+                for (let candidate = element; candidate; candidate = candidate.parentElement) {
+                    if (this.isPopupNoteAside(candidate)) {
+                        popupAsides.add(candidate);
+                        break;
+                    }
+                }
+            }
+        }
+        elements.filter((element) => {
             const tagName = element.localName?.toLowerCase() || '';
             const epubType = element.getAttribute('epub:type')
                 || element.getAttributeNS?.('http://www.idpf.org/2007/ops', 'type')
                 || '';
-            return ['script', 'style', 'link', 'meta', 'svg', 'img', 'image', 'nav'].includes(tagName)
+            return popupAsides.has(element)
+                || ['script', 'style', 'link', 'meta', 'svg', 'img', 'image', 'nav'].includes(tagName)
                 || element.getAttribute('role') === 'doc-endnotes'
                 || element.classList?.contains('footnotes')
                 || epubType === 'footnotes';

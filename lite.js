@@ -294,25 +294,8 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.normalTextDisplay.querySelectorAll('[data-index]').forEach(span => {
    span.removeAttribute('role'); span.removeAttribute('aria-label'); span.removeAttribute('tabindex');
   });
-  const noteAnchors=new Map();
-  (this.currentNotes || []).forEach((note) => {
-   const span=this.wordSpans[note.wordIndex]; if(!span) return;
-   const existing=span.textContent.trimEnd();
-   if(note.inlineMarker !== false && note.label) {
-    const at=existing.lastIndexOf(note.label);
-    if(at>=0) span.textContent=existing.slice(0,at)+existing.slice(at+note.label.length);
-   }
-   const button=document.createElement('button');
-   button.type='button'; button.className='inline-note'; button.textContent=note.label;
-   button.setAttribute('aria-label',this.lt('note')+' '+note.label);
-   button.addEventListener('click',event=>{
-    event.stopPropagation(); this.el('liteNoteText').textContent=note.text;
-    this.openModal(this.el('liteNoteModal'),this.el('liteNoteClose'),button);
-   });
-   const separator=document.createTextNode(' ');
-   (noteAnchors.get(note.wordIndex) || span).after(button,separator);
-   noteAnchors.set(note.wordIndex,separator);
-  });
+  this.renderInlineNoteButtons({modal:this.el('liteNoteModal'),text:this.el('liteNoteText'),
+   close:this.el('liteNoteClose'),label:this.lt('note'),className:'inline-note'});
  }
  setCurrentWordIndex(index, options = {}) {
   this.liteUserScrolling = false; clearTimeout(this.liteScrollTimer);
@@ -508,9 +491,14 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   try {
    if (!await this.allowDraftReplacement()) return;
    const extension = this.getFileExtension(file.name,file.type);
-   const parsed = await this.extractBookFromFile(file,extension);
+   let parsed = await this.extractBookFromFile(file,extension);
    if (this.liteRefreshBook) {
     const id=this.liteRefreshBook, existing=await this.getBook(id);
+    // Older EPUB imports may contain inline note bodies. Match their original
+    // text before adding notes so saved word positions and bookmarks stay valid.
+    if (existing && extension==='epub' && existing.text.trim()!==parsed.text.trim()) {
+     parsed=await this.extractBookFromFile(file,extension,{preserveInlineNoteBodies:true});
+    }
     if (!existing || existing.text.trim()!==parsed.text.trim()) { this.showToast(this.lt('differentBook'),'error'); return; }
     if (!parsed.notes?.length) { this.showToast(this.lt('noNotes')); return; }
     const saved=await this.mutateBook(id,latest=>latest.text.trim()===parsed.text.trim()

@@ -61,8 +61,8 @@ input[type=range]::-moz-range-thumb{height:20px;width:20px;border:0;border-radiu
 .lite-notch.top{top:0}.lite-notch.bottom{bottom:0}
 #hardwareControlsHint{display:block;font-size:11px;color:var(--muted);font-weight:400}
 
-.inline-note{display:inline;vertical-align:super;font-size:.68em;line-height:1;color:#708449;text-decoration:underline;text-underline-offset:2px;padding:0 2px}
-:root[data-theme=night] .inline-note{color:#c6dba0}
+.inline-note{display:inline;vertical-align:super;font-size:.78em;line-height:1;color:#175fa9;text-decoration:underline;text-underline-offset:2px;padding:5px 4px;margin:-5px 0}
+:root[data-theme=night] .inline-note{color:#91c1ff}
 .note-text{white-space:pre-wrap;line-height:1.65;overflow-wrap:anywhere}
 
 #liteSearchForm{display:flex;gap:8px;align-items:center}

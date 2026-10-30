@@ -228,3 +228,95 @@ test('time estimate is reused during adjacent word updates',async({page})=>{
  });
  expect(calls).toBe(1);
 });
+
+async function inlineNoteFixture() {
+ const zip=await JSZip.loadAsync(await epubFixture());
+ const prefix=Array.from({length:220},(_,i)=>`word${i}`).join(' ');
+ zip.file('OEBPS/text.xhtml',`<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><body><p>${prefix} Here<a epub:type="noteref" href="#inline">[1]</a> and there<a epub:type="noteref" href="notes.xhtml#external">[2]</a> is the story.</p><aside epub:type="footnote" id="inline"><p>INLINE NOTE BODY.</p></aside><aside>ORDINARY ASIDE REMAINS.</aside><aside epub:type="footnote" id="unreferenced"><p>UNREFERENCED NOTE REMAINS.</p></aside></body></html>`);
+ zip.file('OEBPS/notes.xhtml','<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><body><aside epub:type="footnote" id="external"><p>EXTERNAL NOTE BODY.</p></aside></body></html>');
+ const opf=await zip.file('OEBPS/book.opf').async('string');
+ zip.file('OEBPS/book.opf',opf.replace('<spine><itemref idref="text"/>','<spine><itemref idref="notes"/><itemref idref="text"/>'));
+ return zip.generateAsync({type:'nodebuffer'});
+}
+
+test('EPUB links show blue notes in place and keep only referenced note bodies out of prose',async({page})=>{
+ await ready(page);
+ await page.locator('#fileInput').setInputFiles({name:'inline.epub',mimeType:'application/epub+zip',buffer:await inlineNoteFixture()});
+ await expect(page.locator('.inline-note')).toHaveText(['[1]','[2]']);
+ const saved=await page.evaluate(async()=>rsvpReader.getBook(rsvpReader.currentBookId));
+ expect(saved.text).not.toContain('INLINE NOTE BODY.');
+ expect(saved.text).not.toContain('EXTERNAL NOTE BODY.');
+ expect(saved.text).toContain('ORDINARY ASIDE REMAINS.');
+ expect(saved.text).toContain('UNREFERENCED NOTE REMAINS.');
+ await page.locator('.inline-note').first().scrollIntoViewIfNeeded();
+ for(const theme of ['day','night']) {
+  await page.evaluate(t=>rsvpReader.setTheme(t),theme);
+  const color=await page.locator('.inline-note').first().evaluate(el=>getComputedStyle(el).color);
+  const [red,green,blue]=color.match(/\d+/g).map(Number);
+  expect(blue).toBeGreaterThan(red);expect(blue).toBeGreaterThan(green);
+  const before=await page.evaluate(()=>({top:rsvpReader.normalTextDisplay.scrollTop,index:rsvpReader.currentIndex}));
+  await page.locator('.inline-note').first().click();
+  await expect(page.locator('#liteNoteText')).toHaveText('INLINE NOTE BODY.');
+  await page.locator('#liteNoteClose').click();
+  expect(await page.evaluate(()=>({top:rsvpReader.normalTextDisplay.scrollTop,index:rsvpReader.currentIndex}))).toEqual(before);
+ }
+ await page.locator('.inline-note').last().click();
+ await expect(page.locator('#liteNoteText')).toHaveText('EXTERNAL NOTE BODY.');
+});
+
+test('loading notes into an older EPUB keeps its saved text, place and bookmarks',async({page})=>{
+ await ready(page);const original=await inlineNoteFixture();
+ const id=await page.evaluate(async data=>{
+  const file=new File([new Uint8Array(data)],'legacy.epub',{type:'application/epub+zip'});
+  const parsed=await rsvpReader.extractBookFromFile(file,'epub',{preserveInlineNoteBodies:true});
+  parsed.notes=[];
+  const book=await rsvpReader.addParsedBookToLibrary('Legacy',parsed,'epub',{silent:true});
+  await rsvpReader.mutateBook(book.id,b=>({...b,currentIndex:210,bookmarks:[{id:'saved',name:'Saved',index:210,excerpt:'kept'}]}));
+  await rsvpReader.loadLibrary();return book.id;
+ },Array.from(original));
+ const before=await page.evaluate(async id=>rsvpReader.getBook(id),id);
+ expect(before.text).toContain('INLINE NOTE BODY.');
+ await page.locator('.book-more').click();
+ const choice=page.waitForEvent('filechooser');await page.locator('#liteBookRefresh').click();
+ await (await choice).setFiles({name:'legacy.epub',mimeType:'application/epub+zip',buffer:original});
+ await expect.poll(()=>page.evaluate(async id=>(await rsvpReader.getBook(id)).notes.length,id)).toBe(2);
+ const after=await page.evaluate(async id=>rsvpReader.getBook(id),id);
+ expect(after.text).toBe(before.text);expect(after.currentIndex).toBe(before.currentIndex);expect(after.bookmarks).toEqual(before.bookmarks);
+});
+
+test('nested note targets keep their full text and do not hide notes reachable only inside a popup',async({page})=>{
+ const zip=await JSZip.loadAsync(await epubFixture());
+ zip.file('OEBPS/text.xhtml','<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><body><p>Story<a epub:type="noteref" href="#nested">[1]</a> continues.</p><aside epub:type="footnote" id="first"><p><span id="nested">1.</span> COMPLETE FIRST NOTE <a epub:type="noteref" href="#second">[2]</a></p></aside><aside epub:type="footnote" id="second"><p>SECOND NOTE STILL READABLE.</p></aside></body></html>');
+ await ready(page);
+ await page.locator('#fileInput').setInputFiles({name:'nested.epub',mimeType:'application/epub+zip',buffer:await zip.generateAsync({type:'nodebuffer'})});
+ await expect(page.locator('.inline-note')).toHaveCount(1);
+ await page.locator('.inline-note').click();
+ await expect(page.locator('#liteNoteText')).toContainText('COMPLETE FIRST NOTE');
+ const saved=await page.evaluate(async()=>rsvpReader.getBook(rsvpReader.currentBookId));
+ expect(saved.text).not.toContain('COMPLETE FIRST NOTE');
+ expect(saved.text).toContain('SECOND NOTE STILL READABLE.');
+});
+
+test('a book shared with the full reader keeps its clickable notes and does not leak them into a new draft',async({page})=>{
+ await ready(page);
+ await page.locator('#fileInput').setInputFiles({name:'inline.epub',mimeType:'application/epub+zip',buffer:await inlineNoteFixture()});
+ await expect(page.locator('.inline-note')).toHaveCount(2);
+ const id=await page.evaluate(()=>rsvpReader.currentBookId);
+ await page.goto('/index.html?lang=ru');
+ await page.waitForFunction(()=>window.rsvpReader && window.rsvpReader.ready);
+ await page.evaluate(async id=>{await rsvpReader.ready;await rsvpReader.loadBook(id,{start:true});},id);
+ await expect(page.locator('.reader-inline-note')).toHaveCount(2);
+ await page.locator('.reader-inline-note').first().scrollIntoViewIfNeeded();
+ const before=await page.evaluate(()=>({top:rsvpReader.normalTextDisplay.scrollTop,index:rsvpReader.currentIndex}));
+ await page.locator('.reader-inline-note').first().click();
+ await expect(page.locator('#readerNoteText')).toHaveText('INLINE NOTE BODY.');
+ await page.locator('#readerNoteClose').click();
+ expect(await page.evaluate(()=>({top:rsvpReader.normalTextDisplay.scrollTop,index:rsvpReader.currentIndex}))).toEqual(before);
+ await page.evaluate(async id=>{rsvpReader.currentNotes=[];rsvpReader.currentBookId=id;await rsvpReader.restoreLastSession();},id);
+ await expect(page.locator('.reader-inline-note')).toHaveCount(2);
+ await page.evaluate(async()=>{
+  rsvpReader.textInput.value='This is a new draft without any book notes.';
+  rsvpReader.handleTextInputChanged();await rsvpReader.startNormalReading();
+ });
+ await expect(page.locator('.reader-inline-note')).toHaveCount(0);
+});

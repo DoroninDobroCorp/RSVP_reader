@@ -120,6 +120,7 @@
   "continue": "Продолжить",
   "sessionProgress": "Сеанс 0% · книга 0% · осталось 0 мин",
   "targetWpmShort": "Цель 350 слов/мин",
+  "footnote": "Сноска",
   "readingPosition": "Позиция чтения",
   "readingPositionValue": "{progress}% · слово {current} из {total}",
   "readingSpeed": "Скорость чтения",

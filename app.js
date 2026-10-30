@@ -301,6 +301,9 @@ class RSVPReader {
         this.tocModal = document.getElementById('tocModal');
         this.closeTocBtn = document.getElementById('closeTocBtn');
         this.tocList = document.getElementById('tocList');
+        this.readerNoteModal = document.getElementById('readerNoteModal');
+        this.readerNoteClose = document.getElementById('readerNoteClose');
+        this.readerNoteText = document.getElementById('readerNoteText');
 
         this.actionDialog = document.getElementById('actionDialog');
         this.actionDialogForm = document.getElementById('actionDialogForm');
@@ -508,6 +511,11 @@ class RSVPReader {
             if (event.target === this.tocModal) this.closeToc();
         });
 
+        this.readerNoteClose?.addEventListener('click', () => this.closeModal(this.readerNoteModal));
+        this.readerNoteModal?.addEventListener('click', (event) => {
+            if (event.target === this.readerNoteModal) this.closeModal(this.readerNoteModal);
+        });
+
         this.actionDialogForm.addEventListener('submit', (event) => {
             event.preventDefault();
             const value = this.actionDialogInputGroup.hidden ? true : this.actionDialogInput.value;
@@ -713,6 +721,7 @@ class RSVPReader {
         this.currentBookName = '';
         this.currentTextSignature = '';
         this.currentChapters = [];
+        this.currentNotes = [];
         this.pendingChapters = [];
         this.currentIndex = 0;
         this.words = [];
@@ -2315,6 +2324,7 @@ class RSVPReader {
         }
         this.currentBookName = book?.name || this.bookNameInput.value.trim();
         this.currentChapters = this.normalizeChapters(book?.chapters || this.currentChapters);
+        this.currentNotes = this.normalizeNotes(book?.notes || []);
         this.assertTextTokenSafety(text, { requireReadable: true });
         this.words = this.parseText(text);
         const resumeIndex = snapshot && snapshot.currentBookId === this.currentBookId
@@ -2356,6 +2366,7 @@ class RSVPReader {
             this.currentBookName = '';
             this.currentTextSignature = '';
             this.currentChapters = [];
+            this.currentNotes = [];
             this.pendingChapters = [];
             this.currentIndex = 0;
             this.hasUnsavedTextInput = true;
@@ -2741,6 +2752,7 @@ class RSVPReader {
             this.currentBookName = this.t('demoBookTitle');
             this.currentTextSignature = '';
             this.currentChapters = [];
+            this.currentNotes = [];
             this.pendingChapters = [];
             this.currentIndex = 0;
             this.words = [];
@@ -3104,7 +3116,7 @@ class RSVPReader {
         return parsedBook.text;
     }
 
-    async extractBookFromFile(file, extension) {
+    async extractBookFromFile(file, extension, options = {}) {
         this.assertSourceFileSafe(file);
         // Telegram and several ebook catalogs distribute a ZIP archive whose
         // outer filename still ends in `.fb2`. Detect the container from its
@@ -3120,7 +3132,7 @@ class RSVPReader {
         let chapters = [];
         switch (extension) {
             case 'epub': {
-                const parsed = await new EPUBParser().parseDetailed(file);
+                const parsed = await new EPUBParser().parseDetailed(file, options);
                 return this.validateParsedBook({
                     text: parsed.text,
                     chapters: this.chaptersFromCharacterOffsets(parsed.text, parsed.chapters),
@@ -4201,6 +4213,12 @@ class RSVPReader {
 
         this.normalTextDisplay.appendChild(fragment);
         this.highlightMatches();
+        if (this.readerNoteModal) {
+            this.renderInlineNoteButtons({
+                modal: this.readerNoteModal, text: this.readerNoteText, close: this.readerNoteClose,
+                label: this.t('footnote'), className: 'reader-inline-note'
+            });
+        }
 
         requestAnimationFrame(() => {
             if (options.scrollTo === 'end') {
@@ -4210,6 +4228,33 @@ class RSVPReader {
             } else {
                 this.scrollCurrentWordIntoView(false);
             }
+        });
+    }
+
+    renderInlineNoteButtons({ modal, text, close, label, className }) {
+        if (!modal || !text || !close) return;
+        const anchors = new Map();
+        (this.currentNotes || []).forEach((note) => {
+            const span = this.wordSpans[note.wordIndex];
+            if (!span) return;
+            const existing = span.textContent.trimEnd();
+            if (note.inlineMarker !== false && note.label) {
+                const at = existing.lastIndexOf(note.label);
+                if (at >= 0) span.textContent = existing.slice(0, at) + existing.slice(at + note.label.length);
+            }
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = className;
+            button.textContent = note.label;
+            button.setAttribute('aria-label', label + ' ' + note.label);
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                text.textContent = note.text;
+                this.openModal(modal, close, button);
+            });
+            const separator = document.createTextNode(' ');
+            (anchors.get(note.wordIndex) || span).after(button, separator);
+            anchors.set(note.wordIndex, separator);
         });
     }
 
@@ -5764,6 +5809,7 @@ class RSVPReader {
             this.currentBookId = null;
             this.currentBookName = '';
             this.currentTextSignature = '';
+            this.currentNotes = [];
             this.hasUnsavedTextInput = true;
             await this.saveDraft({ skipSync: true });
             await this.loadLibrary();
@@ -5981,6 +6027,7 @@ class RSVPReader {
             this.currentBookName = '';
             this.currentTextSignature = '';
             this.currentChapters = [];
+            this.currentNotes = [];
             this.currentIndex = 0;
             await this.saveDraft();
         }
@@ -6610,6 +6657,7 @@ class RSVPReader {
         this.currentBookName = '';
         this.currentTextSignature = '';
         this.currentChapters = [];
+        this.currentNotes = [];
         this.currentIndex = 0;
         this.nativeBookIndex = {};
         this.showToast(this.t('allDataDeleted'));

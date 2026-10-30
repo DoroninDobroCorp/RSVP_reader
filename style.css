@@ -1496,6 +1496,20 @@ input:focus {
     font-size: 1.35rem;
 }
 
+.reader-inline-note {
+    display: inline;
+    vertical-align: super;
+    font-size: .78em;
+    line-height: 1;
+    color: #91c1ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 5px 4px;
+    margin: -5px 0;
+}
+[data-theme="day"] .reader-inline-note { color: #175fa9; }
+.reader-note-text { white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
+
 .modal {
     position: fixed;
     inset: 0;
