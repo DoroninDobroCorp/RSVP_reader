@@ -776,15 +776,26 @@ test.describe('production reader regressions', () => {
       reader.displayCurrentWord();
     });
     await page.waitForTimeout(160);
-    const shortFitted = await page.evaluate(() => {
+    const shortToken = await page.evaluate(() => {
       const shortFrame = document.querySelector('.rsvp-word-frame');
-      return Number(shortFrame.dataset.fittedFontSize);
+      const display = document.querySelector('#rsvpWordDisplay');
+      const displayRect = display.getBoundingClientRect(), style = getComputedStyle(display);
+      const scale = displayRect.width / display.clientWidth;
+      const rects = Array.from(shortFrame.children).map((element) => {
+        const range=document.createRange(); range.selectNodeContents(element); return range.getBoundingClientRect();
+      }).filter((rect) => rect.width > 0);
+      return {fitted:Number(shortFrame.dataset.fittedFontSize),
+        left:Math.min(...rects.map(rect=>rect.left)), right:Math.max(...rects.map(rect=>rect.right)),
+        contentLeft:displayRect.left+parseFloat(style.paddingLeft)*scale,
+        contentRight:displayRect.right-parseFloat(style.paddingRight)*scale};
     });
     expect(longToken.fitted).toBeLessThan(longToken.preferred);
     expect(longToken.left, JSON.stringify(longToken)).toBeGreaterThanOrEqual(longToken.contentLeft - 1);
     expect(longToken.right, JSON.stringify(longToken)).toBeLessThanOrEqual(longToken.contentRight + 1);
-    expect(shortFitted).toBeGreaterThanOrEqual(longToken.preferred * 0.75);
-    expect(shortFitted).toBeGreaterThan(longToken.fitted * 2);
+    expect(shortToken.fitted).toBeGreaterThan(longToken.fitted * 2);
+    expect(shortToken.fitted).toBeLessThanOrEqual(longToken.preferred);
+    expect(shortToken.left, JSON.stringify(shortToken)).toBeGreaterThanOrEqual(shortToken.contentLeft - 1);
+    expect(shortToken.right, JSON.stringify(shortToken)).toBeLessThanOrEqual(shortToken.contentRight + 1);
   });
 
   test('an unbroken long token wraps in normal reading mode without horizontal overflow', async ({ page }) => {

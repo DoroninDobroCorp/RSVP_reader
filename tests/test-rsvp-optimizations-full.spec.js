@@ -225,8 +225,16 @@ test.describe('RSVP Reader - Comprehensive Optimizations & Theme Suite', () => {
       });
 
       expect(focusCenter).not.toBeNull();
-      expect(Math.abs(focusCenter - expected40Pos)).toBeLessThanOrEqual(3.0);
+      expect(Math.abs(focusCenter - expected40Pos)).toBeLessThanOrEqual(1.0);
     }
+    await page.evaluate(() => { window.rsvpReader.pause(); window.rsvpReader.displayCurrentWord(); });
+    await page.waitForTimeout(220);
+    const pausedAlignment = await page.evaluate(() => {
+      const focus=document.querySelector('.focus-letter').getBoundingClientRect();
+      const frame=document.querySelector('.rsvp-word-frame').getBoundingClientRect();
+      return Math.abs((focus.left+focus.right)/2-(frame.left+frame.width*.4));
+    });
+    expect(pausedAlignment).toBeLessThanOrEqual(1.0);
   });
 
   test('8. Offline reload works after cache update', async ({ page, context, browserName }) => {

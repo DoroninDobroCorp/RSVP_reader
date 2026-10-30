@@ -48,6 +48,12 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   on('fileInput','change',(event) => this.runAsync(() => this.handleFileUpload(event)));
   on('fileInput','cancel',() => { this.liteRefreshBook=null; });
   on('continueReadingCard','click',() => this.runAsync(() => this.openBookLite(this.continueReadingCard.dataset.bookId)));
+  on('liteLibrarySearchBtn','click',() => {
+   const input=this.librarySearchInput, opening=input.hidden;
+   input.hidden=!opening; this.el('liteLibrarySearchBtn').setAttribute('aria-expanded',String(opening));
+   if(opening) input.focus(); else {input.value='';this.libraryFilter='';this.renderLibrary();}
+  });
+  on('librarySearchInput','input',event => {this.libraryFilter=event.target.value.trim().toLowerCase();this.renderLibrary();});
   on('tryDemoBtn','click',() => this.runAsync(() => this.openBuiltInDemo()));
   on('backToInputBtn','click',() => this.runAsync(() => this.backToInput()));
   on('startRSVPBtn','click',() => { this.captureScrollPosition(); this.startRSVP(); });
@@ -72,6 +78,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   on('rsvpScrubber','change',() => this.schedulePositionSave());
   ['settingsBtn','liteTextSettings','liteFocusSettings'].forEach(id => on(id,'click',event => this.openSettings(event.currentTarget)));
   on('closeSettingsBtn','click',() => this.closeSettings());
+  on('resetSettingsBtn','click',() => this.resetSettings());
   on('themeDayBtn','click',() => this.setTheme('day'));
   on('themeNightBtn','click',() => this.setTheme('night'));
   this.fontButtons.forEach(button => button.addEventListener('click',() => this.setFontFamily(button.dataset.font)));
@@ -237,6 +244,15 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   document.documentElement.style.setProperty('--text-size',textSize + 'px');
   this.applyReadingFont(); this.updateSpeedControls();
  }
+ resetSettings() {
+  super.resetSettings();
+  this.settings.litePairsEnabled=false;
+  this.settings.chunkingEnabled=false;
+  this.settings.fontFamily='serif';
+  this.loadSettingsToForm(); this.saveSettings();
+  if(this.mode==='rsvp') this.displayCurrentWord();
+  if(this.mode==='rsvp' || this.mode==='normal') this.updateProgress();
+ }
  updateSpeedControls() {
   const wpm = Math.round(this.settings.wpm);
   if (this.rsvpWpmLabel) this.rsvpWpmLabel.textContent = wpm + ' ' + ({en:'WPM',ru:'сл/мин',es:'ppm'}[this.i18n.language] || 'WPM');
@@ -268,6 +284,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.normalTextDisplay.querySelectorAll('[data-index]').forEach(span => {
    span.removeAttribute('role'); span.removeAttribute('aria-label'); span.removeAttribute('tabindex');
   });
+  const noteAnchors=new Map();
   (this.currentNotes || []).forEach((note) => {
    const span=this.wordSpans[note.wordIndex]; if(!span) return;
    const existing=span.textContent.trimEnd();
@@ -282,7 +299,9 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
     event.stopPropagation(); this.el('liteNoteText').textContent=note.text;
     this.openModal(this.el('liteNoteModal'),this.el('liteNoteClose'),button);
    });
-   span.after(button,document.createTextNode(' '));
+   const separator=document.createTextNode(' ');
+   (noteAnchors.get(note.wordIndex) || span).after(button,separator);
+   noteAnchors.set(note.wordIndex,separator);
   });
  }
  setCurrentWordIndex(index, options = {}) {
@@ -373,6 +392,19 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   }
   const minutes=Math.ceil(remaining / Math.max(1,this.liteEstimate.wpm));
   this.el('liteFocusProgress').textContent=progress+'%\n~'+minutes+' '+this.lt('minutes');
+  const stats=this.el('liteSessionStats');
+  if(stats) {
+   stats.hidden=this.mode!=='rsvp' || !total;
+   if(!stats.hidden) {
+    const runStart=this.wordOrdinalAtIndex(this.rsvpRunStartIndex || 0);
+    const session=Math.min(100,Math.max(0,Math.round(100*Math.max(0,current-runStart+1)/Math.max(1,total-runStart+1))));
+    const active=this.getActivePlaybackMinutes();
+    const speed=this.wordsProcessedInRun>=3 && active >= 1/120
+     ? this.t('targetActual',{target:Math.round(this.settings.wpm),actual:Math.max(1,Math.round(this.wordsProcessedInRun/active))})
+     : this.t('targetEstimated',{target:Math.round(this.settings.wpm),actual:Math.round(this.liteEstimate.wpm)});
+    stats.textContent=this.t('rsvpProgress',{session,book:progress,time:this.calculateReadingTime(remaining,this.liteEstimate.wpm)})+' · '+speed;
+   }
+  }
   this.rsvpScrubber.value = total > 1 ? Math.round(1000 * Math.max(0,current - 1) / (total - 1)) : 0;
   this.rsvpScrubber.disabled = total < 2;
   this.rsvpScrubber.setAttribute('aria-valuetext',this.t('readingPositionValue',{progress,current,total}));
@@ -394,7 +426,8 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   if (!this.booksList) return;
   this.booksList.replaceChildren();
   const books = [...this.library].sort((a,b) => new Date(b.lastRead || b.updatedAt || 0) - new Date(a.lastRead || a.updatedAt || 0));
-  books.forEach(book => {
+  const matches=books.filter(book=>!this.libraryFilter || `${book.name} ${book.fileName || ''}`.toLowerCase().includes(this.libraryFilter));
+  matches.forEach(book => {
    const row = document.createElement('li'); row.className = 'book-row';
    const open = document.createElement('button'); open.type = 'button'; open.className = 'book-open'; open.dataset.bookId = book.id;
    const cover = document.createElement('span'); cover.className = 'book-spine'; cover.setAttribute('aria-hidden','true'); cover.textContent = Array.from(book.name || '?')[0];
@@ -412,6 +445,12 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
    row.append(open,more); this.booksList.append(row);
   });
   this.el('liteBookCount').textContent = books.length ? this.formatBookCount(books.length) : '';
+  this.el('liteLibrarySearchBtn').hidden=books.length===0;
+  if(!books.length) {
+   this.librarySearchInput.hidden=true; this.librarySearchInput.value=''; this.libraryFilter='';
+   this.el('liteLibrarySearchBtn').setAttribute('aria-expanded','false');
+  }
+  this.el('liteNoLibraryMatches').hidden=books.length===0 || matches.length>0 || !this.libraryFilter;
   this.el('liteEmpty').hidden = books.length > 0;
   this.textInputSection.classList.toggle('has-books',books.length > 0);
   this.textInputSection.querySelector('h1').textContent = this.lt(books.length ? 'homeTitleReturning' : 'homeTitle');

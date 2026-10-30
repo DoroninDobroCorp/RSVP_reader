@@ -3561,8 +3561,6 @@ class RSVPReader {
                 while (parent && parent.localName?.toLowerCase() !== 'body') parent = parent.parentElement;
                 if (link.getAttribute('type') !== 'note' && parent?.getAttribute('name') !== 'notes') return;
                 const clone = target.cloneNode(true);
-                Array.from(clone.getElementsByTagName('*')).filter((node) => node.localName?.toLowerCase() === 'a')
-                    .forEach((node) => node.remove());
                 const paragraphs = Array.from(clone.getElementsByTagName('*'))
                     .filter((node) => ['p', 'v'].includes(node.localName?.toLowerCase()));
                 const noteText = (paragraphs.length ? paragraphs.map((node) => node.textContent.trim()).filter(Boolean).join('\n\n') : clone.textContent.trim()).slice(0, 10000);
@@ -4957,7 +4955,12 @@ class RSVPReader {
         this.rsvpWordDisplay.style.fontSize = `${fittedSize}px`;
         const syncFocusAxis = () => {
             const center = wordFrame.querySelector('.orp-center');
-            if (center) wordFrame.style.setProperty('--orp-focus-half', `${center.getBoundingClientRect().width / 2}px`);
+            if (center) {
+                const layoutWidth = parseFloat(getComputedStyle(wordFrame).width);
+                const screenWidth = wordFrame.getBoundingClientRect().width;
+                const scale = layoutWidth > 0 && screenWidth > 0 ? screenWidth / layoutWidth : 1;
+                wordFrame.style.setProperty('--orp-focus-half', `${center.getBoundingClientRect().width / scale / 2}px`);
+            }
         };
         syncFocusAxis();
 
@@ -4967,8 +4970,9 @@ class RSVPReader {
         for (let attempt = 0; attempt < 5; attempt++) {
             void wordFrame.offsetWidth;
             const displayRect = this.rsvpWordDisplay.getBoundingClientRect();
-            const contentLeft = displayRect.left + parseFloat(displayStyle.paddingLeft || 0);
-            const contentRight = displayRect.right - parseFloat(displayStyle.paddingRight || 0);
+            const scale = this.rsvpWordDisplay.clientWidth > 0 ? displayRect.width / this.rsvpWordDisplay.clientWidth : 1;
+            const contentLeft = displayRect.left + parseFloat(displayStyle.paddingLeft || 0) * scale;
+            const contentRight = displayRect.right - parseFloat(displayStyle.paddingRight || 0) * scale;
             const partRects = Array.from(wordFrame.children).map((element) => {
                 const range = document.createRange();
                 range.selectNodeContents(element);

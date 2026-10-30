@@ -73,3 +73,7 @@ input[type=range]::-moz-range-thumb{height:20px;width:20px;border:0;border-radiu
 .bookmark-actions{display:flex;gap:8px}.bookmark-btn{padding:8px;color:var(--ink);text-decoration:underline}
 .sheet-links{flex-wrap:wrap}
 .advanced-toggle small{display:block;color:var(--muted);font-size:11px;line-height:1.4}
+
+.session-stats{display:block;color:var(--muted);font-size:12px;line-height:1.5}
+
+.shelf-tools{display:flex;align-items:center;gap:8px}.shelf-tools .icon-button{font-size:22px}.bookshelf input[type=search]{width:100%;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font-size:16px}.library-no-matches{padding:18px 0;color:var(--muted);font-size:13px}

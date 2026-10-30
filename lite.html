@@ -28,7 +28,7 @@
     <button id="litePasteBtn" class="soft-button" type="button" data-lite="paste">Paste text</button>
   </div>
   <p class="file-hint" data-lite="formats">EPUB, FB2, DOCX, TXT, HTML, MD, RTF · no DRM</p>
-  <section class="bookshelf" aria-labelledby="shelfTitle"><div class="shelf-heading"><h2 id="shelfTitle" data-lite="books">Your books</h2><span id="liteBookCount"></span></div><ul id="booksList"></ul><div id="liteEmpty" class="empty"><span class="empty-mark" aria-hidden="true">⌁</span><p data-lite="empty">Your next chapter starts here.</p><button id="tryDemoBtn" class="text-button" type="button" data-lite="demo">Try a short read →</button></div></section>
+  <section class="bookshelf" aria-labelledby="shelfTitle"><div class="shelf-heading"><h2 id="shelfTitle" data-lite="books">Your books</h2><div class="shelf-tools"><span id="liteBookCount"></span><button id="liteLibrarySearchBtn" class="icon-button" type="button" aria-label="Search your library" data-i18n-aria="searchLibrary" aria-expanded="false" hidden>⌕</button></div></div><input id="librarySearchInput" type="search" aria-label="Search your library" data-i18n-aria="searchLibrary" hidden><p id="liteNoLibraryMatches" class="library-no-matches" data-i18n="noLibraryMatches" hidden></p><ul id="booksList"></ul><div id="liteEmpty" class="empty"><span class="empty-mark" aria-hidden="true">⌁</span><p data-lite="empty">Your next chapter starts here.</p><button id="tryDemoBtn" class="text-button" type="button" data-lite="demo">Try a short read →</button></div></section>
   <footer class="home-footer"><p id="litePrivacy" data-lite="privacy">Books and progress stay in this browser.</p><a href="privacy.html" data-i18n="privacyPolicy">Privacy policy</a></footer>
   <input id="fileInput" type="file" hidden>
 </section>
@@ -63,6 +63,7 @@
   <div class="setting"><span data-i18n="language">Language</span><div class="segments languages"><button type="button" data-language="en" aria-label="English">EN</button><button type="button" data-language="ru" aria-label="Русский">RU</button><button type="button" data-language="es" aria-label="Español">ES</button></div></div>
   <details class="advanced-settings"><summary data-lite="advanced">Advanced settings</summary>
   <div class="advanced-body">
+   <small id="liteSessionStats" class="session-stats" hidden></small>
    <label class="advanced-toggle"><span><span data-i18n="shortPairs">Pair two short words</span><small data-i18n="shortPairsHint"></small></span><input id="litePairing" type="checkbox" data-setting="litePairsEnabled"></label>
    <label class="advanced-toggle"><span><span data-i18n="balancedPairs">Flexible pairs up to 10 letters total</span><small data-i18n="balancedPairsHint"></small></span><input id="balancedPairsEnabledInput" type="checkbox" data-setting="balancedPairsEnabled"></label>
    <label class="advanced-toggle"><span data-i18n="orpAlignment">Align by focus point</span><input id="orpAlignmentInput" type="checkbox" data-setting="orpAlignment"></label>
@@ -77,6 +78,7 @@
     <label class="advanced-number"><span data-i18n="periodPause">Sentence</span><input id="periodPause" type="number" min="1" max="5" step="0.1" data-number-setting="periodPause"></label>
     <label class="advanced-number"><span data-i18n="semicolonPause">Semicolon</span><input id="semicolonPause" type="number" min="1" max="5" step="0.1" data-number-setting="semicolonPause"></label>
    </div>
+   <button id="resetSettingsBtn" class="text-button" type="button" data-i18n="resetSettings">Restore defaults</button>
   </div>
  </details>
  <div class="sheet-links"><button id="settingsExportBtn" class="text-button" type="button" data-lite="backup">Download a backup</button><button id="settingsImportBtn" class="text-button" type="button" data-lite="restore">Restore backup</button><input id="libraryImportInput" type="file" hidden></div>

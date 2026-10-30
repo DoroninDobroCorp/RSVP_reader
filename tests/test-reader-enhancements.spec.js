@@ -46,10 +46,23 @@ test('EPUB notes and navigation survive closing and reloading without executing 
 
 test('FB2 note opens and ordinary file text stays intact',async({page})=>{
  await ready(page);
- const fb2='<?xml version="1.0"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink"><body><section><title><p>Глава первая</p></title><p>Слово<a type="note" l:href="#n1">[1]</a> и текст.</p></section></body><body name="notes"><section id="n1"><title><p>1</p></title><p>Текст примечания.</p></section></body></FictionBook>';
+ const fb2='<?xml version="1.0"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink"><body><section><title><p>Глава первая</p></title><p>Слово<a type="note" l:href="#n1">[1]</a> и текст.</p></section></body><body name="notes"><section id="n1"><title><p>1</p></title><p>Текст <a l:href="https://example.org">ссылки</a> в примечании.</p></section></body></FictionBook>';
  await page.locator('#fileInput').setInputFiles({name:'book.fb2',mimeType:'application/xml',buffer:Buffer.from(fb2)});
  await expect(page.locator('.inline-note')).toHaveCount(1);
- await page.locator('.inline-note').click();await expect(page.locator('#liteNoteText')).toContainText('Текст примечания.');
+ await page.locator('.inline-note').click();await expect(page.locator('#liteNoteText')).toContainText('Текст ссылки в примечании.');
+});
+
+test('consecutive EPUB notes remain in their original order',async({page})=>{
+ const zip=await JSZip.loadAsync(await epubFixture());
+ const chapter=await zip.file('OEBPS/text.xhtml').async('string');
+ zip.file('OEBPS/text.xhtml',chapter.replace('[1]</a> continues','[1]</a><a epub:type="noteref" href="notes.xhtml#n2">[2]</a> continues'));
+ const notes=await zip.file('OEBPS/notes.xhtml').async('string');
+ zip.file('OEBPS/notes.xhtml',notes.replace('</body>','<aside epub:type="footnote" id="n2"><p>Second note.</p></aside></body>'));
+ await ready(page);
+ await page.locator('#fileInput').setInputFiles({name:'notes.epub',mimeType:'application/epub+zip',buffer:await zip.generateAsync({type:'nodebuffer'})});
+ await expect(page.locator('.inline-note')).toHaveText(['[1]','[2]']);
+ await page.locator('.inline-note').last().click();
+ await expect(page.locator('#liteNoteText')).toHaveText('Second note.');
 });
 
 test('paused entry, reading context, paging, pairing and focus fitting',async({page})=>{
@@ -89,6 +102,38 @@ test('paused entry, reading context, paging, pairing and focus fitting',async({p
   return {children:frame.children.length,fit:Number(frame.dataset.fittedFontSize),preferred:Number(frame.dataset.preferredFontSize)};
  });
  expect(unaligned.children).toBeLessThanOrEqual(3);expect(unaligned.fit).toBeLessThan(unaligned.preferred);
+});
+
+test('the library can be searched without hiding or changing saved books',async({page})=>{
+ await ready(page);
+ await page.evaluate(async()=>{
+  await rsvpReader.addParsedBookToLibrary('First library book',{text:'A first book for a search.',chapters:[]},'text',{silent:true});
+  await rsvpReader.addParsedBookToLibrary('Second library book',{text:'A second book for a search.',chapters:[]},'text',{silent:true});
+  await rsvpReader.loadLibrary();
+ });
+ await page.locator('#liteLibrarySearchBtn').click();
+ await page.locator('#librarySearchInput').fill('Second');
+ await expect(page.locator('.book-open')).toHaveCount(1);
+ await expect(page.locator('.book-open')).toContainText('Second');
+ await page.locator('#librarySearchInput').fill('No such title');
+ await expect(page.locator('#liteNoLibraryMatches')).toBeVisible();
+ await page.locator('#liteLibrarySearchBtn').click();
+ await expect(page.locator('.book-open')).toHaveCount(2);
+ expect(await page.evaluate(()=>rsvpReader.library.length)).toBe(2);
+});
+
+test('advanced settings retain session statistics and can restore reading defaults',async({page})=>{
+ await ready(page);await openText(page,'A little book with several words for this reading session. '.repeat(40));
+ await page.locator('#startRSVPBtn').click();await page.locator('#liteFocusSettings').click();
+ await page.locator('.advanced-settings summary').click();
+ await expect(page.locator('#liteSessionStats')).toContainText('Сеанс');
+ await expect(page.locator('#liteSessionStats')).toContainText('Цель');
+ await page.locator('#wpmInput').fill('500');
+ await page.locator('#litePairing').check();
+ await page.locator('#resetSettingsBtn').click();
+ expect(await page.evaluate(()=>({wpm:rsvpReader.settings.wpm,font:rsvpReader.settings.fontFamily,pairs:rsvpReader.settings.litePairsEnabled})))
+  .toEqual({wpm:350,font:'serif',pairs:false});
+ await expect(page.locator('#normalTextDisplay')).toContainText('A little book');
 });
 
 test('existing book can restore notes from its matching original without changing progress or bookmarks',async({page})=>{
