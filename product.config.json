@@ -8,12 +8,12 @@
     "es": "RSVP, una palabra a la vez"
   },
   "urls": {
-    "support": "https://145.239.82.124.sslip.io/rsvp/support.html",
-    "privacy": "https://145.239.82.124.sslip.io/rsvp/privacy.html",
-    "marketingSite": "https://145.239.82.124.sslip.io/rsvp/",
+    "support": "https://31.220.90.37.sslip.io/rsvp/support.html",
+    "privacy": "https://31.220.90.37.sslip.io/rsvp/privacy.html",
+    "marketingSite": "https://31.220.90.37.sslip.io/rsvp/",
     "chromeWebStore": "https://example.invalid/hummingread-chrome-store-pending",
     "appStore": "https://example.invalid/hummingread-app-store-pending",
-    "publicArticleApiBase": "https://145.239.82.124.sslip.io/rsvp/"
+    "publicArticleApiBase": "https://31.220.90.37.sslip.io/rsvp/"
   },
   "versions": {
     "web": "2.0.0",
@@ -44,7 +44,7 @@
   },
   "supportEmail": "vladimir_doronin@icloud.com",
   "website": {
-    "baseUrl": "https://hummingread.145.239.82.124.sslip.io/",
+    "baseUrl": "https://hummingread.31.220.90.37.sslip.io/",
     "sourceUrl": "https://github.com/DoroninDobroCorp/RSVP_reader/tree/mission/android-r5-recovery-20260814",
     "donationUrl": null,
     "indexable": true

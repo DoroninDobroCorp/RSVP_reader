@@ -82,15 +82,15 @@ for attempt in 1 2 3 4 5; do
 done
 probe_root="artifacts/ios-candidate/deploy-probes"
 mkdir -p "$probe_root"
-curl --fail --silent --show-error --output "$probe_root/en.html" https://hummingread.145.239.82.124.sslip.io/
+curl --fail --silent --show-error --output "$probe_root/en.html" https://hummingread.31.220.90.37.sslip.io/
 grep -q 'Your books.' "$probe_root/en.html"
-curl --fail --silent --show-error --output "$probe_root/ru.html" https://hummingread.145.239.82.124.sslip.io/ru/
+curl --fail --silent --show-error --output "$probe_root/ru.html" https://hummingread.31.220.90.37.sslip.io/ru/
 grep -q 'Ваши книги.' "$probe_root/ru.html"
-curl --fail --silent --show-error --output "$probe_root/es.html" https://hummingread.145.239.82.124.sslip.io/es/
+curl --fail --silent --show-error --output "$probe_root/es.html" https://hummingread.31.220.90.37.sslip.io/es/
 grep -q 'Tus libros.' "$probe_root/es.html"
-curl --fail --silent --show-error --output "$probe_root/support.html" https://145.239.82.124.sslip.io/rsvp/support.html
+curl --fail --silent --show-error --output "$probe_root/support.html" https://31.220.90.37.sslip.io/rsvp/support.html
 grep -q 'mailto:vladimir_doronin@icloud.com' "$probe_root/support.html"
-test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://145.239.82.124.sslip.io/rsvp/.git/config)" = 404
-test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://hummingread.145.239.82.124.sslip.io/package.json)" = 404
+test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://31.220.90.37.sslip.io/rsvp/.git/config)" = 404
+test "$(curl --silent --output /dev/null --write-out '%{http_code}' https://hummingread.31.220.90.37.sslip.io/package.json)" = 404
 trap - ERR
 printf 'Published source %s\nRelease %s\nPrevious target %s\nBackup %s\n' "$candidate_sha" "$release_root" "$previous_target" "$backup_root"
