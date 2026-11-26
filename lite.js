@@ -2,9 +2,9 @@
 (function () {
 'use strict';
 const copy = {
- en: {nativePrivacy:'Books and progress stay on this device.',nativeFull:'All tools',nativePreview:'HummingRead',skip:'Skip to reading',eyebrow:'A little space for reading',homeTitle:'Just you.\nAnd a good book.',homeTitleReturning:'Time for a few pages.',homeHint:'Open a book. Find your rhythm.',continue:'Pick up where you left off',openBook:'Open a book',paste:'Paste text',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · no DRM',books:'Your books',empty:'Your next chapter starts here.',demo:'Try a short read →',privacy:'Books and progress stay in this browser.',full:'Full version ↗',preview:'Optional preview',back:'Back to books',bookText:'Book text',backText:'Back to text',focus:'One word at a time',play:'Read',pause:'Pause',resume:'Continue',settings:'Make it yours',speed:'Reading speed',speedHint:'Words per minute · start at a comfortable pace',size:'Text size',font:'Typeface',serif:'Book',sans:'Simple',light:'Light',dark:'Dark',backup:'Download a backup',title:'Title (optional)',text:'Your text',start:'Read',loading:'Opening your book…',more:'Options for {name}',remove:'Remove book',rename:'Rename',progress:'{progress}% read',draftTitle:'Keep your unsaved text?',draftHint:'There is unsaved text from the full reader. Download a backup or save it there before opening another book. Continue only if you no longer need that draft.',openAnyway:'Open anyway',done:'Done',offline:'Offline · your saved books are here',failed:'Could not open the reader. Reload to try again.'},
- ru: {nativePrivacy:'Книги и прогресс сохраняются на этом устройстве.',nativeFull:'Все инструменты',nativePreview:'HummingRead',skip:'К чтению',eyebrow:'Немного времени для себя',homeTitle:'Только ты.\nИ хорошая книга.',homeTitleReturning:'Время для пары страниц.',homeHint:'Открой книгу. Найди свой ритм.',continue:'Продолжить с того же места',openBook:'Открыть книгу',paste:'Вставить текст',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · без DRM',books:'Твои книги',empty:'Здесь начнётся следующая глава.',demo:'Попробовать на примере →',privacy:'Книги и прогресс остаются в этом браузере.',full:'Полная версия ↗',preview:'Пробный вариант',back:'К книгам',bookText:'Текст книги',backText:'К тексту',focus:'По одному слову',play:'Читать',pause:'Пауза',resume:'Продолжить',settings:'Как тебе удобно',speed:'Скорость чтения',speedHint:'Слов в минуту · начни с комфортного темпа',size:'Размер текста',font:'Шрифт',serif:'Книжный',sans:'Простой',light:'Светлая',dark:'Тёмная',backup:'Скачать резервную копию',title:'Название (необязательно)',text:'Твой текст',start:'Читать',loading:'Открываем книгу…',more:'Действия с книгой «{name}»',remove:'Убрать книгу',rename:'Переименовать',progress:'Прочитано {progress}%',draftTitle:'Сохранить вставленный текст?',draftHint:'В полной версии остался несохранённый текст. Скачай резервную копию или сохрани его там перед открытием другой книги. Продолжай, только если этот черновик больше не нужен.',openAnyway:'Всё равно открыть',done:'Готово',offline:'Без сети · сохранённые книги доступны',failed:'Не удалось открыть читалку. Обнови страницу и попробуй ещё раз.'},
- es: {nativePrivacy:'Los libros y tu progreso quedan en este dispositivo.',nativeFull:'Todas las herramientas',nativePreview:'HummingRead',skip:'Ir a la lectura',eyebrow:'Un momento para leer',homeTitle:'Solo tú.\nY un buen libro.',homeTitleReturning:'Unas páginas para ti.',homeHint:'Abre un libro. Encuentra tu ritmo.',continue:'Sigue donde lo dejaste',openBook:'Abrir un libro',paste:'Pegar texto',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · sin DRM',books:'Tus libros',empty:'Tu próximo capítulo empieza aquí.',demo:'Prueba una lectura breve →',privacy:'Los libros y tu progreso quedan en este navegador.',full:'Versión completa ↗',preview:'Vista previa opcional',back:'Volver a los libros',bookText:'Texto del libro',backText:'Volver al texto',focus:'Palabra por palabra',play:'Leer',pause:'Pausa',resume:'Continuar',settings:'A tu gusto',speed:'Velocidad de lectura',speedHint:'Palabras por minuto · empieza a un ritmo cómodo',size:'Tamaño del texto',font:'Tipografía',serif:'Libro',sans:'Sencilla',light:'Clara',dark:'Oscura',backup:'Descargar copia de seguridad',title:'Título (opcional)',text:'Tu texto',start:'Leer',loading:'Abriendo tu libro…',more:'Opciones de {name}',remove:'Quitar libro',rename:'Cambiar título',progress:'{progress}% leído',draftTitle:'¿Conservar el texto sin guardar?',draftHint:'Hay un texto sin guardar en la versión completa. Descarga una copia o guárdalo allí antes de abrir otro libro. Continúa solo si ya no necesitas ese borrador.',openAnyway:'Abrir de todos modos',done:'Listo',offline:'Sin conexión · tus libros guardados están aquí',failed:'No se pudo abrir el lector. Recarga la página para intentarlo de nuevo.'}
+ en: {nativePrivacy:'Books and progress stay on this device.',nativeFull:'All tools',nativePreview:'HummingRead',skip:'Skip to reading',eyebrow:'A little space for reading',homeTitle:'Just you.\nAnd a good book.',homeTitleReturning:'Time for a few pages.',homeHint:'Open a book. Find your rhythm.',continue:'Pick up where you left off',openBook:'Open a book',paste:'Paste text',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · no DRM',books:'Your books',empty:'Your next chapter starts here.',demo:'Try a short read →',privacy:'Books and progress stay in this browser.',full:'Full version ↗',preview:'Optional preview',back:'Back to books',bookText:'Book text',backText:'Back to text',focus:'Speed reading',play:'Read',pause:'Pause',resume:'Continue',settings:'Make it yours',speed:'Reading speed',speedHint:'Words per minute · start at a comfortable pace',size:'Text size',font:'Typeface',serif:'Book',sans:'Simple',light:'Light',dark:'Dark',backup:'Download a backup',title:'Title (optional)',text:'Your text',start:'Read',loading:'Opening your book…',more:'Options for {name}',remove:'Remove book',rename:'Rename',progress:'{progress}% read',draftTitle:'Keep your unsaved text?',draftHint:'There is unsaved text from the full reader. Download a backup or save it there before opening another book. Continue only if you no longer need that draft.',openAnyway:'Open anyway',done:'Done',offline:'Offline · your saved books are here',failed:'Could not open the reader. Reload to try again.'},
+ ru: {nativePrivacy:'Книги и прогресс сохраняются на этом устройстве.',nativeFull:'Все инструменты',nativePreview:'HummingRead',skip:'К чтению',eyebrow:'Немного времени для себя',homeTitle:'Только ты.\nИ хорошая книга.',homeTitleReturning:'Время для пары страниц.',homeHint:'Открой книгу. Найди свой ритм.',continue:'Продолжить с того же места',openBook:'Открыть книгу',paste:'Вставить текст',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · без DRM',books:'Твои книги',empty:'Здесь начнётся следующая глава.',demo:'Попробовать на примере →',privacy:'Книги и прогресс остаются в этом браузере.',full:'Полная версия ↗',preview:'Пробный вариант',back:'К книгам',bookText:'Текст книги',backText:'К тексту',focus:'Быстрое чтение',play:'Читать',pause:'Пауза',resume:'Продолжить',settings:'Как тебе удобно',speed:'Скорость чтения',speedHint:'Слов в минуту · начни с комфортного темпа',size:'Размер текста',font:'Шрифт',serif:'Книжный',sans:'Простой',light:'Светлая',dark:'Тёмная',backup:'Скачать резервную копию',title:'Название (необязательно)',text:'Твой текст',start:'Читать',loading:'Открываем книгу…',more:'Действия с книгой «{name}»',remove:'Убрать книгу',rename:'Переименовать',progress:'Прочитано {progress}%',draftTitle:'Сохранить вставленный текст?',draftHint:'В полной версии остался несохранённый текст. Скачай резервную копию или сохрани его там перед открытием другой книги. Продолжай, только если этот черновик больше не нужен.',openAnyway:'Всё равно открыть',done:'Готово',offline:'Без сети · сохранённые книги доступны',failed:'Не удалось открыть читалку. Обнови страницу и попробуй ещё раз.'},
+ es: {nativePrivacy:'Los libros y tu progreso quedan en este dispositivo.',nativeFull:'Todas las herramientas',nativePreview:'HummingRead',skip:'Ir a la lectura',eyebrow:'Un momento para leer',homeTitle:'Solo tú.\nY un buen libro.',homeTitleReturning:'Unas páginas para ti.',homeHint:'Abre un libro. Encuentra tu ritmo.',continue:'Sigue donde lo dejaste',openBook:'Abrir un libro',paste:'Pegar texto',formats:'EPUB, FB2, DOCX, TXT, HTML, MD, RTF · sin DRM',books:'Tus libros',empty:'Tu próximo capítulo empieza aquí.',demo:'Prueba una lectura breve →',privacy:'Los libros y tu progreso quedan en este navegador.',full:'Versión completa ↗',preview:'Vista previa opcional',back:'Volver a los libros',bookText:'Texto del libro',backText:'Volver al texto',focus:'Lectura rápida',play:'Leer',pause:'Pausa',resume:'Continuar',settings:'A tu gusto',speed:'Velocidad de lectura',speedHint:'Palabras por minuto · empieza a un ritmo cómodo',size:'Tamaño del texto',font:'Tipografía',serif:'Libro',sans:'Sencilla',light:'Clara',dark:'Oscura',backup:'Descargar copia de seguridad',title:'Título (opcional)',text:'Tu texto',start:'Leer',loading:'Abriendo tu libro…',more:'Opciones de {name}',remove:'Quitar libro',rename:'Cambiar título',progress:'{progress}% leído',draftTitle:'¿Conservar el texto sin guardar?',draftHint:'Hay un texto sin guardar en la versión completa. Descarga una copia o guárdalo allí antes de abrir otro libro. Continúa solo si ya no necesitas ese borrador.',openAnyway:'Abrir de todos modos',done:'Listo',offline:'Sin conexión · tus libros guardados están aquí',failed:'No se pudo abrir el lector. Recarga la página para intentarlo de nuevo.'}
 };
 Object.assign(copy.en,{restore:'Restore backup',previousResult:'Previous result',nextResult:'Next result',note:'Note',advanced:'Advanced settings',moreFonts:'More typefaces',previousPage:'Previous page',nextPage:'Next page',earlierContext:'Earlier text',laterContext:'Later text',contextHint:'Tap a word to continue from there',minutes:'min'});
 Object.assign(copy.ru,{restore:'Восстановить копию',previousResult:'Предыдущее совпадение',nextResult:'Следующее совпадение',note:'Сноска',advanced:'Расширенные настройки',moreFonts:'Другие шрифты',previousPage:'Предыдущая страница',nextPage:'Следующая страница',earlierContext:'Текст раньше',laterContext:'Текст дальше',contextHint:'Нажми на слово, чтобы продолжить с него',minutes:'мин'});
@@ -12,6 +12,9 @@ Object.assign(copy.es,{restore:'Restaurar copia',previousResult:'Resultado anter
 Object.assign(copy.en,{draftHint:'Save your previous draft to your library before opening another book?',openAnyway:'Save and continue'});
 Object.assign(copy.ru,{draftHint:'Сохранить предыдущий черновик в библиотеку перед открытием другой книги?',openAnyway:'Сохранить и продолжить'});
 Object.assign(copy.es,{draftHint:'¿Guardar el borrador anterior en tu biblioteca antes de abrir otro libro?',openAnyway:'Guardar y continuar'});
+Object.assign(copy.en,{focusHere:'From here',focusResume:'Resume',focusHereAria:'Start speed reading from here',focusResumeAria:'Return to speed reading at {percent}%',tocHere:'You are here',tocStop:'Speed reading stopped',notesAdded:'Footnotes added. Your place is kept.'});
+Object.assign(copy.ru,{focusHere:'Отсюда',focusResume:'Вернуться',focusHereAria:'Начать быстрое чтение отсюда',focusResumeAria:'Вернуться к быстрому чтению на {percent}%',tocHere:'Вы здесь',tocStop:'Остановка быстрого чтения',notesAdded:'Сноски добавлены. Место чтения сохранено.'});
+Object.assign(copy.es,{focusHere:'Desde aquí',focusResume:'Volver',focusHereAria:'Empezar la lectura rápida desde aquí',focusResumeAria:'Volver a la lectura rápida en el {percent}%',tocHere:'Estás aquí',tocStop:'Parada de lectura rápida',notesAdded:'Notas añadidas. Tu lugar se conserva.'});
 const queryLanguage = new URL(location.href).searchParams.get('lang');
 if (['en','ru','es'].includes(queryLanguage)) window.paceflowI18n.setLanguage(queryLanguage);
 
@@ -45,7 +48,14 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.applyTheme(this.currentTheme);
   this.localizeLite();
   on('loadFileBtn','click',() => { if(this.litePickerBusy) return; this.openFilePicker(this.fileInput); });
-  on('fileInput','change',(event) => this.runAsync(() => this.handleFileUpload(event)));
+  // Keep the chosen files before the input is reset, so an action retried after a storage
+  // reconnect still has its file.
+  const keepFiles = (event, action) => {
+   const proxy = {target:{files:Array.from(event.target.files || []),value:''}};
+   event.target.value = '';
+   this.runAsync(() => action(proxy));
+  };
+  on('fileInput','change',(event) => keepFiles(event,proxy => this.handleFileUpload(proxy)));
   on('continueReadingCard','click',() => this.runAsync(() => this.openBookLite(this.continueReadingCard.dataset.bookId)));
   on('liteLibrarySearchBtn','click',() => {
    const input=this.librarySearchInput, opening=input.hidden;
@@ -56,13 +66,16 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   on('tryDemoBtn','click',() => this.runAsync(() => this.openBuiltInDemo()));
   on('backToInputBtn','click',() => this.runAsync(() => this.backToInput()));
   on('startRSVPBtn','click',() => { this.captureScrollPosition(); this.startRSVP(); });
+  on('resumeRSVPBtn','click',() => this.resumeRSVP());
   on('stopRSVPBtn','click',() => this.stopRSVP());
   on('pagePrevBtn','click',() => this.turnPage(-1));
   on('pageNextBtn','click',() => this.turnPage(1));
   let pageTouch = null;
   this.normalTextDisplay.addEventListener('touchstart',event => {
-   if (event.touches.length === 1) pageTouch = {x:event.touches[0].clientX,y:event.touches[0].clientY};
+   // A second finger (pinch, two-finger scroll) or a cancelled touch is not a page-turning swipe.
+   pageTouch = event.touches.length === 1 ? {x:event.touches[0].clientX,y:event.touches[0].clientY} : null;
   },{passive:true});
+  this.normalTextDisplay.addEventListener('touchcancel',() => { pageTouch = null; },{passive:true});
   this.normalTextDisplay.addEventListener('touchend',event => {
    if (!pageTouch || !event.changedTouches.length) return;
    const dx=event.changedTouches[0].clientX-pageTouch.x, dy=event.changedTouches[0].clientY-pageTouch.y;
@@ -117,7 +130,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   on('litePasteForm','submit',event => { event.preventDefault(); this.runAsync(() => this.savePastedText()); });
   on('settingsExportBtn','click',() => this.runAsync(() => this.exportLibrary()));
   on('settingsImportBtn','click',() => this.openFilePicker(this.libraryImportInput));
-  on('libraryImportInput','change',event => this.runAsync(() => this.importLibrary(event)));
+  on('libraryImportInput','change',event => keepFiles(event,proxy => this.importLibrary(proxy)));
   on('liteFocusContents','click',event => this.openToc(event.currentTarget));
   on('liteOpenBookmarks','click',event => {
    this.closeToc(); this.runAsync(() => this.openBookmarksForCurrentBook(event.currentTarget));
@@ -176,6 +189,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   });
   document.addEventListener('visibilitychange',() => {
    if (document.visibilityState === 'hidden') this.handleAppPause();
+   else if (this.dbConnectionLost && this.db && this.storageMode !== 'localstorage') this.reopenDatabase().catch(error => console.warn('Could not reopen IndexedDB:',error));
   });
   window.addEventListener('pagehide',() => this.handleAppPause());
   window.addEventListener('resize',() => { if (this.mode === 'rsvp') this.displayCurrentWord(); });
@@ -214,7 +228,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   }
   super.openFilePicker(input);
  }
- runAsync(task) { Promise.resolve().then(task).catch(error => { console.error(error); this.showToast(error.message || this.t('actionFailed'),'error'); }); }
+ runAsync(task) { Promise.resolve().then(() => this.withDbRecovery(task)).catch(error => { console.error(error); this.showToast(error.message || this.t('actionFailed'),'error'); }); }
  localizeLite() {
   document.documentElement.lang = this.i18n.language;
   document.querySelectorAll('[data-lite]').forEach(el => el.textContent = this.lt(el.dataset.lite));
@@ -227,6 +241,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.el('litePrivacy').textContent = this.lt(navigator.onLine ? (this.isNativePlatform() ? 'nativePrivacy' : 'privacy') : 'offline');
   if (this.library.length) this.el('textInputSection').querySelector('h1').textContent = this.lt('homeTitleReturning');
   this.updatePlaybackControls();
+  this.updateFocusEntry(true);
  }
  setLanguage(language) {
   this.i18n.setLanguage(language);
@@ -289,32 +304,84 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   });
   this.renderInlineNoteButtons({modal:this.el('liteNoteModal'),text:this.el('liteNoteText'),
    close:this.el('liteNoteClose'),label:this.lt('note'),className:'inline-note'});
+  this.updateFocusEntry();
+ }
+ // Two quiet ways into speed reading: back to where it stopped, or from the text position.
+ // The pair only appears when those two places are different.
+ hasRsvpStop() {
+  return this.mode === 'normal' && Number.isInteger(this.rsvpIndex) && this.words.length > 0
+   && Math.abs(this.rsvpIndex - this.currentIndex) > 30;
+ }
+ updateFocusEntry(force = false) {
+  const resume = this.el('resumeRSVPBtn'), start = this.el('startRSVPBtn'), label = this.el('startRSVPLabel');
+  if (!resume || !start || !label) return;
+  const split = this.hasRsvpStop();
+  let percent = 0;
+  if (split) {
+   const total = this.countReadableWords();
+   percent = total > 1 ? Math.round(100 * Math.max(0,this.wordOrdinalAtIndex(this.rsvpIndex) - 1) / (total - 1)) : 0;
+  }
+  const state = split + ':' + percent + ':' + this.i18n.language;
+  if (!force && state === this.liteFocusEntryState) return;
+  this.liteFocusEntryState = state;
+  resume.hidden = !split;
+  this.el('liteFocusChoice').classList.toggle('is-split',split);
+  const key = split ? 'focusHere' : 'focus';
+  label.dataset.lite = key; label.textContent = this.lt(key);
+  start.setAttribute('aria-label',this.lt(split ? 'focusHereAria' : 'focus'));
+  resume.setAttribute('aria-label',this.lt('focusResumeAria',{percent}));
+  resume.title = this.lt('focusResumeAria',{percent});
+ }
+ resumeRSVP() {
+  if (!Number.isInteger(this.rsvpIndex) || !this.words.length) { this.captureScrollPosition(); this.startRSVP(); return; }
+  this.liteUserScrolling = false; clearTimeout(this.liteScrollTimer);
+  this.currentIndex = this.nearestReadableIndex(this.clampIndex(this.rsvpIndex,this.words.length));
+  this.startRSVP();
  }
  setCurrentWordIndex(index, options = {}) {
   this.liteUserScrolling = false; clearTimeout(this.liteScrollTimer);
   super.setCurrentWordIndex(index,options);
  }
+ // A page is whole lines. Forward, the first line that was not fully on screen comes up flush with the top edge;
+ // backward, the line just above the first fully visible one lands flush with the bottom edge. Nothing already
+ // read stays at the edge and nothing is skipped. At the end of the rendered window the next window is shown.
  turnPage(direction) {
   if (this.mode !== 'normal' || !this.words.length) return;
-  const view=this.normalTextDisplay;
-  const max=Math.max(0,view.scrollHeight-view.clientHeight);
-  const distance=Math.max(80,view.clientHeight*0.88);
-  const next=Math.max(0,Math.min(max,view.scrollTop+direction*distance));
-  if (Math.abs(next-view.scrollTop)>2) {
-   view.scrollTop=next; this.liteUserScrolling=true; this.captureScrollPosition(); return;
+  const view=this.normalTextDisplay, spans=view.querySelectorAll('[data-index]');
+  const box=view.getBoundingClientRect(), viewTop=box.top, viewBottom=box.top+view.clientHeight;
+  const max=Math.max(0,view.scrollHeight-view.clientHeight), lineHeight=this.textLineHeight(), slack=2; // sub-pixel noise
+  // A word that wraps over two lines has a box on each of them.
+  const linesOf=span => {
+   const rects=span.getClientRects();
+   return Array.from(rects.length ? rects : [span.getBoundingClientRect()],rect => this.textLineBox(rect,lineHeight,span));
+  };
+  // Lines run top to bottom in reading order, so a test that flips from false to true can be searched by halving.
+  const firstSpan=test => {
+   let low=0, high=spans.length;
+   while (low<high) { const mid=(low+high)>>1; if (test(spans[mid])) high=mid; else low=mid+1; }
+   return low;
+  };
+  let target=direction>0 ? max : 0; // no further line in this window: go to its end
+  if (direction>0) {
+   const hidden=firstSpan(span => linesOf(span).pop().bottom>viewBottom+slack);
+   if (hidden<spans.length) target=view.scrollTop+linesOf(spans[hidden]).find(line => line.bottom>viewBottom+slack).top-viewTop;
+  } else {
+   const shown=firstSpan(span => linesOf(span).pop().top>=viewTop-slack);
+   const first=shown<spans.length ? linesOf(spans[shown]).find(line => line.top>=viewTop-slack) : null;
+   // The line right above the first fully visible one: the last box before it that is on an earlier line.
+   for (let index=Math.min(shown,spans.length-1); index>=0; index--) {
+    const above=linesOf(spans[index]).reverse().find(line => !first || line.top<first.top-lineHeight/2);
+    if (above) { target=view.scrollTop+above.bottom-viewBottom; break; }
+   }
   }
-  const target=direction>0 ? this.renderWindowEnd : this.renderWindowStart-1;
-  if (target<0 || target>=this.words.length) return;
-  const index=this.nearestReadableIndex(target,direction);
-  this.currentIndex=index;
-  this.renderNormalText({anchorIndex:index});
-  requestAnimationFrame(() => {
-   const span=this.wordSpans[index]; if (!span) return;
-   const bounds=view.getBoundingClientRect(), word=span.getBoundingClientRect();
-   view.scrollTop += direction>0 ? word.top-bounds.top-24 : word.bottom-bounds.bottom+24;
-   this.liteUserScrolling=true; this.captureScrollPosition();
-  });
+  const next=Math.max(0,Math.min(max,target));
+  if (direction*(next-view.scrollTop)>2) {
+   view.scrollTo({top:next,behavior:'auto'}); this.liteUserScrolling=true; this.captureScrollPosition(); return;
+  }
+  if (direction>0) this.showLaterText(); else this.showEarlierText();
  }
+ // After a window change the saved place follows the text that is now at the top.
+ afterWindowAlign() { this.liteUserScrolling=true; this.captureScrollPosition(); }
  captureScrollPosition() {
   if (!this.liteUserScrolling || this.mode !== 'normal') return;
   const spans = this.normalTextDisplay.querySelectorAll('[data-index]');
@@ -347,7 +414,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   }
   for(let index=start;index<end;index++) {
    if (!this.isReadableToken(this.words[index])) { pane.append(document.createElement('br')); continue; }
-   const word=document.createElement('span'); word.textContent=this.words[index]+' ';
+   const word=document.createElement('span'); word.textContent=this.displayToken(index)+' ';
    if(index===this.currentIndex) {word.className='pause-current';word.setAttribute('aria-current','location');}
    word.addEventListener('click',()=>{this.setCurrentWordIndex(index,{scroll:false});this.displayCurrentWord();});
    pane.append(word);
@@ -359,11 +426,15 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   }
   requestAnimationFrame(()=>{
    const current=pane.querySelector('.pause-current');
-   if(showCurrent && current) pane.scrollTop=Math.max(0,current.offsetTop-pane.offsetTop-pane.clientHeight*.45);
-   else pane.scrollTop=0;
+   if(showCurrent && current) {
+    // Measure on screen rather than through offsetParent, so the stopped word lands in the middle of the block.
+    const paneBox=pane.getBoundingClientRect(), wordBox=current.getBoundingClientRect();
+    pane.scrollTop=Math.max(0,pane.scrollTop+(wordBox.top+wordBox.height/2)-(paneBox.top+paneBox.height/2));
+   } else pane.scrollTop=0;
   });
  }
  updateProgress() {
+  this.updateFocusEntry();
   const total = this.countReadableWords();
   const current = total ? this.wordOrdinalAtIndex(this.currentIndex) : 0;
   const progress = total > 1 ? Math.round(100 * Math.max(0,current - 1) / (total - 1)) : 0;
@@ -395,6 +466,41 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   this.rsvpScrubber.disabled = total < 2;
   this.rsvpScrubber.setAttribute('aria-valuetext',this.t('readingPositionValue',{progress,current,total}));
   this.updateSpeedControls();
+ }
+ // Contents: chapter, where it is in the book, where we are, where speed reading stopped.
+ renderToc() {
+  this.tocList.replaceChildren();
+  const chapters = this.normalizeChapters(this.currentChapters);
+  if (!chapters.length) {
+   const empty = document.createElement('li'); empty.className = 'empty-state'; empty.textContent = this.t('noChapters');
+   this.tocList.appendChild(empty); return;
+  }
+  const total = this.countReadableWords();
+  const chapterAt = index => { let found = 0; chapters.forEach((chapter,i) => { if (chapter.wordIndex <= index) found = i; }); return found; };
+  const here = chapterAt(this.currentIndex);
+  const stop = Number.isInteger(this.rsvpIndex) ? chapterAt(this.rsvpIndex) : -1;
+  chapters.forEach((chapter,i) => {
+   const item = document.createElement('li'), button = document.createElement('button');
+   button.type = 'button'; button.className = 'toc-button';
+   button.style.paddingLeft = (14 + (chapter.level - 1) * 16) + 'px';
+   const title = document.createElement('span'); title.className = 'toc-title'; title.textContent = chapter.title;
+   const meta = document.createElement('small'); meta.className = 'toc-meta';
+   const ordinal = this.wordOrdinalAtIndex(chapter.wordIndex);
+   meta.textContent = this.t('chapterPosition',{progress:total > 0 ? Math.round(100 * ordinal / total) : 0,word:this.i18n.formatNumber(Math.max(1,ordinal))});
+   button.append(title,meta);
+   const tags = document.createElement('span'); tags.className = 'toc-tags';
+   if (i === here) {
+    button.classList.add('current'); button.setAttribute('aria-current','location');
+    const tag = document.createElement('span'); tag.className = 'toc-tag here'; tag.textContent = this.lt('tocHere'); tags.append(tag);
+   }
+   if (i === stop && !(this.mode === 'rsvp' && stop === here)) {
+    button.classList.add('stopped');
+    const tag = document.createElement('span'); tag.className = 'toc-tag stop'; tag.textContent = '▶ ' + this.lt('tocStop'); tags.append(tag);
+   }
+   if (tags.childElementCount) button.append(tags);
+   button.addEventListener('click',() => this.goToChapter(chapter));
+   item.append(button); this.tocList.append(item);
+  });
  }
  updateCurrentBookInfo() {
   const name = this.currentBookName || this.bookNameInput.value.trim() || this.t('draft');
@@ -447,6 +553,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   Object.entries(views).forEach(([key,view]) => { view.hidden = key !== section; view.style.display = ''; });
   document.body.dataset.screen = section;
   if (section !== 'input') window.scrollTo(0,0);
+  this.updateFocusEntry();
  }
  async restoreLastSession() {
   await super.restoreLastSession();
@@ -475,6 +582,7 @@ window.HummingReadLite = class HummingReadLite extends RSVPReader {
   if (this.words.length) await this.persistReadingPosition();
   const book = await this.addParsedBookToLibrary(name,parsed,type,{...options,select:true,silent:true});
   if (book) await this.loadBook(book.id,{start:true});
+  if (book && this.lastImportRefreshedNotes) this.showToast(this.lt('notesAdded'));
   return book;
  }
  async handleFileUpload(event) {

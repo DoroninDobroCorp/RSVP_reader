@@ -107,6 +107,7 @@ class RSVPReader {
         this.searchYieldInterval = 4000;
         this.library = [];
         this.currentNotes = [];
+        this.rsvpIndex = null;
         this.libraryFilter = '';
         this.demoGuideActive = false;
         this.demoGuideStep = 0;
@@ -611,7 +612,7 @@ class RSVPReader {
     }
 
     runAsync(task) {
-        Promise.resolve(task()).catch((error) => {
+        Promise.resolve().then(() => this.withDbRecovery(task)).catch((error) => {
             console.error(error);
             this.showToast(error.message || this.t('actionFailed'), 'error');
         });
@@ -777,9 +778,48 @@ class RSVPReader {
                 }
             };
 
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => {
+                const db = request.result;
+                // iOS WebKit can drop the storage connection (for example after the app sat in the
+                // background); remember it so the next action reopens the database first.
+                db.onclose = () => { if (this.db === db) this.dbConnectionLost = true; };
+                db.onversionchange = () => { db.close(); if (this.db === db) this.dbConnectionLost = true; };
+                resolve(db);
+            };
             request.onerror = () => reject(request.error || new Error(this.t('indexedDbOpenFailed')));
         });
+    }
+
+    isDbConnectionError(error) {
+        if (!error) return false;
+        const text = `${error.name || ''} ${error.message || ''}`;
+        return error.name === 'UnknownError' || error.name === 'InvalidStateError'
+            || /indexed ?database|indexeddb|connection.*(lost|clos)|database.*clos/iu.test(text);
+    }
+
+    async reopenDatabase() {
+        if (this.dbReopening) return this.dbReopening;
+        this.dbReopening = (async () => {
+            try { this.db?.close(); } catch (error) { /* already closed */ }
+            this.db = await this.openDatabase();
+            this.dbConnectionLost = false;
+        })().finally(() => { this.dbReopening = null; });
+        return this.dbReopening;
+    }
+
+    // Run a user action; if the storage connection was lost, reopen it and try once more.
+    async withDbRecovery(task) {
+        if (this.dbConnectionLost && this.db && this.storageMode !== 'localstorage') {
+            try { await this.reopenDatabase(); } catch (error) { console.warn('Could not reopen IndexedDB:', error); }
+        }
+        try {
+            return await task();
+        } catch (error) {
+            if (!this.db || this.storageMode === 'localstorage' || !this.isDbConnectionError(error)) throw error;
+            console.warn('IndexedDB connection problem, reopening and retrying once:', error);
+            await this.reopenDatabase();
+            return await task();
+        }
     }
 
     requestToPromise(request) {
@@ -2325,6 +2365,7 @@ class RSVPReader {
         this.currentBookName = book?.name || this.bookNameInput.value.trim();
         this.currentChapters = this.normalizeChapters(book?.chapters || this.currentChapters);
         this.currentNotes = this.normalizeNotes(book?.notes || []);
+        this.rsvpIndex = Number.isInteger(book?.rsvpIndex) ? book.rsvpIndex : null;
         this.assertTextTokenSafety(text, { requireReadable: true });
         this.words = this.parseText(text);
         const resumeIndex = snapshot && snapshot.currentBookId === this.currentBookId
@@ -2406,6 +2447,12 @@ class RSVPReader {
         const now = new Date().toISOString();
         const id = String(book.id || this.createId());
         const currentIndex = this.clampIndex(rawCurrentIndex, tokenCount);
+        // Where speed reading last stopped; absent until the reader has used it.
+        const hasRsvpIndex = book.rsvpIndex !== null && book.rsvpIndex !== undefined && book.rsvpIndex !== ''
+            && Number.isFinite(Number(book.rsvpIndex));
+        const rsvpIndex = hasRsvpIndex
+            ? this.clampIndex(Math.max(0, parseInt(book.rsvpIndex, 10) || 0), tokenCount)
+            : null;
         const bookmarks = Array.isArray(book.bookmarks)
             ? book.bookmarks.map((bookmark) => this.normalizeBookmark(bookmark, tokenCount))
             : [];
@@ -2423,6 +2470,7 @@ class RSVPReader {
                 ? String(book.textSignature)
                 : this.bookTextSignature(text),
             currentIndex,
+            ...(rsvpIndex === null ? {} : { rsvpIndex }),
             bookmarks,
             chapters: this.normalizeChapters(book.chapters || []),
             notes: this.normalizeNotes(book.notes || []),
@@ -4134,13 +4182,18 @@ class RSVPReader {
         return this.clampIndex(parseInt(storedIndex || this.currentIndex || 0, 10), this.words.length);
     }
 
+    // Options: anchorIndex places that word at 38% of the rendered window; windowStart sets the first rendered word
+    // exactly. alignIndex + alignEdge ('top' | 'bottom') then put the line of that word flush with that edge of the
+    // view, once, after layout.
     renderNormalText(options = {}) {
         const anchorIndex = this.clampIndex(options.anchorIndex ?? this.currentIndex, this.words.length);
         const before = Math.floor(this.renderWindowSize * 0.38);
-        const start = Math.max(0, anchorIndex - before);
+        const requestedStart = Number.isInteger(options.windowStart) ? options.windowStart : anchorIndex - before;
+        const start = Math.max(0, requestedStart);
         const end = Math.min(this.words.length, start + this.renderWindowSize);
         this.renderWindowStart = Math.max(0, end === this.words.length ? end - this.renderWindowSize : start);
         this.renderWindowEnd = end;
+        const renderToken = this.normalRenderToken = (this.normalRenderToken || 0) + 1;
 
         this.normalTextDisplay.replaceChildren();
         this.wordSpans = new Array(this.words.length);
@@ -4152,10 +4205,7 @@ class RSVPReader {
             earlierButton.type = 'button';
             earlierButton.className = 'text-window-button window-before';
             earlierButton.textContent = this.t('showEarlier');
-            earlierButton.addEventListener('click', () => {
-                const nextAnchor = Math.max(0, this.renderWindowStart - Math.floor(this.renderWindowSize / 2));
-                this.renderNormalText({ anchorIndex: nextAnchor, scrollTo: 'end' });
-            });
+            earlierButton.addEventListener('click', () => this.showEarlierText());
             fragment.appendChild(earlierButton);
         }
 
@@ -4204,10 +4254,7 @@ class RSVPReader {
             laterButton.type = 'button';
             laterButton.className = 'text-window-button window-after';
             laterButton.textContent = this.t('showLater');
-            laterButton.addEventListener('click', () => {
-                const nextAnchor = Math.min(this.words.length - 1, this.renderWindowEnd + Math.floor(this.renderWindowSize / 2));
-                this.renderNormalText({ anchorIndex: nextAnchor, scrollTo: 'start' });
-            });
+            laterButton.addEventListener('click', () => this.showLaterText());
             fragment.appendChild(laterButton);
         }
 
@@ -4220,15 +4267,85 @@ class RSVPReader {
             });
         }
 
+        // One scroll adjustment per render; a render that was replaced meanwhile leaves the view alone.
         requestAnimationFrame(() => {
-            if (options.scrollTo === 'end') {
-                this.normalTextDisplay.scrollTop = this.normalTextDisplay.scrollHeight;
-            } else if (options.scrollTo === 'start') {
-                this.normalTextDisplay.scrollTop = 0;
+            if (renderToken !== this.normalRenderToken) return;
+            const aligned = Number.isInteger(options.alignIndex) ? this.wordSpans[options.alignIndex] : null;
+            if (aligned && this.normalTextDisplay.clientHeight > 0) {
+                this.alignWordLine(aligned, options.alignEdge === 'bottom' ? 'bottom' : 'top');
+                this.afterWindowAlign();
             } else {
                 this.scrollCurrentWordIntoView(false);
             }
         });
+    }
+
+    // The nearest readable word at or beyond `index`, walking later (step 1) or earlier (step -1); null when none.
+    readableWordFrom(index, step) {
+        for (let cursor = index; cursor >= 0 && cursor < this.words.length; cursor += step) {
+            if (this.isReadableToken(this.words[cursor])) return cursor;
+        }
+        return null;
+    }
+
+    // Text just past the rendered window. Its first word comes up flush at the top of the view and the usual share
+    // of already-rendered text stays above it, so nothing between the old window and the view is skipped.
+    showLaterText() {
+        const first = this.renderWindowEnd;
+        if (first >= this.words.length) return;
+        this.renderNormalText({
+            windowStart: first - Math.floor(this.renderWindowSize * 0.38),
+            alignIndex: this.readableWordFrom(first, 1) ?? first,
+            alignEdge: 'top'
+        });
+    }
+
+    // Mirror image: the last word before the window ends up flush at the bottom, with rendered text below it.
+    showEarlierText() {
+        const last = this.renderWindowStart - 1;
+        if (last < 0) return;
+        this.renderNormalText({
+            windowStart: last + 1 + Math.floor(this.renderWindowSize * 0.38) - this.renderWindowSize,
+            alignIndex: this.readableWordFrom(last, -1) ?? last,
+            alignEdge: 'bottom'
+        });
+    }
+
+    // Hook for readers that track the visible text; runs after a window change put a line at an edge of the view.
+    afterWindowAlign() {}
+
+    textLineHeight() {
+        const style = getComputedStyle(this.normalTextDisplay);
+        const fontSize = parseFloat(style.fontSize) || 16;
+        const declared = parseFloat(style.lineHeight);
+        if (!(declared > 0)) return fontSize * 1.5;
+        return /px$/.test(style.lineHeight) ? declared : declared * fontSize;
+    }
+
+    // A word is shorter than the line it sits on (half-leading above and below), and paging works in whole lines.
+    // The line is the line height centred on the word's own text. Padding and borders of the word itself (the
+    // current word is underlined by a border) change its box but not its line, so they are taken off first.
+    textLineBox(rect, lineHeight = this.textLineHeight(), element = null) {
+        let top = rect.top;
+        let bottom = rect.bottom;
+        if (element) {
+            const style = getComputedStyle(element);
+            top += (parseFloat(style.paddingTop) || 0) + (parseFloat(style.borderTopWidth) || 0);
+            bottom -= (parseFloat(style.paddingBottom) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+        }
+        const middle = (top + bottom) / 2;
+        return { top: middle - lineHeight / 2, bottom: middle + lineHeight / 2 };
+    }
+
+    // Scroll so the line holding `element` is flush with the top or the bottom edge of the text view.
+    alignWordLine(element, edge = 'top') {
+        const view = this.normalTextDisplay;
+        const rects = element.getClientRects();
+        if (!rects.length) return;
+        const line = this.textLineBox(edge === 'bottom' ? rects[rects.length - 1] : rects[0], this.textLineHeight(), element);
+        const box = view.getBoundingClientRect();
+        const delta = edge === 'bottom' ? line.bottom - (box.top + view.clientHeight) : line.top - box.top;
+        view.scrollTo({ top: Math.max(0, view.scrollTop + delta), behavior: 'auto' });
     }
 
     renderInlineNoteButtons({ modal, text, close, label, className }) {
@@ -4242,20 +4359,39 @@ class RSVPReader {
                 const at = existing.lastIndexOf(note.label);
                 if (at >= 0) span.textContent = existing.slice(0, at) + existing.slice(at + note.label.length);
             }
+            const shown = this.noteDisplayLabel(note.label);
             const button = document.createElement('button');
             button.type = 'button';
             button.className = className;
-            button.textContent = note.label;
-            button.setAttribute('aria-label', label + ' ' + note.label);
+            button.textContent = shown;
+            button.setAttribute('aria-label', label + ' ' + shown);
             button.addEventListener('click', (event) => {
                 event.stopPropagation();
-                text.textContent = note.text;
+                text.textContent = this.noteBodyText(note);
                 this.openModal(modal, close, button);
             });
             const separator = document.createTextNode(' ');
-            (anchors.get(note.wordIndex) || span).after(button, separator);
+            // A word joiner keeps the marker on the line of the word it belongs to.
+            const joiner = anchors.has(note.wordIndex) ? document.createTextNode('') : document.createTextNode('\u2060');
+            (anchors.get(note.wordIndex) || span).after(joiner, button, separator);
             anchors.set(note.wordIndex, separator);
         });
+    }
+
+    noteDisplayLabel(label) {
+        return String(label || '*').trim();
+    }
+
+    // FB2 note bodies start with their own number ("19"); the sheet already shows which note it is.
+    noteBodyText(note) {
+        const paragraphs = String(note.text || '').split(/\n\s*\n/);
+        if (paragraphs.length > 1) {
+            const first = paragraphs[0].trim();
+            const label = String(note.label || '').trim();
+            const bare = label.replace(/^\[\s*(.+?)\s*\]$/u, '$1');
+            if (first === label || first === bare || first === `[${bare}]` || first === `${bare}.`) paragraphs.shift();
+        }
+        return paragraphs.join('\n\n');
     }
 
     async handleSearch() {
@@ -4549,8 +4685,17 @@ class RSVPReader {
         this.updatePlaybackControls();
         this.updateMediaSessionState('paused');
         this.triggerHaptic('light');
+        this.noteRsvpStop();
         this.runAsync(() => this.persistReadingPosition());
         this.releaseWakeLock();
+    }
+
+    // Remember where speed reading stopped. Peeking into the focus view without
+    // playing or moving must not overwrite a stop point that was saved earlier.
+    noteRsvpStop() {
+        if (this.mode !== 'rsvp' || !this.words.length) return;
+        const moved = this.currentIndex !== this.rsvpRunStartIndex || this.wordsProcessedInRun > 0;
+        if (moved || !Number.isInteger(this.rsvpIndex)) this.rsvpIndex = this.currentIndex;
     }
 
     updatePlaybackControls() {
@@ -4716,7 +4861,7 @@ class RSVPReader {
             return { text: '', advanceCount: 0, lexicalWordCount: 0, focusIndex: 0, sourceWords: [], punctuationMultiplier: 1, isPauseToken: true };
         }
 
-        const firstWord = this.words[index];
+        const firstWord = this.displayToken(index);
 
         if (firstWord === '') {
             return { text: '', advanceCount: 1, lexicalWordCount: 0, focusIndex: 0, sourceWords: [''], punctuationMultiplier: 1, isPauseToken: true };
@@ -4733,7 +4878,7 @@ class RSVPReader {
             && (strictEligible || balancedEligible)
             && index < this.words.length - 1;
         if (pairModeEnabled) {
-            const secondWord = this.words[index + 1];
+            const secondWord = this.displayToken(index + 1);
             if (!this.terminalPunctuation(firstWord) && this.isReadableToken(secondWord)) {
                 const firstLength = this.readableCharacterCount(firstWord);
                 const secondLength = this.readableCharacterCount(secondWord);
@@ -4775,6 +4920,30 @@ class RSVPReader {
             punctuationMultiplier: punctuationMultiplier,
             isPauseToken: lexicalWordCount === 0
         };
+    }
+
+    // Footnote markers such as "[19]" or a glued "3" are replaced by tappable note
+    // buttons in the book text; speed reading should not flash them as part of the word.
+    displayToken(index) {
+        const token = this.words[index];
+        if (!token || !this.currentNotes?.length) return token;
+        if (this.noteMarkerSource !== this.currentNotes) {
+            this.noteMarkerSource = this.currentNotes;
+            this.noteMarkerMap = new Map();
+            this.currentNotes.forEach((note) => {
+                if (note.inlineMarker === false || !note.label) return;
+                if (!this.noteMarkerMap.has(note.wordIndex)) this.noteMarkerMap.set(note.wordIndex, []);
+                this.noteMarkerMap.get(note.wordIndex).push(note.label);
+            });
+        }
+        const labels = this.noteMarkerMap.get(index);
+        if (!labels) return token;
+        let cleaned = token;
+        labels.forEach((label) => {
+            const at = cleaned.lastIndexOf(label);
+            if (at >= 0) cleaned = cleaned.slice(0, at) + cleaned.slice(at + label.length);
+        });
+        return cleaned || token;
     }
 
     terminalPunctuation(word) {
@@ -5991,6 +6160,7 @@ class RSVPReader {
         this.currentTextSignature = savedBook.textSignature;
         this.currentChapters = this.normalizeChapters(savedBook.chapters);
         this.currentNotes = this.normalizeNotes(savedBook.notes);
+        this.rsvpIndex = Number.isInteger(savedBook.rsvpIndex) ? savedBook.rsvpIndex : null;
         this.words = this.parseText(savedBook.text);
         this.currentIndex = this.nearestReadableIndex(this.clampIndex(savedBook.currentIndex, this.words.length));
         this.setTextInputValue(savedBook.text);
@@ -6073,6 +6243,8 @@ class RSVPReader {
         const bookId = this.currentBookId;
         const bookGeneration = bookId ? this.getBookWriteGeneration(bookId) : 0;
         const currentIndex = this.currentIndex;
+        this.noteRsvpStop();
+        const rsvpIndex = Number.isInteger(this.rsvpIndex) ? this.rsvpIndex : null;
         try {
             localStorage.setItem('rsvp_bookmark', String(currentIndex));
         } catch (error) {
@@ -6084,6 +6256,7 @@ class RSVPReader {
             const savedBook = await this.mutateBook(bookId, (latest) => ({
                 ...latest,
                 currentIndex: this.clampIndex(currentIndex, latest.tokenCount ?? this.parseText(latest.text).length),
+                ...(rsvpIndex === null ? {} : { rsvpIndex }),
                 lastRead: now,
                 updatedAt: now
             }), { generation, bookGeneration, skipNative: true, skipSync: true });
@@ -6776,7 +6949,9 @@ class RSVPReader {
             lastRead: now,
             updatedAt: now
         };
-        const savedBook = await this.putBook(book);
+        const refreshedBook = await this.refreshBookNotes(book);
+        this.lastImportRefreshedNotes = Boolean(refreshedBook);
+        const savedBook = refreshedBook || await this.putBook(book);
         if (!savedBook) return null;
         if (options.select
             && (options.selectRevision === undefined || options.selectRevision === this.composerRevision)) {
@@ -6785,6 +6960,7 @@ class RSVPReader {
             this.currentTextSignature = savedBook.textSignature;
             this.currentChapters = savedBook.chapters;
             this.currentNotes = this.normalizeNotes(savedBook.notes);
+            this.rsvpIndex = Number.isInteger(savedBook.rsvpIndex) ? savedBook.rsvpIndex : null;
             this.pendingChapters = savedBook.chapters;
             this.currentIndex = savedBook.currentIndex;
             this.setTextInputValue(savedBook.text);
@@ -6794,8 +6970,28 @@ class RSVPReader {
         await this.loadLibrary();
         if (this.mode === 'library') this.renderLibrary();
         this.updateCurrentBookInfo();
-        if (!options.silent) this.showToast(this.t('importedBook', { name }));
+        if (!options.silent) this.showToast(this.t(refreshedBook ? 'bookUpdated' : 'importedBook', { name }));
         return savedBook;
+    }
+
+    // The same file opened again after the reader learned to read footnotes: put the notes
+    // into the book already on the shelf, so its place and bookmarks are kept.
+    async refreshBookNotes(book) {
+        if (!book.notes.length) return null;
+        const signature = this.bookTextSignature(book.text);
+        const twin = this.library.find((item) => /^\d+:[0-9a-f]{32}$/i.test(String(item.textSignature || ''))
+            && item.textSignature === signature && item.sourceType === book.sourceType
+            && !item.isUnsafeText && (item.notes || []).length < book.notes.length);
+        if (!twin) return null;
+        const bookGeneration = this.getBookWriteGeneration(twin.id);
+        const saved = await this.mutateBook(twin.id, (latest) => ({
+            ...latest,
+            notes: book.notes,
+            chapters: book.chapters.length > latest.chapters.length ? book.chapters : latest.chapters,
+            updatedAt: new Date().toISOString()
+        }), { bookGeneration });
+        if (saved) this.updateBookInMemory(saved);
+        return saved;
     }
 
     updateCurrentBookInfo() {
